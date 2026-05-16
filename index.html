@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Vault — Wallpapers</title>
+<meta name="description" content="Premium wallpapers. Browse, download, share.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════ RESET & TOKENS ══════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#C9A84C;--gold-l:#E8C96A;--gold-d:#8B6914;
+  --bg:#0A0A0F;--bg2:#111118;--bg3:#1A1A24;--bg4:#22222F;
+  --dim:#7A7A9A;--mid:#AAAAC0;--bright:#E8E8F0;
+  --radius:6px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--bright);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* grain */
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.5}
+
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ══════════════════════ TOPBAR ══════════════════════ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.9rem 2rem;
+  background:rgba(10,10,15,.92);
+  border-bottom:1px solid rgba(201,168,76,.12);
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(14px);
+  gap:1rem;
+}
+
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.logo-svg{width:32px;height:32px}
+.logo-text{display:flex;flex-direction:column;line-height:1}
+.logo-name{font-family:'Cinzel Decorative',serif;font-size:.95rem;color:var(--gold);letter-spacing:.1em}
+.logo-tag{font-family:'Cinzel',serif;font-size:.48rem;color:var(--dim);letter-spacing:.3em;text-transform:uppercase;margin-top:3px}
+
+/* search bar */
+.search-wrap{flex:1;max-width:480px;position:relative}
+.search-input{
+  width:100%;background:var(--bg3);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);color:var(--bright);font-family:'Inter',sans-serif;
+  font-size:.85rem;padding:.55rem 1rem .55rem 2.5rem;outline:none;
+  transition:border-color .2s;
+}
+.search-input:focus{border-color:rgba(201,168,76,.4)}
+.search-input::placeholder{color:var(--dim)}
+.search-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--dim);font-size:.9rem;pointer-events:none}
+
+.topbar-actions{display:flex;gap:.7rem;align-items:center}
+.btn{
+  font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:.5rem 1.2rem;border:1px solid rgba(255,255,255,.1);color:var(--mid);
+  background:var(--bg3);cursor:pointer;border-radius:var(--radius);transition:all .2s;white-space:nowrap;
+}
+.btn:hover{border-color:rgba(201,168,76,.4);color:var(--gold)}
+.btn-gold{border-color:var(--gold);color:var(--gold);background:transparent}
+.btn-gold:hover{background:var(--gold);color:var(--bg)}
+
+/* ══════════════════════ CATEGORY BAR ══════════════════════ */
+.cat-bar{
+  display:flex;align-items:center;gap:.5rem;padding:.8rem 2rem;
+  background:var(--bg2);border-bottom:1px solid rgba(255,255,255,.05);
+  overflow-x:auto;scrollbar-width:none;
+}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat-pill{
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:.38rem .95rem;border:1px solid rgba(255,255,255,.07);color:var(--dim);
+  background:var(--bg3);cursor:pointer;border-radius:20px;transition:all .2s;white-space:nowrap;flex-shrink:0;
+}
+.cat-pill:hover{color:var(--mid);border-color:rgba(255,255,255,.15)}
+.cat-pill.active{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:600}
+
+/* ══════════════════════ SORT + COUNT ══════════════════════ */
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.7rem 2rem;gap:1rem;
+}
+.count{font-size:.78rem;color:var(--dim)}
+.count strong{color:var(--gold)}
+.sort-wrap{display:flex;align-items:center;gap:.5rem}
+.sort-label{font-size:.72rem;color:var(--dim)}
+.sort-select{
+  background:var(--bg3);border:1px solid rgba(255,255,255,.08);color:var(--mid);
+  font-family:'Inter',sans-serif;font-size:.76rem;padding:.35rem .7rem;
+  border-radius:var(--radius);outline:none;cursor:pointer;
+}
+
+/* ══════════════════════ GRID ══════════════════════ */
+.main{flex:1;padding:1.2rem 2rem 3rem}
+
+.wall-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+
+.wall-card{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  cursor:pointer;background:var(--bg4);
+  border:1px solid rgba(255,255,255,.06);
+  transition:transform .22s,border-color .22s,box-shadow .22s;
+  aspect-ratio:9/16;
+}
+.wall-card:hover{transform:translateY(-5px);border-color:rgba(201,168,76,.4);box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.wall-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.wall-card:hover img{transform:scale(1.03)}
+
+.card-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(10,10,15,.95) 0%,transparent 55%);
+  opacity:0;transition:opacity .22s;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:.9rem;
+}
+.wall-card:hover .card-overlay{opacity:1}
+
+.card-title{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.08em;color:var(--bright);margin-bottom:.2rem;line-height:1.3}
+.card-cat{font-size:.65rem;color:var(--gold);text-transform:capitalize;margin-bottom:.5rem;letter-spacing:.05em}
+.card-actions{display:flex;gap:.4rem}
+
+.card-btn{
+  flex:1;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:.35rem .4rem;border:none;cursor:pointer;border-radius:3px;transition:filter .2s;
+  font-weight:600;
+}
+.card-btn-dl{background:var(--gold);color:var(--bg)}
+.card-btn-dl:hover{filter:brightness(1.12)}
+.card-btn-link{background:rgba(255,255,255,.1);color:var(--mid);border:1px solid rgba(255,255,255,.12)}
+.card-btn-link:hover{background:rgba(255,255,255,.18)}
+
+.card-badge{
+  position:absolute;top:8px;right:8px;
+  background:rgba(10,10,15,.78);border:1px solid rgba(201,168,76,.35);
+  border-radius:3px;font-size:.55rem;letter-spacing:.12em;font-family:'Cinzel',serif;
+  color:var(--gold);padding:.2rem .45rem;text-transform:uppercase;
+}
+
+/* ══════════════════════ EMPTY / LOADING / ERROR ══════════════════════ */
+.state-msg{
+  text-align:center;padding:5rem 2rem;color:var(--dim);
+}
+.state-msg .icon{font-size:2.5rem;margin-bottom:1rem;opacity:.4}
+.state-msg p{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase}
+
+.spinner{
+  width:32px;height:32px;border:2px solid rgba(201,168,76,.2);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 1rem;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:2rem;flex-wrap:wrap}
+.page-btn{
+  font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;
+  padding:.45rem .9rem;border:1px solid rgba(255,255,255,.08);color:var(--mid);
+  background:var(--bg3);cursor:pointer;border-radius:var(--radius);transition:all .2s;
+}
+.page-btn:hover,.page-btn.active{border-color:var(--gold);color:var(--gold)}
+.page-btn:disabled{opacity:.3;cursor:default}
+
+/* ══════════════════════ UPLOAD MODAL ══════════════════════ */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.85);align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.modal-bg.open{display:flex}
+
+.modal{
+  background:var(--bg3);border:1px solid rgba(201,168,76,.2);
+  border-radius:var(--radius);padding:2rem;max-width:520px;width:95%;
+  max-height:92vh;overflow-y:auto;position:relative;
+}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.modal-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold);letter-spacing:.08em}
+.modal-close{background:none;border:none;color:var(--dim);font-size:1.3rem;cursor:pointer;padding:.2rem}
+.modal-close:hover{color:var(--gold)}
+
+/* drop zone */
+.drop-zone{
+  border:2px dashed rgba(201,168,76,.25);border-radius:var(--radius);
+  padding:2.5rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1.2rem;
+  position:relative;
+}
+.drop-zone:hover,.drop-zone.drag{border-color:rgba(201,168,76,.6);background:rgba(201,168,76,.04)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dz-icon{font-size:2.2rem;margin-bottom:.6rem;opacity:.5}
+.dz-text{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.3rem}
+.dz-sub{font-size:.72rem;color:var(--dim);opacity:.7}
+
+.preview-img{
+  width:100%;max-height:200px;object-fit:contain;border-radius:var(--radius);
+  border:1px solid rgba(255,255,255,.06);margin-bottom:1.2rem;display:none;
+}
+
+/* form fields */
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.72rem;color:var(--mid);letter-spacing:.05em;margin-bottom:.35rem}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,.09);
+  border-radius:var(--radius);color:var(--bright);font-family:'Inter',sans-serif;
+  font-size:.83rem;padding:.55rem .85rem;outline:none;transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(201,168,76,.4)}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim)}
+.field select option{background:var(--bg3)}
+.field textarea{resize:vertical;min-height:64px}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+
+.btn-upload{
+  width:100%;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;
+  padding:.85rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));
+  color:var(--bg);border:none;cursor:pointer;font-weight:600;border-radius:var(--radius);
+  transition:filter .2s;margin-top:.5rem;
+}
+.btn-upload:hover{filter:brightness(1.1)}
+.btn-upload:disabled{opacity:.5;cursor:default;filter:none}
+
+/* upload progress */
+.upload-prog{margin-top:.8rem;display:none}
+.prog-bar-wrap{background:var(--bg4);border-radius:20px;height:4px;overflow:hidden;margin-bottom:.3rem}
+.prog-bar{height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:20px}
+.prog-text{font-size:.72rem;color:var(--dim);text-align:center}
+
+/* ══════════════════════ LIGHTBOX ══════════════════════ */
+.lb-bg{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.92);align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);
+}
+.lb-bg.open{display:flex}
+.lb-inner{
+  position:relative;max-width:1000px;width:95%;max-height:92vh;
+  display:flex;gap:1.5rem;align-items:flex-start;
+}
+.lb-img-wrap{flex:1;display:flex;align-items:center;justify-content:center;max-height:85vh}
+.lb-img-wrap img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:var(--radius);border:1px solid rgba(201,168,76,.15)}
+.lb-info{width:260px;flex-shrink:0;background:var(--bg3);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:1.4rem}
+.lb-close{position:absolute;top:-40px;right:0;background:none;border:none;color:var(--mid);font-size:1.5rem;cursor:pointer}
+.lb-close:hover{color:var(--gold)}
+.lb-title{font-family:'Cinzel',serif;font-size:.95rem;letter-spacing:.1em;color:var(--bright);margin-bottom:.3rem}
+.lb-cat{font-size:.72rem;color:var(--gold);text-transform:capitalize;margin-bottom:.8rem}
+.lb-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem}
+.lb-tag{font-size:.65rem;padding:.2rem .6rem;background:var(--bg4);border:1px solid rgba(255,255,255,.07);border-radius:20px;color:var(--dim)}
+.lb-meta{font-size:.72rem;color:var(--dim);margin-bottom:1rem;line-height:1.8}
+.lb-meta span{color:var(--mid)}
+
+.lb-link-box{
+  background:var(--bg2);border:1px solid rgba(201,168,76,.2);border-radius:var(--radius);
+  padding:.6rem .8rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem;
+}
+.lb-link-label{font-size:.6rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.lb-link-url{font-size:.7rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-family:monospace}
+.lb-copy-btn{background:none;border:1px solid rgba(201,168,76,.3);color:var(--gold);font-size:.62rem;padding:.25rem .5rem;cursor:pointer;border-radius:3px;flex-shrink:0;transition:all .2s}
+.lb-copy-btn:hover{background:var(--gold);color:var(--bg)}
+
+.lb-dl-btn{
+  width:100%;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:.7rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));
+  color:var(--bg);border:none;cursor:pointer;font-weight:600;border-radius:var(--radius);transition:filter .2s;
+}
+.lb-dl-btn:hover{filter:brightness(1.1)}
+
+/* ══════════════════════ TOAST ══════════════════════ */
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+  background:var(--bg3);border:1px solid rgba(201,168,76,.35);color:var(--gold);
+  font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:.7rem 1.3rem;border-radius:var(--radius);
+  opacity:0;transform:translateY(8px);transition:all .28s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ══════════════════════ ADMIN STRIP ══════════════════════ */
+.admin-bar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+  padding:.6rem 2rem;background:rgba(201,168,76,.05);border-bottom:1px solid rgba(201,168,76,.1);
+}
+.admin-info{font-size:.72rem;color:var(--dim)}
+.admin-info strong{color:var(--gold)}
+
+/* ══════════════════════ RESPONSIVE ══════════════════════ */
+@media(max-width:640px){
+  .topbar{padding:.8rem 1rem}
+  .main{padding:.8rem 1rem 2rem}
+  .cat-bar{padding:.6rem 1rem}
+  .toolbar{padding:.5rem 1rem}
+  .wall-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .lb-inner{flex-direction:column}
+  .lb-info{width:100%}
+  .logo-tag{display:none}
+  .admin-bar{padding:.6rem 1rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── TOPBAR ─────────────────────────────────────────── -->
+<header class="topbar">
+  <a class="logo" href="#">
+    <svg class="logo-svg" viewBox="0 0 32 32" fill="none">
+      <polygon points="16,1 19,11 30,11 21,17 24,28 16,22 8,28 11,17 2,11 13,11" fill="none" stroke="#C9A84C" stroke-width="1.1"/>
+      <circle cx="16" cy="15.5" r="2.5" fill="#C9A84C" opacity=".7"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-name">Knight Vault</span>
+      <span class="logo-tag">Wallpaper Hosting</span>
+    </div>
+  </a>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search wallpapers, categories, tags…" oninput="debounceSearch()">
+  </div>
+
+  <div class="topbar-actions">
+    <button class="btn btn-gold" onclick="openUpload()">+ Upload</button>
+  </div>
+</header>
+
+<!-- ── ADMIN STATS BAR ─────────────────────────────────── -->
+<div class="admin-bar" id="adminBar">
+  <div class="admin-info">Loading stats…</div>
+  <button class="btn" onclick="openUpload()">+ Add Wallpaper</button>
+</div>
+
+<!-- ── CATEGORY PILLS ──────────────────────────────────── -->
+<nav class="cat-bar" id="catBar">
+  <button class="cat-pill active" onclick="selectCat('all', this)">All</button>
+  <!-- populated by JS -->
+</nav>
+
+<!-- ── TOOLBAR ─────────────────────────────────────────── -->
+<div class="toolbar">
+  <div class="count" id="countInfo">Loading…</div>
+  <div class="sort-wrap">
+    <span class="sort-label">Sort:</span>
+    <select class="sort-select" id="sortSelect" onchange="loadWallpapers(1)">
+      <option value="new">Newest</option>
+      <option value="popular">Most Downloaded</option>
+      <option value="views">Most Viewed</option>
+    </select>
+  </div>
+</div>
+
+<!-- ── MAIN GRID ───────────────────────────────────────── -->
+<main class="main">
+  <div class="wall-grid" id="wallGrid"></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<!-- ── UPLOAD MODAL ────────────────────────────────────── -->
+<div class="modal-bg" id="uploadModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Upload Wallpaper</div>
+      <button class="modal-close" onclick="closeUpload()">✕</button>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewFile(event)">
+      <div class="dz-icon">📁</div>
+      <div class="dz-text">Click or drop image here</div>
+      <div class="dz-sub">JPEG · PNG · WEBP · GIF · Max 20MB</div>
+    </div>
+    <img class="preview-img" id="previewImg" alt="Preview">
+
+    <div class="field">
+      <label>Title *</label>
+      <input type="text" id="upTitle" placeholder="e.g. Dark Knight Cityscape">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Category *</label>
+        <input type="text" id="upCat" placeholder="e.g. dark, nature, abstract" list="catSuggestions">
+        <datalist id="catSuggestions"></datalist>
+      </div>
+      <div class="field">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="upTags" placeholder="4k, amoled, minimal">
+      </div>
+    </div>
+
+    <button class="btn-upload" id="uploadBtn" onclick="uploadWallpaper()">⚔ Upload to Vault</button>
+
+    <div class="upload-prog" id="uploadProg">
+      <div class="prog-bar-wrap"><div class="prog-bar" id="progBar"></div></div>
+      <div class="prog-text" id="progText">Uploading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIGHTBOX ────────────────────────────────────────── -->
+<div class="lb-bg" id="lbBg" onclick="closeLb(event)">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="closeLb()">✕</button>
+    <div class="lb-img-wrap">
+      <img id="lbImg" src="" alt="">
+    </div>
+    <div class="lb-info">
+      <div class="lb-title" id="lbTitle">—</div>
+      <div class="lb-cat"  id="lbCat">—</div>
+      <div class="lb-tags" id="lbTags"></div>
+      <div class="lb-meta" id="lbMeta"></div>
+
+      <div class="lb-link-box">
+        <span class="lb-link-label">Direct</span>
+        <span class="lb-link-url" id="lbDirectUrl">—</span>
+        <button class="lb-copy-btn" onclick="copyLink('direct')">Copy</button>
+      </div>
+
+      <div class="lb-link-box">
+        <span class="lb-link-label">Page</span>
+        <span class="lb-link-url" id="lbPageUrl">—</span>
+        <button class="lb-copy-btn" onclick="copyLink('page')">Copy</button>
+      </div>
+
+      <button class="lb-dl-btn" id="lbDlBtn">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ───────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+const API = '';   // empty = same origin (server.js serves this file)
+let currentCat  = 'all';
+let currentPage = 1;
+let currentSort = 'new';
+let searchQ     = '';
+let searchTimer = null;
+let currentWall = null;   // wallpaper open in lightbox
+
+/* ══════ INIT ══════ */
+async function init() {
+  await Promise.all([loadCategories(), loadStats()]);
+  await loadWallpapers(1);
+}
+
+/* ══════ STATS ══════ */
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const d = await r.json();
+    document.getElementById('adminBar').querySelector('.admin-info').innerHTML =
+      `<strong>${d.total}</strong> wallpapers &nbsp;·&nbsp; <strong>${d.downloads}</strong> downloads &nbsp;·&nbsp; <strong>${d.views}</strong> views`;
+  } catch(e) {}
+}
+
+/* ══════ CATEGORIES ══════ */
+async function loadCategories() {
+  try {
+    const r    = await fetch(`${API}/api/categories`);
+    const cats = await r.json();
+    const bar  = document.getElementById('catBar');
+    const dl   = document.getElementById('catSuggestions');
+
+    // remove old pills except "All"
+    bar.querySelectorAll('.cat-pill:not(:first-child)').forEach(p => p.remove());
+    dl.innerHTML = '';
+
+    cats.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-pill';
+      btn.textContent = `${c.name} (${c.count})`;
+      btn.onclick = () => selectCat(c.name, btn);
+      bar.appendChild(btn);
+
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      dl.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+function selectCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  loadWallpapers(1);
+}
+
+/* ══════ LOAD WALLPAPERS ══════ */
+async function loadWallpapers(page = 1) {
+  currentPage = page;
+  currentSort = document.getElementById('sortSelect').value;
+  const grid  = document.getElementById('wallGrid');
+  const pag   = document.getElementById('pagination');
+  const count = document.getElementById('countInfo');
+
+  grid.innerHTML  = `<div style="grid-column:1/-1"><div class="state-msg"><div class="spinner"></div><p>Loading…</p></div></div>`;
+  pag.innerHTML   = '';
+  count.textContent = 'Loading…';
+
+  const params = new URLSearchParams({ page, limit:24, sort:currentSort });
+  if (currentCat !== 'all') params.set('category', currentCat);
+  if (searchQ.trim())       params.set('q', searchQ.trim());
+
+  try {
+    const r   = await fetch(`${API}/api/wallpapers?${params}`);
+    const d   = await r.json();
+    renderGrid(d.wallpapers);
+    renderPagination(d.page, d.pages);
+    count.innerHTML = `<strong>${d.total}</strong> wallpaper${d.total !== 1 ? 's' : ''}`;
+  } catch(e) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">⚠</div><p>Could not connect to server</p></div></div>`;
+  }
+}
+
+/* ══════ RENDER GRID ══════ */
+function renderGrid(walls) {
+  const grid = document.getElementById('wallGrid');
+  if (!walls || !walls.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">🏰</div><p>No wallpapers found</p></div></div>`;
+    return;
+  }
+  grid.innerHTML = walls.map(w => `
+    <div class="wall-card" onclick="openLb('${w._id}')">
+      <img src="${w.directLink}" alt="${esc(w.title)}" loading="lazy">
+      <div class="card-overlay">
+        <div class="card-title">${esc(w.title)}</div>
+        <div class="card-cat">${esc(w.category)}</div>
+        <div class="card-actions">
+          <button class="card-btn card-btn-dl" onclick="event.stopPropagation();downloadWall('${w._id}','${w.directLink}','${esc(w.title)}')">⬇ Download</button>
+          <button class="card-btn card-btn-link" onclick="event.stopPropagation();copyText('${w.directLink}','Link copied!')">🔗</button>
+        </div>
+      </div>
+      ${w.tags && w.tags.length ? `<div class="card-badge">${esc(w.tags[0])}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+/* ══════ PAGINATION ══════ */
+function renderPagination(page, pages) {
+  const pag = document.getElementById('pagination');
+  if (pages <= 1) return;
+  let html = '';
+  if (page > 1)     html += `<button class="page-btn" onclick="loadWallpapers(${page-1})">‹ Prev</button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i-page) <= 2)
+      html += `<button class="page-btn ${i===page?'active':''}" onclick="loadWallpapers(${i})">${i}</button>`;
+    else if (Math.abs(i-page) === 3)
+      html += `<span style="color:var(--dim);padding:0 .3rem">…</span>`;
+  }
+  if (page < pages) html += `<button class="page-btn" onclick="loadWallpapers(${page+1})">Next ›</button>`;
+  pag.innerHTML = html;
+}
+
+/* ══════ SEARCH ══════ */
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchQ = document.getElementById('searchInput').value;
+  searchTimer = setTimeout(() => loadWallpapers(1), 380);
+}
+
+/* ══════ LIGHTBOX ══════ */
+async function openLb(id) {
+  try {
+    const r = await fetch(`${API}/api/wallpapers/${id}`);
+    const w = await r.json();
+    currentWall = w;
+
+    document.getElementById('lbImg').src        = w.directLink;
+    document.getElementById('lbTitle').textContent = w.title;
+    document.getElementById('lbCat').textContent   = w.category;
+    document.getElementById('lbTags').innerHTML    = (w.tags||[]).map(t=>`<span class="lb-tag">${esc(t)}</span>`).join('');
+    document.getElementById('lbMeta').innerHTML    =
+      `<span>Views:</span> ${w.views} &nbsp;·&nbsp; <span>Downloads:</span> ${w.downloads}<br>` +
+      `<span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}`;
+    document.getElementById('lbDirectUrl').textContent = w.directLink;
+    document.getElementById('lbPageUrl').textContent   = w.url;
+    document.getElementById('lbDlBtn').onclick = () => downloadWall(w._id, w.directLink, w.title);
+    document.getElementById('lbBg').classList.add('open');
+  } catch(e) { showToast('Error loading wallpaper'); }
+}
+
+function closeLb(e) {
+  if (e && e.target !== document.getElementById('lbBg')) return;
+  document.getElementById('lbBg').classList.remove('open');
+  document.getElementById('lbImg').src = '';
+  currentWall = null;
+}
+
+function copyLink(type) {
+  const url = type === 'direct'
+    ? document.getElementById('lbDirectUrl').textContent
+    : document.getElementById('lbPageUrl').textContent;
+  copyText(url, 'Link copied!');
+}
+
+/* ══════ DOWNLOAD ══════ */
+async function downloadWall(id, url, title) {
+  try { await fetch(`${API}/api/wallpapers/${id}/download`, { method:'POST' }); } catch(e) {}
+  // Trigger browser download
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/\s+/g,'_') + url.substring(url.lastIndexOf('.'));
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('Downloading ' + title);
+}
+
+/* ══════ UPLOAD MODAL ══════ */
+function openUpload()  { document.getElementById('uploadModal').classList.add('open'); }
+function closeUpload() {
+  document.getElementById('uploadModal').classList.remove('open');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('upTitle').value = '';
+  document.getElementById('upCat').value   = '';
+  document.getElementById('upTags').value  = '';
+  document.getElementById('uploadProg').style.display = 'none';
+  document.getElementById('progBar').style.width = '0%';
+  document.getElementById('uploadBtn').disabled = false;
+}
+
+function previewFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = document.getElementById('previewImg');
+  img.src = URL.createObjectURL(file);
+  img.style.display = 'block';
+  // auto-fill title from filename
+  if (!document.getElementById('upTitle').value) {
+    document.getElementById('upTitle').value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+  }
+}
+
+// Drag and drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', ()  => dz.classList.remove('drag'));
+dz.addEventListener('drop',      e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('fileInput').files = dt.files;
+    previewFile({ target: { files: [file] } });
+  }
+});
+
+async function uploadWallpaper() {
+  const file     = document.getElementById('fileInput').files[0];
+  const title    = document.getElementById('upTitle').value.trim();
+  const category = document.getElementById('upCat').value.trim();
+  const tags     = document.getElementById('upTags').value.trim();
+
+  if (!file)     return showToast('Please select an image');
+  if (!title)    return showToast('Please enter a title');
+  if (!category) return showToast('Please enter a category');
+
+  const fd = new FormData();
+  fd.append('image',    file);
+  fd.append('title',    title);
+  fd.append('category', category);
+  fd.append('tags',     tags);
+
+  document.getElementById('uploadBtn').disabled = true;
+  document.getElementById('uploadProg').style.display = 'block';
+
+  // XHR for progress
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `${API}/api/upload`);
+
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable) {
+      const pct = Math.round(e.loaded / e.total * 100);
+      document.getElementById('progBar').style.width = pct + '%';
+      document.getElementById('progText').textContent = `Uploading… ${pct}%`;
+    }
+  };
+
+  xhr.onload = async () => {
+    if (xhr.status === 201) {
+      showToast('✓ Wallpaper uploaded!');
+      closeUpload();
+      await loadCategories();
+      await loadStats();
+      await loadWallpapers(1);
+    } else {
+      try {
+        const err = JSON.parse(xhr.responseText);
+        showToast('Error: ' + err.error);
+      } catch(e) { showToast('Upload failed'); }
+      document.getElementById('uploadBtn').disabled = false;
+    }
+  };
+
+  xhr.onerror = () => {
+    showToast('Network error — is the server running?');
+    document.getElementById('uploadBtn').disabled = false;
+  };
+
+  xhr.send(fd);
+}
+
+/* ══════ UTILS ══════ */
+function copyText(text, msg = 'Copied!') {
+  navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast(msg);
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// keyboard: ESC closes modals
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('lbBg').classList.remove('open');
+    document.getElementById('uploadModal').classList.remove('open');
+  }
+});
+
+/* ══════ BOOT ══════ */
+init();
+</script>
+</body>
+</html>
