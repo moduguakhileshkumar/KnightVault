@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Vault — Premium Wallpapers</title>
+<meta name="description" content="Knight Vault — premium digital wallpapers curated for those who demand excellence.">
+
+<!-- ════════════════════════════════════════════════════════
+     GOOGLE ADSENSE — replace data-ad-client with YOUR ID
+     Sign up at: https://adsense.google.com
+     ════════════════════════════════════════════════════════ -->
+<!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+<!-- ════════════════════════════════════════════════════════
+     STRIPE PAYMENTS — replace with your Publishable Key
+     Sign up at: https://stripe.com
+     ════════════════════════════════════════════════════════ -->
+<!-- <script src="https://js.stripe.com/v3/"></script> -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════
+   RESET & ROOT
+═══════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold:        #C9A84C;
+  --gold-light:  #E8C96A;
+  --gold-dark:   #8B6914;
+  --obsidian:    #0A0A0F;
+  --obs2:        #111118;
+  --obs3:        #1A1A24;
+  --obs4:        #22222F;
+  --text-dim:    #7A7A9A;
+  --text-mid:    #AAAAC0;
+  --text-bright: #E8E8F0;
+  --success:     #2D8B47;
+  --radius:      4px;
+}
+
+body {
+  background: var(--obsidian);
+  color: var(--text-bright);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* grain overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════
+   PANELS / NAV
+═══════════════════════════════════════ */
+.page { position: relative; z-index: 1; }
+
+/* Tab nav */
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  background: var(--obs2);
+  position: sticky; top: 0; z-index: 200;
+}
+
+.tab-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 1.1rem 2rem;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-btn:hover:not(.active) { color: var(--text-mid); }
+
+.tab-icon { font-size: 14px; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 3rem;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+
+.logo { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+
+.logo-text { display: flex; flex-direction: column; line-height: 1; }
+.logo-main { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); letter-spacing: 0.12em; }
+.logo-sub  { font-family: 'Cinzel', serif; font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.35em; text-transform: uppercase; margin-top: 4px; }
+
+.header-actions { display: flex; gap: 1rem; align-items: center; }
+.btn-outline {
+  font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 0.5rem 1.4rem; border: 1px solid var(--gold); color: var(--gold);
+  background: transparent; cursor: pointer; transition: all 0.2s;
+}
+.btn-outline:hover { background: var(--gold); color: var(--obsidian); }
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.hero {
+  padding: 4rem 3rem 3rem;
+  text-align: center;
+}
+
+.eyebrow {
+  font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.45em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1.4rem;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.eyebrow::before, .eyebrow::after {
+  content: ''; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold));
+}
+.eyebrow::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
+.hero h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 700; color: var(--text-bright); line-height: 1.1; letter-spacing: 0.04em; margin-bottom: 0.4rem;
+}
+.hero h1 span { color: var(--gold); }
+
+.hero p {
+  font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.2em;
+  color: var(--text-dim); text-transform: uppercase; margin-bottom: 2.5rem;
+}
+
+/* ═══════════════════════════════════════
+   AD BANNER (top leaderboard)
+═══════════════════════════════════════ */
+.ad-leaderboard {
+  max-width: 728px; margin: 0 auto 2.5rem;
+  border: 1px dashed rgba(201,168,76,0.2);
+  background: var(--obs3);
+  display: flex; align-items: center; justify-content: center;
+  height: 90px;
+  font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-dim);
+  text-transform: uppercase; position: relative;
+}
+.ad-leaderboard .ad-label {
+  position: absolute; top: 4px; left: 8px; font-size: 0.5rem; letter-spacing: 0.15em; color: rgba(201,168,76,0.3);
+}
+
+/* AdSense slot - uncomment when you have your ID */
+/*
+<ins class="adsbygoogle"
+  style="display:inline-block;width:728px;height:90px"
+  data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+  data-ad-slot="XXXXXXXXXX"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+*/
+
+/* ═══════════════════════════════════════
+   WALLPAPER GRID
+═══════════════════════════════════════ */
+.gallery-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  max-width: 1200px; margin: 0 auto; padding: 0 3rem 4rem;
+}
+
+/* Sidebar ad */
+.sidebar-ad {
+  width: 160px;
+  border: 1px dashed rgba(201,168,76,0.2);
+  background: var(--obs3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 400px; font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 0.15em;
+  color: var(--text-dim); text-transform: uppercase; position: relative; align-self: start;
+}
+.sidebar-ad .ad-label {
+  position: absolute; top: 6px; left: 8px; font-size: 0.5rem; letter-spacing: 0.15em; color: rgba(201,168,76,0.3);
+}
+
+.grid-section h2 {
+  font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 12px;
+}
+.grid-section h2::before { content: ''; width: 16px; height: 1px; background: var(--gold); }
+
+.wall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.wall-card {
+  position: relative; border-radius: 3px; overflow: hidden; cursor: pointer;
+  aspect-ratio: 9/16; background: var(--obs4);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform 0.25s, border-color 0.25s;
+  display: flex; align-items: center; justify-content: center;
+}
+.wall-card:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.4); }
+
+.wall-card svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.wall-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, transparent 55%);
+  opacity: 0; transition: opacity 0.25s;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 1rem;
+}
+.wall-card:hover .wall-overlay { opacity: 1; }
+
+.wall-title {
+  font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.1em;
+  color: var(--text-bright); margin-bottom: 6px;
+}
+
+.wall-price {
+  font-family: 'Cinzel Decorative', serif; font-size: 0.85rem; color: var(--gold);
+}
+
+.lock-badge {
+  position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px; background: rgba(10,10,15,0.8);
+  border: 1px solid rgba(201,168,76,0.4); border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.download-btn {
+  width: 100%; margin-top: 8px;
+  font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.4rem 0.8rem; background: var(--gold); color: var(--obsidian); border: none; cursor: pointer;
+  font-weight: 600; border-radius: 2px; transition: filter 0.2s;
+}
+.download-btn:hover { filter: brightness(1.15); }
+.download-btn.free-dl { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+.download-btn.free-dl:hover { background: rgba(201,168,76,0.25); }
+
+/* ═══════════════════════════════════════
+   LIGHTBOX / MODAL
+═══════════════════════════════════════ */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.88); align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+
+.modal {
+  background: var(--obs3); border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 4px; padding: 2rem; max-width: 480px; width: 90%;
+  position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 12px; background: none; border: none;
+  color: var(--text-dim); font-size: 1.3rem; cursor: pointer;
+}
+.modal-close:hover { color: var(--gold); }
+
+.modal-title {
+  font-family: 'Cinzel', serif; font-size: 0.9rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem;
+}
+.modal-sub {
+  font-size: 0.78rem; color: var(--text-dim); margin-bottom: 1.5rem; letter-spacing: 0.03em;
+}
+
+.payment-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+
+.pay-option {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 3px;
+  padding: 0.9rem 1rem; cursor: pointer; transition: border-color 0.2s;
+}
+.pay-option:hover { border-color: rgba(201,168,76,0.4); }
+.pay-option.selected { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+
+.pay-option span:first-child { font-size: 1.3rem; }
+.pay-option-label { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); }
+
+.btn-pay {
+  width: 100%; font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase;
+  padding: 0.9rem; background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--obsidian); border: none; cursor: pointer; font-weight: 600; transition: filter 0.2s;
+}
+.btn-pay:hover { filter: brightness(1.1); }
+
+/* stripe card element placeholder */
+.stripe-placeholder {
+  border: 1px solid rgba(201,168,76,0.2); border-radius: 3px;
+  padding: 0.9rem 1rem; margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif; font-size: 0.8rem; color: var(--text-dim);
+  background: var(--obs2);
+}
+
+/* ═══════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════ */
+.admin-panel {
+  max-width: 860px; margin: 0 auto; padding: 2.5rem 3rem;
+}
+
+.admin-header {
+  font-family: 'Cinzel Decorative', serif; font-size: 1.4rem; color: var(--gold);
+  letter-spacing: 0.1em; margin-bottom: 0.4rem;
+}
+.admin-sub {
+  font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem; letter-spacing: 0.03em;
+}
+
+.admin-card {
+  background: var(--obs3); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px; padding: 1.5rem 1.8rem; margin-bottom: 1.5rem;
+}
+
+.admin-card-title {
+  font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1.2rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.admin-card-title::before { content: ''; width: 12px; height: 1px; background: var(--gold); }
+
+/* toggle */
+.access-toggle { display: flex; gap: 1px; background: var(--obs4); border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; padding: 3px; width: fit-content; margin-bottom: 1.2rem; }
+.tog-opt {
+  font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
+  padding: 0.5rem 1.6rem; border: none; background: transparent; color: var(--text-dim); cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.tog-opt.active { background: var(--gold); color: var(--obsidian); font-weight: 600; }
+
+/* price input */
+.price-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.price-box { display: flex; align-items: center; border: 1px solid rgba(201,168,76,0.3); background: var(--obs2); border-radius: 2px; overflow: hidden; }
+.curr-sym { padding: 0.6rem 0.9rem; font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); background: rgba(201,168,76,0.08); border-right: 1px solid rgba(201,168,76,0.2); user-select: none; }
+.price-in { border: none; background: transparent; color: var(--text-bright); font-size: 1.1rem; font-weight: 300; padding: 0.5rem 0.9rem; width: 100px; outline: none; }
+.price-in::-webkit-inner-spin-button, .price-in::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.hint { font-size: 0.76rem; color: var(--text-dim); font-style: italic; }
+
+/* status */
+.status-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--obs4); border: 1px solid rgba(255,255,255,0.05); border-radius: 3px; padding: 0.9rem 1.2rem;
+}
+.status-left { display: flex; align-items: center; gap: 10px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.status-label { font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mid); }
+.status-value { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--gold); }
+
+/* adsense config */
+.input-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+.field-label { font-size: 0.72rem; color: var(--text-mid); letter-spacing: 0.05em; }
+.text-input {
+  background: var(--obs2); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
+  color: var(--text-bright); font-family: 'Inter', sans-serif; font-size: 0.82rem;
+  padding: 0.6rem 0.9rem; outline: none; width: 100%;
+  transition: border-color 0.2s;
+}
+.text-input:focus { border-color: rgba(201,168,76,0.4); }
+.text-input::placeholder { color: var(--text-dim); }
+
+.stripe-key-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* save button */
+.btn-deploy {
+  width: 100%; font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase;
+  padding: 1rem; background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--obsidian); border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; margin-top: 1rem; position: relative;
+}
+.btn-deploy::before { content: ''; position: absolute; inset: 1px; border: 1px solid rgba(255,255,255,0.2); pointer-events: none; }
+.btn-deploy:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* wallpaper upload area */
+.upload-area {
+  border: 2px dashed rgba(201,168,76,0.25); border-radius: 4px; padding: 2.5rem;
+  text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 1rem;
+}
+.upload-area:hover { border-color: rgba(201,168,76,0.5); }
+.upload-icon { font-size: 2rem; margin-bottom: 0.6rem; opacity: 0.4; }
+.upload-text { font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
+
+/* earnings summary */
+.earnings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.earn-card { background: var(--obs4); border-radius: 3px; padding: 1rem 1.2rem; }
+.earn-label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+.earn-value { font-family: 'Cinzel Decorative', serif; font-size: 1.3rem; color: var(--gold); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 2rem 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.75rem; color: var(--text-dim);
+}
+.footer-logo { font-family: 'Cinzel Decorative', serif; font-size: 0.8rem; color: var(--gold); letter-spacing: 0.1em; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--obs3); border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold); font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.8rem 1.4rem; border-radius: 3px;
+  opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 999; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  header { padding: 1rem 1.5rem; }
+  .hero { padding: 2.5rem 1.5rem 2rem; }
+  .gallery-layout { grid-template-columns: 1fr; padding: 0 1.5rem 3rem; }
+  .sidebar-ad { display: none; }
+  .admin-panel { padding: 1.5rem; }
+  .earnings-grid { grid-template-columns: 1fr 1fr; }
+  .stripe-key-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TAB NAVIGATION -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('gallery', this)">
+    <span class="tab-icon">⚔</span> Gallery
+  </button>
+  <button class="tab-btn" onclick="switchTab('admin', this)">
+    <span class="tab-icon">🛡</span> Vault Master
+  </button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     GALLERY PANEL
+════════════════════════════════════════════════════════ -->
+<div id="panel-gallery" class="panel active page">
+
+  <header>
+    <a class="logo" href="#">
+      <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+        <polygon points="20,2 24,14 38,14 27,22 31,35 20,27 9,35 13,22 2,14 16,14" fill="none" stroke="#C9A84C" stroke-width="1.2"/>
+        <polygon points="20,8 22,15 30,15 24,19 26,27 20,23 14,27 16,19 10,15 18,15" fill="rgba(201,168,76,0.12)"/>
+        <circle cx="20" cy="19" r="3" fill="#C9A84C" opacity="0.7"/>
+      </svg>
+      <div class="logo-text">
+        <span class="logo-main">Knight Vault</span>
+        <span class="logo-sub">Premium Wallpapers</span>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button class="btn-outline" onclick="switchTab('admin', document.querySelectorAll('.tab-btn')[1])">⚙ Vault Master</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Curated Digital Art</div>
+    <h1>Knight <span>Vault</span></h1>
+    <p>Where every pixel earns its place</p>
+
+    <!-- AD: Leaderboard 728×90 -->
+    <div class="ad-leaderboard">
+      <span class="ad-label">Advertisement</span>
+      <!-- 
+        REPLACE THIS DIV WITH YOUR ADSENSE CODE:
+        <ins class="adsbygoogle"
+          style="display:inline-block;width:728px;height:90px"
+          data-ad-client="ca-pub-YOUR_ID"
+          data-ad-slot="YOUR_SLOT"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      -->
+      <span>Ad · 728 × 90 · Google AdSense Leaderboard</span>
+    </div>
+  </section>
+
+  <div class="gallery-layout">
+
+    <!-- Sidebar Ad 160×600 -->
+    <div>
+      <div class="sidebar-ad">
+        <span class="ad-label">Ad</span>
+        <!-- 
+          REPLACE WITH ADSENSE:
+          <ins class="adsbygoogle"
+            style="display:inline-block;width:160px;height:600px"
+            data-ad-client="ca-pub-YOUR_ID"
+            data-ad-slot="YOUR_SLOT"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        -->
+        <span style="writing-mode:vertical-rl;transform:rotate(180deg)">Ad · 160 × 600 · Skyscraper</span>
+      </div>
+    </div>
+
+    <div class="grid-section">
+      <h2>The Collection</h2>
+      <div class="wall-grid" id="wallGrid"></div>
+    </div>
+  </div>
+
+  <!-- In-content ad 336×280 -->
+  <div style="max-width:1200px;margin:0 auto 3rem;padding:0 3rem;display:flex;justify-content:center;">
+    <div class="ad-leaderboard" style="width:336px;height:280px;">
+      <span class="ad-label">Advertisement</span>
+      <!-- 
+        REPLACE WITH ADSENSE:
+        <ins class="adsbygoogle"
+          style="display:inline-block;width:336px;height:280px"
+          data-ad-client="ca-pub-YOUR_ID"
+          data-ad-slot="YOUR_SLOT"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      -->
+      <span>Ad · 336 × 280 · Medium Rectangle</span>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-logo">Knight Vault</span>
+    <span>© 2025 Knight Vault · All rights reserved</span>
+    <span>Powered by honour & pixels</span>
+  </footer>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     ADMIN / VAULT MASTER PANEL
+════════════════════════════════════════════════════════ -->
+<div id="panel-admin" class="panel page">
+  <div class="admin-panel">
+    <div class="admin-header">Vault Master</div>
+    <div class="admin-sub">Control pricing, ads, and your earnings from one place.</div>
+
+    <!-- EARNINGS OVERVIEW -->
+    <div class="admin-card">
+      <div class="admin-card-title">Earnings Overview</div>
+      <div class="earnings-grid">
+        <div class="earn-card">
+          <div class="earn-label">Total Revenue</div>
+          <div class="earn-value" id="earn-total">$0.00</div>
+        </div>
+        <div class="earn-card">
+          <div class="earn-label">Downloads</div>
+          <div class="earn-value" id="earn-downloads">0</div>
+        </div>
+        <div class="earn-card">
+          <div class="earn-label">Ad Clicks</div>
+          <div class="earn-value" id="earn-clicks">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING CONTROL -->
+    <div class="admin-card">
+      <div class="admin-card-title">Pricing Command</div>
+
+      <div class="access-toggle">
+        <button class="tog-opt active" id="togFree" onclick="setMode('free')">Free Access</button>
+        <button class="tog-opt" id="togPaid" onclick="setMode('paid')">Set Price</button>
+      </div>
+
+      <div class="price-row" id="priceSection" style="opacity:0.35;pointer-events:none;margin-bottom:1rem;">
+        <span class="hint">Price per download:</span>
+        <div class="price-box">
+          <span class="curr-sym">$</span>
+          <input type="number" class="price-in" id="priceIn" value="4.99" min="0.99" step="0.01" oninput="updateStatus()">
+        </div>
+        <span class="hint" id="priceHint">Visitors pay this to download.</span>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-left">
+          <div class="dot"></div>
+          <span class="status-label">Wallpapers are</span>
+        </div>
+        <span class="status-value" id="statusVal">Free to download</span>
+      </div>
+    </div>
+
+    <!-- PAYMENT SETUP -->
+    <div class="admin-card">
+      <div class="admin-card-title">Stripe Payment Setup</div>
+      <p class="hint" style="margin-bottom:1rem;">
+        Sign up free at <strong style="color:var(--gold)">stripe.com</strong> → Developers → API Keys → copy your keys below.
+        Stripe takes 2.9% + 30¢ per transaction. You keep the rest.
+      </p>
+      <div class="stripe-key-row">
+        <div class="input-row">
+          <label class="field-label">Publishable Key (pk_live_...)</label>
+          <input type="text" class="text-input" id="stripePub" placeholder="pk_live_XXXXXXXXXXXX">
+        </div>
+        <div class="input-row">
+          <label class="field-label">Secret Key (sk_live_...) — server only</label>
+          <input type="password" class="text-input" id="stripeSecret" placeholder="sk_live_XXXXXXXXXXXX">
+        </div>
+      </div>
+      <p class="hint">
+        💡 <strong style="color:var(--text-mid)">Alternative (no code):</strong> Use <strong style="color:var(--gold)">gumroad.com</strong> — upload your wallpacks, get a buy link, paste it into each card's download button below. Zero setup, 10% fee.
+      </p>
+    </div>
+
+    <!-- GOOGLE ADSENSE SETUP -->
+    <div class="admin-card">
+      <div class="admin-card-title">Google AdSense Setup</div>
+      <p class="hint" style="margin-bottom:1rem;">
+        Sign up at <strong style="color:var(--gold)">adsense.google.com</strong> → add your site → get approved (usually 1–2 weeks) → paste your Publisher ID below. Ads auto-fill the reserved spots on your gallery page.
+      </p>
+      <div class="input-row">
+        <label class="field-label">Publisher ID (ca-pub-...)</label>
+        <input type="text" class="text-input" id="adsensePub" placeholder="ca-pub-XXXXXXXXXXXXXXXXX">
+      </div>
+      <div class="input-row">
+        <label class="field-label">Ad Slot IDs (comma separated)</label>
+        <input type="text" class="text-input" id="adSlots" placeholder="1234567890, 0987654321, 1122334455">
+      </div>
+      <p class="hint">Each slot ID maps to: leaderboard (top), skyscraper (sidebar), rectangle (mid-page).</p>
+    </div>
+
+    <!-- UPLOAD WALLPAPERS -->
+    <div class="admin-card">
+      <div class="admin-card-title">Upload Wallpapers</div>
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Click to add wallpapers · PNG or JPG · 4K recommended</div>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleUpload(event)">
+      </div>
+      <p class="hint">Files are stored locally for preview. For production, host images on Cloudflare R2, AWS S3, or Bunny CDN (all have free/cheap tiers).</p>
+    </div>
+
+    <!-- DEPLOY BUTTON -->
+    <button class="btn-deploy" onclick="saveSettings()">
+      ⚔ &nbsp; Deploy Vault Settings &nbsp; ⚔
+    </button>
+
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-bg" id="payModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Download Wallpaper</div>
+    <div class="modal-sub" id="modalSub">Complete payment to access this wallpaper.</div>
+
+    <div class="payment-options" id="payOptions">
+      <div class="pay-option selected" onclick="selectPay(this, 'card')">
+        <span>💳</span>
+        <span class="pay-option-label">Credit / Debit Card</span>
+      </div>
+      <div class="pay-option" onclick="selectPay(this, 'paypal')">
+        <span>🅿</span>
+        <span class="pay-option-label">PayPal</span>
+      </div>
+    </div>
+
+    <!-- Stripe card element goes here -->
+    <div class="stripe-placeholder" id="stripeEl">
+      Card number · Expiry · CVC
+      <br><span style="font-size:0.7rem;color:rgba(201,168,76,0.5)">Powered by Stripe · SSL encrypted</span>
+    </div>
+
+    <button class="btn-pay" id="payBtn" onclick="processPayment()">
+      Pay <span id="payAmt">$4.99</span>
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════ -->
+<script>
+/* ─── APP STATE ─── */
+const state = {
+  mode: 'free',
+  price: 4.99,
+  revenue: 0,
+  downloads: 0,
+  adClicks: 0,
+  stripePub: '',
+  adsensePub: '',
+  currentWall: null,
+};
+
+/* Load saved state */
+try {
+  const saved = JSON.parse(localStorage.getItem('kv_state') || '{}');
+  Object.assign(state, saved);
+} catch(e) {}
+
+/* ─── WALLPAPERS DATA ─── */
+const WALLS = [
+  { id:1, title:'Obsidian Knight',   palette:['#0D1B2A','#1B4B7A','#2A6DB5'], free: true  },
+  { id:2, title:'Crimson Keep',      palette:['#1A0A08','#5C1A10','#B03020'], free: false },
+  { id:3, title:'Emerald Citadel',   palette:['#0A1A0F','#1A4A26','#2D8B47'], free: false },
+  { id:4, title:'Amethyst Bastion',  palette:['#1A0A2E','#4A1060','#9B2EA5'], free: true  },
+  { id:5, title:'Golden Rampart',    palette:['#1A1000','#4A3000','#8B6914'], free: false },
+  { id:6, title:'Teal Fortress',     palette:['#0A1A1A','#0F4A4A','#1A8B8B'], free: false },
+  { id:7, title:'Midnight Citadel',  palette:['#1A1A28','#2E2E50','#5050A0'], free: true  },
+  { id:8, title:'Iron Gate',         palette:['#141414','#2A2A2A','#505050'], free: false },
+];
+
+/* ─── BUILD GALLERY ─── */
+function buildGallery() {
+  const grid = document.getElementById('wallGrid');
+  grid.innerHTML = '';
+  WALLS.forEach(w => {
+    const isPaid = state.mode === 'paid' && !w.free;
+    const price  = state.mode === 'paid' ? '$' + state.price.toFixed(2) : 'Free';
+
+    grid.innerHTML += `
+    <div class="wall-card" onclick="openWall(${w.id})">
+      ${makeSVG(w)}
+      <div class="wall-overlay">
+        <div class="wall-title">${w.title}</div>
+        <div class="wall-price">${isPaid ? '$' + state.price.toFixed(2) : 'Free'}</div>
+        <button class="${isPaid ? 'download-btn' : 'download-btn free-dl'}" onclick="event.stopPropagation();handleDownload(${w.id})">
+          ${isPaid ? '🔒 Buy & Download' : '⬇ Download Free'}
+        </button>
+      </div>
+      ${isPaid ? '<div class="lock-badge"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="2" y="5.5" width="8" height="5.5" rx="1" fill="#C9A84C" opacity="0.8"/><path d="M4 5.5V4a2 2 0 014 0v1.5" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg></div>' : ''}
+    </div>`;
+  });
+}
+
+function makeSVG(w) {
+  const id = 'g'+w.id;
+  return `<svg viewBox="0 0 180 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${w.palette[0]}"/>
+        <stop offset="50%" stop-color="${w.palette[1]}"/>
+        <stop offset="100%" stop-color="${w.palette[2]}"/>
+      </linearGradient>
+    </defs>
+    <rect width="180" height="320" fill="url(#${id})"/>
+    <path d="M90 55 L122 72 L122 135 Q122 162 90 178 Q58 162 58 135 L58 72 Z" fill="none" stroke="rgba(201,168,76,0.3)" stroke-width="1.5"/>
+    <path d="M90 66 L112 80 L112 133 Q112 155 90 167 Q68 155 68 133 L68 80 Z" fill="rgba(201,168,76,0.07)"/>
+    <polygon points="90,97 94.5,110 109,110 97.5,118 102,131 90,123 78,131 82.5,118 71,110 85.5,110" fill="rgba(201,168,76,0.4)"/>
+    <text x="90" y="210" text-anchor="middle" font-size="10" fill="rgba(201,168,76,0.25)" font-family="serif" letter-spacing="3">VAULT · ${String(w.id).padStart(2,'0')}</text>
+  </svg>`;
+}
+
+/* ─── DOWNLOAD HANDLER ─── */
+function handleDownload(id) {
+  const w = WALLS.find(x => x.id === id);
+  if (!w) return;
+
+  if (state.mode === 'paid') {
+    openModal(w);
+  } else {
+    // Free download
+    state.downloads++;
+    saveState();
+    showToast('⬇ Downloading ' + w.title + '...');
+    // In production: trigger actual file download here
+    // window.location.href = '/wallpapers/' + w.id + '.jpg';
+  }
+}
+
+function openWall(id) { /* future: lightbox preview */ }
+
+/* ─── PAYMENT MODAL ─── */
+function openModal(w) {
+  state.currentWall = w;
+  document.getElementById('modalTitle').textContent = w.title;
+  document.getElementById('modalSub').textContent = 'One-time payment · Instant download · 4K resolution';
+  document.getElementById('payAmt').textContent = '$' + state.price.toFixed(2);
+  document.getElementById('payModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('payModal').classList.remove('open');
+}
+
+function selectPay(el, method) {
+  document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function processPayment() {
+  /* ════════════════════════════════════════════════════════
+     STRIPE INTEGRATION — Replace this block:
+
+     const stripe = Stripe(state.stripePub || 'pk_live_YOUR_KEY');
+     const elements = stripe.elements();
+     const card = elements.create('card', { style: { base: { color: '#E8E8F0' } } });
+     card.mount('#stripeEl');
+
+     Then on pay button click:
+     stripe.createPaymentMethod({ type: 'card', card }).then(result => {
+       // Send result.paymentMethod.id to your server
+       // Server creates PaymentIntent and confirms
+       // On success: trigger download
+     });
+  ════════════════════════════════════════════════════════ */
+  closeModal();
+  state.revenue += state.price;
+  state.downloads++;
+  saveState();
+  updateEarnings();
+  showToast('✓ Payment success · Downloading ' + (state.currentWall?.title || '') + '...');
+}
+
+/* ─── ADMIN CONTROLS ─── */
+function setMode(mode) {
+  state.mode = mode;
+  const ps = document.getElementById('priceSection');
+  document.getElementById('togFree').classList.toggle('active', mode === 'free');
+  document.getElementById('togPaid').classList.toggle('active', mode === 'paid');
+  ps.style.opacity = mode === 'paid' ? '1' : '0.35';
+  ps.style.pointerEvents = mode === 'paid' ? 'auto' : 'none';
+  updateStatus();
+  buildGallery();
+}
+
+function updateStatus() {
+  const val = parseFloat(document.getElementById('priceIn').value);
+  state.price = isNaN(val) ? 4.99 : val;
+  document.getElementById('statusVal').textContent =
+    state.mode === 'free' ? 'Free to download' : '$' + state.price.toFixed(2) + ' per download';
+}
+
+function saveSettings() {
+  state.stripePub    = document.getElementById('stripePub').value;
+  state.adsensePub   = document.getElementById('adsensePub').value;
+  saveState();
+  buildGallery();
+  showToast('⚔ Vault settings deployed');
+}
+
+function updateEarnings() {
+  document.getElementById('earn-total').textContent     = '$' + state.revenue.toFixed(2);
+  document.getElementById('earn-downloads').textContent = state.downloads;
+  document.getElementById('earn-clicks').textContent    = state.adClicks;
+}
+
+/* ─── UPLOAD PREVIEW ─── */
+function handleUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach((f, i) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      WALLS.push({ id: 100 + i, title: f.name.replace(/\.[^.]+$/, ''), palette: ['#111','#222','#333'], free: state.mode === 'free', img: ev.target.result });
+    };
+    reader.readAsDataURL(f);
+  });
+  setTimeout(() => { buildGallery(); showToast('✓ ' + files.length + ' wallpaper(s) added'); }, 300);
+}
+
+/* ─── STATE & UTILS ─── */
+function saveState() {
+  try { localStorage.setItem('kv_state', JSON.stringify(state)); } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function switchTab(panel, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + panel).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ─── INIT ─── */
+document.getElementById('priceIn').value = state.price;
+document.getElementById('togFree').classList.toggle('active', state.mode === 'free');
+document.getElementById('togPaid').classList.toggle('active', state.mode === 'paid');
+document.getElementById('priceSection').style.opacity = state.mode === 'paid' ? '1' : '0.35';
+document.getElementById('priceSection').style.pointerEvents = state.mode === 'paid' ? 'auto' : 'none';
+updateStatus();
+updateEarnings();
+buildGallery();
+</script>
+
+</body>
+</html>
