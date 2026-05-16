@@ -203,7 +203,7 @@ app.get('/api/stats', async (req, res) => {
 app.get('/healthz', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
 
 // ─── CATCH-ALL → serve frontend ──────────────────────────
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
