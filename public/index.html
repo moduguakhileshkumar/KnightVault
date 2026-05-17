@@ -491,6 +491,7 @@ function renderGrid(walls) {
   if (!walls || !walls.length) {
     grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">🏰</div><p>No wallpapers found</p></div></div>`;
     return;
+  }
   grid.innerHTML = walls.map(w => {
     const pageLink = window.location.origin + '/w/' + w.filename.split('/').pop();
     return `
