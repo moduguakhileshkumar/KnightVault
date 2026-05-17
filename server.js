@@ -68,50 +68,7 @@ app.get('/api/wallpapers', async (req, res) => {
     res.json({ wallpapers: walls, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
-// ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
-app.get('/w/:publicId', async (req, res) => {
-  try {
-    // Find the wallpaper in MongoDB using its filename/publicId
-    const publicId = `knight-vault/${req.params.publicId}`;
-    const w = await Wallpaper.findOne({ filename: publicId });
-    
-    if (!w) return res.status(404).send('Wallpaper not found in the vault.');
 
-    // Increment views since someone clicked the direct page link
-    await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
-
-    // Send back a clean, simple HTML wrapper showing the image beautifully
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${w.title} — Knight Vault</title>
-        <style>
-          body { margin: 0; background: #0A0A0F; color: #E8E8F0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-          .container { text-align: center; max-width: 600px; }
-          img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
-          h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
-          p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
-          .btn:hover { filter: brightness(1.1); }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <img src="${w.directLink}" alt="${w.title}">
-          <h1>${w.title}</h1>
-          <p>Category: ${w.category}</p>
-          <a href="${w.directLink}" download="${w.title}" class="btn">Download Wallpaper</a>
-        </div>
-      </body>
-      </html>
-    `);
-  } catch (err) { 
-    res.status(500).send('Error loading wallpaper page.'); 
-  }
-});
 app.get('/api/categories', async (req, res) => {
   try {
     const cats = await Wallpaper.aggregate([
@@ -211,6 +168,50 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
     if (!w) return res.status(404).json({ error: 'Not found' });
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+// ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
+app.get('/w/:publicId', async (req, res) => {
+  try {
+    // Find the wallpaper in MongoDB using its filename/publicId
+    const publicId = `knight-vault/${req.params.publicId}`;
+    const w = await Wallpaper.findOne({ filename: publicId });
+    
+    if (!w) return res.status(404).send('Wallpaper not found in the vault.');
+
+    // Increment views since someone clicked the direct page link
+    await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+
+    // Send back a clean, simple HTML wrapper showing the image beautifully
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${w.title} — Knight Vault</title>
+        <style>
+          body { margin: 0; background: #0A0A0F; color: #E8E8F0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+          .container { text-align: center; max-width: 600px; }
+          img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+          h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
+          p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+          .btn:hover { filter: brightness(1.1); }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <img src="${w.directLink}" alt="${w.title}">
+          <h1>${w.title}</h1>
+          <p>Category: ${w.category}</p>
+          <a href="${w.directLink}" download="${w.title}" class="btn">Download Wallpaper</a>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) { 
+    res.status(500).send('Error loading wallpaper page.'); 
+  }
 });
 
 // ─── KEEP-ALIVE ───────────────────────────────────────────
