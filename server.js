@@ -169,19 +169,23 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
-// ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
 app.get('/w/:publicId', async (req, res) => {
   try {
-    // Find the wallpaper in MongoDB using its filename/publicId
-    const publicId = `knight-vault/${req.params.publicId}`;
-    const w = await Wallpaper.findOne({ filename: publicId });
+    // 1. Reconstruct the exact filename stored in MongoDB
+    const fullFilename = `knight-vault/${req.params.publicId}`;
     
-    if (!w) return res.status(404).send('Wallpaper not found in the vault.');
+    // 2. Query using the full filename string
+    const w = await Wallpaper.findOne({ filename: fullFilename });
+    
+    // 3. If it doesn't exist, give a descriptive error
+    if (!w) {
+      return res.status(404).send('<h1>Vault Error</h1><p>Wallpaper not found in our database records.</p>');
+    }
 
-    // Increment views since someone clicked the direct page link
+    // 4. Increment the view counter since they visited the link
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
 
-    // Send back a clean, simple HTML wrapper showing the image beautifully
+    // 5. Send your beautiful HTML template down
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
@@ -218,6 +222,6 @@ app.get('/w/:publicId', async (req, res) => {
 app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
 // ─── CATCH-ALL → frontend ────────────────────────────────
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.listen(PORT, () => console.log(`⚔  Knight Vault → ${BASE_URL}`));
