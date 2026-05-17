@@ -201,7 +201,12 @@ app.get('/w/:publicId', async (req, res) => {
       `);
     }
 
+    // Increment view counter
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+
+    // CREATE THE FL_ATTACHMENT DOWNLOAD LINK
+    // This tells Cloudinary's servers to force the browser to download the file instead of opening it
+    const downloadLink = w.directLink.replace('/upload/', '/upload/fl_attachment/');
 
     res.send(`
       <!DOCTYPE html>
@@ -229,7 +234,7 @@ app.get('/w/:publicId', async (req, res) => {
           <h1>${w.title}</h1>
           <p>Category: ${w.category}</p>
           
-          <a href="/api/download-direct/${req.params.publicId}" class="btn">⬇ Download Wallpaper</a>
+          <a href="${downloadLink}" class="btn">Explicit Download</a>
         </div>
       </body>
       </html>
