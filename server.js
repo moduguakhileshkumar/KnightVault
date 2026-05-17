@@ -7,6 +7,7 @@ const cloudinary = require('cloudinary').v2;
 const cors       = require('cors');
 const path       = require('path');
 const Wallpaper  = require('./model');
+const Settings   = require('./settingsModel');
 
 const app      = express();
 const PORT     = process.env.PORT || 3000;
@@ -115,6 +116,25 @@ app.post('/api/verify-admin', (req, res) => {
   res.status(401).json({ ok: false, error: 'Wrong password' });
 });
 
+// ─── SETTINGS API ─────────────────────────────────────────
+app.get('/api/settings', async (req, res) => {
+  try {
+    let s = await Settings.findOne();
+    if (!s) s = await Settings.create({ adsensePublisherId: '' });
+    res.json(s);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/settings', adminOnly, async (req, res) => {
+  try {
+    let s = await Settings.findOne();
+    if (!s) s = new Settings();
+    if (req.body.adsensePublisherId !== undefined) s.adsensePublisherId = req.body.adsensePublisherId;
+    await s.save();
+    res.json(s);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ─── BINARY DOWNLOAD PROXY ────────────────────────────────
 // This bypasses browser cross-origin limits and forces files to download directly 
 app.get('/api/download-proxy', async (req, res) => {
@@ -143,7 +163,7 @@ app.get('/api/download-proxy', async (req, res) => {
 app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const { title, category, tags } = req.body;
+    const { title, category, tags, isPaid, price } = req.body;
     if (!title || !category) return res.status(400).json({ error: 'title and category required' });
 
     const directLink = req.file.path;
@@ -160,6 +180,8 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
       tags:         tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
       size:         req.file.size || 0,
       mimeType:     req.file.mimetype,
+      isPaid:       isPaid === 'true' || isPaid === true,
+      price:        parseFloat(price) || 0,
     });
     res.status(201).json(wall);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -176,7 +198,7 @@ app.delete('/api/wallpapers/:id', adminOnly, async (req, res) => {
 
 app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
   try {
-    const allowed = ['title', 'category', 'tags'];
+    const allowed = ['title', 'category', 'tags', 'isPaid', 'price'];
     const update  = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
     const w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
@@ -201,6 +223,11 @@ app.get('/w/:publicId', async (req, res) => {
       `);
     }
 
+    const settings = await Settings.findOne();
+    const adsenseScript = settings && settings.adsensePublisherId 
+      ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsensePublisherId}" crossorigin="anonymous"></script>` 
+      : '';
+
     // Increment view counter
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
 
@@ -215,7 +242,7 @@ app.get('/w/:publicId', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${w.title} — Knight Vault</title>
-        
+        ${adsenseScript}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
         
         <style>

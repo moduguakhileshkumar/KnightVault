@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Vault — Admin Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#C9A84C;--gold-l:#E8C96A;--gold-d:#8B6914;
+  --bg:#0A0A0F;--bg2:#111118;--bg3:#1A1A24;--bg4:#22222F;
+  --dim:#7A7A9A;--mid:#AAAAC0;--bright:#E8E8F0;
+  --radius:6px;
+}
+body{background:var(--bg);color:var(--bright);font-family:'Inter',sans-serif;min-height:100vh;display:flex}
+a { text-decoration: none; color: inherit; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: 240px; background: var(--bg2); border-right: 1px solid rgba(201,168,76,.1); padding: 1.5rem; display: flex; flex-direction: column; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 2.5rem; }
+.logo-name { font-family: 'Cinzel Decorative', serif; font-size: .95rem; color: var(--gold); letter-spacing: .1em; }
+.nav-btn { display: block; padding: .8rem 1rem; border-radius: var(--radius); margin-bottom: .5rem; color: var(--dim); cursor: pointer; transition: all .2s; border: 1px solid transparent; text-align: left; background: none; width: 100%; font-size: .85rem; }
+.nav-btn:hover { background: var(--bg3); color: var(--mid); }
+.nav-btn.active { background: rgba(201,168,76,.1); color: var(--gold); border-color: rgba(201,168,76,.2); }
+.spacer { flex: 1; }
+.back-btn { font-size: .75rem; color: var(--dim); text-align: center; padding: 1rem; cursor: pointer; }
+.back-btn:hover { color: var(--gold); }
+
+/* ── MAIN ── */
+.main { flex: 1; padding: 2rem; overflow-y: auto; height: 100vh; position: relative; }
+.header { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--gold); margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,.05); padding-bottom: 1rem; }
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--bg3); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.05); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: .8rem; }
+th, td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,.05); }
+th { background: var(--bg2); color: var(--dim); font-weight: 500; letter-spacing: .05em; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg4); }
+.thumb { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(255,255,255,.1); }
+.badge { padding: .2rem .5rem; border-radius: 20px; font-size: .65rem; font-weight: 600; text-transform: uppercase; }
+.badge.free { background: rgba(255,255,255,.1); color: var(--dim); }
+.badge.paid { background: rgba(201,168,76,.2); color: var(--gold); }
+.action-btn { background: none; border: none; cursor: pointer; color: var(--dim); font-size: 1rem; margin-right: .5rem; transition: .2s; }
+.action-btn:hover { color: var(--bright); }
+.action-btn.del:hover { color: #ff8080; }
+
+/* ── FORMS ── */
+.card { background: var(--bg3); border-radius: var(--radius); border: 1px solid rgba(255,255,255,.05); padding: 2rem; max-width: 600px; }
+.field { margin-bottom: 1.2rem; }
+.field label { display: block; font-size: .75rem; color: var(--dim); margin-bottom: .4rem; }
+.field input[type="text"], .field input[type="number"] { width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); color: var(--bright); padding: .7rem; outline: none; transition: .2s; }
+.field input:focus { border-color: var(--gold); }
+.checkbox-wrap { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+.btn { background: var(--gold); color: var(--bg); border: none; padding: .8rem 1.5rem; border-radius: var(--radius); font-weight: 600; cursor: pointer; transition: .2s; font-family: 'Cinzel', serif; letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; }
+.btn:hover { filter: brightness(1.1); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── UPLOADER ── */
+.drop-zone { border: 2px dashed rgba(201,168,76,.3); border-radius: var(--radius); padding: 3rem; text-align: center; cursor: pointer; margin-bottom: 1.5rem; position: relative; transition: .2s; }
+.drop-zone:hover { background: rgba(201,168,76,.05); border-color: var(--gold); }
+.drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.preview-img { max-width: 100%; max-height: 200px; margin-bottom: 1.5rem; border-radius: var(--radius); display: none; }
+.prog-bar-wrap { height: 4px; background: var(--bg4); border-radius: 4px; overflow: hidden; margin-top: 1rem; display: none; }
+.prog-bar { height: 100%; background: var(--gold); width: 0%; transition: .3s; }
+
+/* ── LOGIN MODAL ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.modal { background: var(--bg3); padding: 2.5rem; border-radius: var(--radius); border: 1px solid rgba(201,168,76,.3); width: 100%; max-width: 400px; text-align: center; }
+.modal h2 { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 1.5rem; font-size: 1.2rem; }
+.modal input { width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); padding: .8rem; color: #fff; border-radius: var(--radius); margin-bottom: 1rem; outline: none; text-align: center; letter-spacing: .1em; }
+.modal input:focus { border-color: var(--gold); }
+.modal button { width: 100%; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--bg3); border: 1px solid var(--gold); color: var(--gold); padding: 1rem 2rem; border-radius: var(--radius); font-family: 'Cinzel', serif; text-transform: uppercase; font-size: .75rem; letter-spacing: .1em; opacity: 0; transform: translateY(10px); transition: .3s; pointer-events: none; z-index: 9999; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <a class="logo" href="/">
+    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+      <polygon points="16,1 19,11 30,11 21,17 24,28 16,22 8,28 11,17 2,11 13,11" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+    </svg>
+    <span class="logo-name">Vault Master</span>
+  </a>
+  <button class="nav-btn active" onclick="switchTab('wallpapers')">Wallpapers</button>
+  <button class="nav-btn" onclick="switchTab('upload')">Upload New</button>
+  <button class="nav-btn" onclick="switchTab('settings')">AdSense Settings</button>
+  <div class="spacer"></div>
+  <a class="back-btn" href="/">← Back to Vault</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  
+  <!-- WALLPAPERS PANEL -->
+  <div id="panel-wallpapers" class="panel active">
+    <h2 class="header">Manage Wallpapers</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Stats</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wallTableBody">
+          <tr><td colspan="6" style="text-align:center;padding:2rem;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- UPLOAD PANEL -->
+  <div id="panel-upload" class="panel">
+    <h2 class="header">Upload to Vault</h2>
+    <div class="card">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="upFile" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewFile(event)">
+        <div style="font-size:2rem;margin-bottom:1rem;color:var(--dim)">📁</div>
+        <div>Click or drag image here</div>
+      </div>
+      <img id="upPreview" class="preview-img">
+      
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="upTitle" placeholder="e.g. Dark Knight">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="field">
+          <label>Category</label>
+          <input type="text" id="upCat" placeholder="e.g. dark">
+        </div>
+        <div class="field">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="upTags" placeholder="4k, amoled">
+        </div>
+      </div>
+      <div class="field">
+        <label class="checkbox-wrap">
+          <input type="checkbox" id="upIsPaid" onchange="document.getElementById('upPriceWrap').style.display = this.checked ? 'block' : 'none'">
+          Requires Premium Payment
+        </label>
+      </div>
+      <div class="field" id="upPriceWrap" style="display:none;">
+        <label>Price (USD)</label>
+        <input type="number" id="upPrice" placeholder="5.00" step="0.50" min="0">
+      </div>
+      
+      <button class="btn" id="uploadBtn" style="width:100%" onclick="submitUpload()">Upload Wallpaper</button>
+      <div class="prog-bar-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div id="panel-settings" class="panel">
+    <h2 class="header">Global Settings</h2>
+    <div class="card">
+      <div class="field">
+        <label>Google AdSense Publisher ID</label>
+        <input type="text" id="setAdsense" placeholder="e.g. pub-1234567890123456">
+        <div style="font-size: .7rem; color: var(--dim); margin-top: .5rem;">
+          If provided, this will automatically inject the AdSense script tag into your wallpaper pages so you can serve auto-ads.
+        </div>
+      </div>
+      <button class="btn" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg hidden" id="editModal">
+  <div class="modal">
+    <h2>Edit Wallpaper</h2>
+    <div class="field"><input type="text" id="editTitle" placeholder="Title"></div>
+    <div class="field"><input type="text" id="editCat" placeholder="Category"></div>
+    <div class="field"><input type="text" id="editTags" placeholder="Tags"></div>
+    <div class="field" style="text-align:left;">
+      <label class="checkbox-wrap" style="color:var(--dim);font-size:.8rem;">
+        <input type="checkbox" id="editIsPaid" onchange="document.getElementById('editPrice').style.display = this.checked ? 'block' : 'none'">
+        Paid / Premium
+      </label>
+    </div>
+    <div class="field"><input type="number" id="editPrice" placeholder="Price" style="display:none;" step="0.50"></div>
+    <div style="display:flex;gap:1rem;">
+      <button class="btn" style="flex:1;background:var(--bg2);color:var(--bright);" onclick="document.getElementById('editModal').classList.add('hidden')">Cancel</button>
+      <button class="btn" style="flex:1;" onclick="submitEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <h2>Vault Master Auth</h2>
+    <input type="password" id="pwInput" placeholder="Enter Admin Password" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" onclick="login()">Enter Vault</button>
+    <div id="loginErr" style="color:#ff8080;font-size:.75rem;margin-top:1rem;height:1rem;"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let adminPw = '';
+let editId = null;
+
+async function checkAuth() {
+  const r = await fetch('/api/check-admin');
+  const d = await r.json();
+  if (!d.passwordRequired) {
+    document.getElementById('loginModal').classList.add('hidden');
+    loadData();
+  }
+}
+
+async function login() {
+  const pw = document.getElementById('pwInput').value;
+  const r = await fetch('/api/verify-admin', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password:pw})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    adminPw = pw;
+    document.getElementById('loginModal').classList.add('hidden');
+    loadData();
+  } else {
+    document.getElementById('loginErr').textContent = 'Incorrect Password';
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function loadData() {
+  loadWallpapers();
+  loadSettings();
+}
+
+async function loadWallpapers() {
+  try {
+    const r = await fetch('/api/wallpapers?limit=1000');
+    const d = await r.json();
+    const tbody = document.getElementById('wallTableBody');
+    if (!d.wallpapers.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No wallpapers found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.wallpapers.map(w => `
+      <tr>
+        <td><img src="${w.directLink}" class="thumb"></td>
+        <td>${esc(w.title)}</td>
+        <td>${esc(w.category)}</td>
+        <td>
+          <span class="badge ${w.isPaid ? 'paid' : 'free'}">${w.isPaid ? 'Premium $'+w.price : 'Free'}</span>
+        </td>
+        <td style="color:var(--dim);font-size:.75rem;">DL: ${w.downloads} | V: ${w.views}</td>
+        <td>
+          <button class="action-btn" onclick='openEdit(${JSON.stringify(w).replace(/'/g, "&apos;")})'>✎</button>
+          <button class="action-btn del" onclick="deleteWall('${w._id}')">✕</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadSettings() {
+  try {
+    const r = await fetch('/api/settings');
+    const d = await r.json();
+    if(d && d.adsensePublisherId) {
+      document.getElementById('setAdsense').value = d.adsensePublisherId;
+    }
+  } catch(e) {}
+}
+
+async function saveSettings() {
+  const pubId = document.getElementById('setAdsense').value.trim();
+  try {
+    await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
+      body: JSON.stringify({ adsensePublisherId: pubId })
+    });
+    showToast('Settings saved!');
+  } catch(e) {
+    showToast('Failed to save settings');
+  }
+}
+
+function deleteWall(id) {
+  if(!confirm("Delete this wallpaper permanently?")) return;
+  fetch(`/api/wallpapers/${id}`, { method: 'DELETE', headers: { 'x-admin-password': adminPw }})
+    .then(() => { showToast('Deleted successfully'); loadWallpapers(); });
+}
+
+function openEdit(w) {
+  editId = w._id;
+  document.getElementById('editTitle').value = w.title;
+  document.getElementById('editCat').value = w.category;
+  document.getElementById('editTags').value = (w.tags||[]).join(', ');
+  document.getElementById('editIsPaid').checked = w.isPaid;
+  document.getElementById('editPrice').value = w.price || '';
+  document.getElementById('editPrice').style.display = w.isPaid ? 'block' : 'none';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+async function submitEdit() {
+  const title = document.getElementById('editTitle').value;
+  const category = document.getElementById('editCat').value;
+  const tags = document.getElementById('editTags').value;
+  const isPaid = document.getElementById('editIsPaid').checked;
+  const price = document.getElementById('editPrice').value;
+  
+  try {
+    await fetch(`/api/wallpapers/${editId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
+      body: JSON.stringify({ title, category, tags: tags.split(',').map(t=>t.trim()), isPaid, price: parseFloat(price)||0 })
+    });
+    document.getElementById('editModal').classList.add('hidden');
+    showToast('Wallpaper updated!');
+    loadWallpapers();
+  } catch(e) {
+    showToast('Update failed');
+  }
+}
+
+// UPLOAD
+function previewFile(e) {
+  const f = e.target.files[0];
+  if(!f) return;
+  const img = document.getElementById('upPreview');
+  img.src = URL.createObjectURL(f);
+  img.style.display = 'block';
+  if(!document.getElementById('upTitle').value)
+    document.getElementById('upTitle').value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+}
+
+function submitUpload() {
+  const file = document.getElementById('upFile').files[0];
+  if(!file) return showToast('Select a file');
+  
+  const fd = new FormData();
+  fd.append('image', file);
+  fd.append('title', document.getElementById('upTitle').value);
+  fd.append('category', document.getElementById('upCat').value);
+  fd.append('tags', document.getElementById('upTags').value);
+  fd.append('isPaid', document.getElementById('upIsPaid').checked);
+  fd.append('price', document.getElementById('upPrice').value || 0);
+
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  document.getElementById('progWrap').style.display = 'block';
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload');
+  xhr.setRequestHeader('x-admin-password', adminPw);
+  xhr.upload.onprogress = e => {
+    if(e.lengthComputable) {
+      document.getElementById('progBar').style.width = (e.loaded / e.total * 100) + '%';
+    }
+  };
+  xhr.onload = () => {
+    btn.disabled = false;
+    btn.textContent = 'Upload Wallpaper';
+    document.getElementById('progWrap').style.display = 'none';
+    document.getElementById('progBar').style.width = '0%';
+    if(xhr.status === 201) {
+      showToast('Uploaded successfully!');
+      document.getElementById('upFile').value = '';
+      document.getElementById('upPreview').style.display = 'none';
+      document.getElementById('upTitle').value = '';
+      document.getElementById('upCat').value = '';
+      document.getElementById('upTags').value = '';
+      document.getElementById('upIsPaid').checked = false;
+      document.getElementById('upPrice').value = '';
+      document.getElementById('upPriceWrap').style.display = 'none';
+      loadWallpapers();
+      switchTab('wallpapers');
+    } else {
+      showToast('Upload failed');
+    }
+  };
+  xhr.send(fd);
+}
+
+// Utils
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+let toastTimer;
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+checkAuth();
+</script>
+</body>
+</html>
