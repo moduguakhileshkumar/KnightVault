@@ -20,8 +20,6 @@ cloudinary.config({
 });
 
 // ─── MULTER → CLOUDINARY STORAGE ─────────────────────────
-// Files go directly to Cloudinary — never stored on Render disk
-// This means images survive redeploys and links NEVER break
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -105,18 +103,37 @@ app.get('/api/stats', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Frontend checks this to know if it should show admin login
 app.get('/api/check-admin', (req, res) => {
   res.json({ passwordRequired: !!process.env.ADMIN_PASSWORD });
 });
 
-// Verify admin password — frontend sends password, gets ok:true back
 app.post('/api/verify-admin', (req, res) => {
   const { password } = req.body;
   if (!process.env.ADMIN_PASSWORD || password === process.env.ADMIN_PASSWORD) {
     return res.json({ ok: true });
   }
   res.status(401).json({ ok: false, error: 'Wrong password' });
+});
+
+// ─── BINARY DOWNLOAD PROXY ────────────────────────────────
+// This bypasses browser cross-origin limits and forces files to download directly 
+app.get('/api/download-proxy', async (req, res) => {
+  try {
+    const { url, filename } = req.query;
+    if (!url) return res.status(400).send('URL required');
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch asset');
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename || 'wallpaper')}.jpg"`);
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).send('Download processing failed');
+  }
 });
 
 // ═══════════════════════════════════════
@@ -129,8 +146,6 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
     const { title, category, tags } = req.body;
     if (!title || !category) return res.status(400).json({ error: 'title and category required' });
 
-    // req.file.path = permanent Cloudinary URL (https://res.cloudinary.com/...)
-    // req.file.filename = cloudinary public_id
     const directLink = req.file.path;
     const publicId   = req.file.filename;
     const pageUrl    = `${BASE_URL}/w/${encodeURIComponent(publicId.replace('knight-vault/', ''))}`;
@@ -169,23 +184,25 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
 app.get('/w/:publicId', async (req, res) => {
   try {
-    // 1. Reconstruct the exact filename stored in MongoDB
     const fullFilename = `knight-vault/${req.params.publicId}`;
-    
-    // 2. Query using the full filename string
     const w = await Wallpaper.findOne({ filename: fullFilename });
     
-    // 3. If it doesn't exist, give a descriptive error
     if (!w) {
-      return res.status(404).send('<h1>Vault Error</h1><p>Wallpaper not found in our database records.</p>');
+      return res.status(404).send(`
+        <body style="background:#0A0A0F;color:#7A7A9A;font-family:sans-serif;text-align:center;padding-top:100px;">
+          <h1 style="color:#C9A84C;">Vault Error</h1>
+          <p>Wallpaper not found in our database records.</p>
+          <a href="/" style="color:#C9A84C;text-decoration:none;">← Return to Vault</a>
+        </body>
+      `);
     }
 
-    // 4. Increment the view counter since they visited the link
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
 
-    // 5. Send your beautiful HTML template down
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
@@ -193,13 +210,16 @@ app.get('/w/:publicId', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${w.title} — Knight Vault</title>
+        
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
+        
         <style>
           body { margin: 0; background: #0A0A0F; color: #E8E8F0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
           .container { text-align: center; max-width: 600px; }
           img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
           h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
           p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; transition: filter 0.2s; }
           .btn:hover { filter: brightness(1.1); }
         </style>
       </head>
@@ -208,7 +228,7 @@ app.get('/w/:publicId', async (req, res) => {
           <img src="${w.directLink}" alt="${w.title}">
           <h1>${w.title}</h1>
           <p>Category: ${w.category}</p>
-          <a href="${w.directLink}" download="${w.title}" class="btn">Download Wallpaper</a>
+          <a href="/api/download-proxy?url=${encodeURIComponent(w.directLink)}&filename=${encodeURIComponent(w.title.replace(/\s+/g, '_'))}" class="btn">Download Wallpaper</a>
         </div>
       </body>
       </html>
