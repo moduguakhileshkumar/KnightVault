@@ -246,24 +246,30 @@ app.get('/api/download-direct/:publicId', async (req, res) => {
     
     if (!w) return res.status(404).send('Wallpaper record not found.');
 
-    // Track the download count in MongoDB
+    // 1. Increment the download count in MongoDB
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { downloads: 1 } });
 
-    // Stream image file from Cloudinary over the server to client device
-    const response = await fetch(w.directLink);
-    if (!response.ok) throw new Error('Cloudinary fetch failed');
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Force application/octet-stream headers so browser HAS to save it as a local file
+    // 2. Format a clean filename for their device saving
     const safeName = w.title.trim().replace(/\s+/g, '_') + '.jpg';
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeName)}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
     
-    res.send(buffer);
+    // 3. Set standard download headers to bypass browser view triggers
+    res.attachment(safeName); // Sets Content-Disposition and Content-Type automatically
+
+    // 4. Use a robust, non-crashing cross-platform stream pipeline
+    const https = require('https');
+    https.get(w.directLink, (cloudinaryResponse) => {
+      if (cloudinaryResponse.statusCode === 200) {
+        // Stream the data directly from Cloudinary straight to the user's device
+        cloudinaryResponse.pipe(res);
+      } else {
+        res.status(500).send('Cloudinary resource streaming failed.');
+      }
+    }).on('error', (e) => {
+      res.status(500).send('Download connection lost.');
+    });
+
   } catch (err) {
-    res.status(500).send('Direct backend download pipeline failed.');
+    res.status(500).send('Direct download pipeline encountered an error.');
   }
 });
 // ─── KEEP-ALIVE ───────────────────────────────────────────
