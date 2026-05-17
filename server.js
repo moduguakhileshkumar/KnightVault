@@ -219,8 +219,9 @@ app.get('/w/:publicId', async (req, res) => {
           img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
           h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
           p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; transition: filter 0.2s; }
+          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; border: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: filter 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
           .btn:hover { filter: brightness(1.1); }
+          .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
         </style>
       </head>
       <body>
@@ -228,8 +229,50 @@ app.get('/w/:publicId', async (req, res) => {
           <img src="${w.directLink}" alt="${w.title}">
           <h1>${w.title}</h1>
           <p>Category: ${w.category}</p>
-          <a href="/api/download-proxy?url=${encodeURIComponent(w.directLink)}&filename=${encodeURIComponent(w.title.replace(/\s+/g, '_'))}" class="btn">Download Wallpaper</a>
+          
+          <button id="dlBtn" onclick="forceDownload('${w.directLink}', '${w.title.replace(/'/g, "\\'")}')" class="btn">⬇ Download Wallpaper</button>
         </div>
+
+        <script>
+          function forceDownload(url, title) {
+            const btn = document.getElementById('dlBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing Download...';
+
+            fetch(url)
+              .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.blob();
+              })
+              .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                // Force filename format
+                link.download = title.trim().replace(/\\s+/g, '_') + '.jpg';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Cleanup memory
+                window.URL.revokeObjectURL(blobUrl);
+                
+                btn.disabled = false;
+                btn.textContent = '⬇ Download Wallpaper';
+              })
+              .catch(err => {
+                console.error(err);
+                // Fallback to proxy route if frontend fetch encounters CORS limits
+                window.location.href = '/api/download-proxy?url=' + encodeURIComponent(url) + '&filename=' + encodeURIComponent(title.replace(/\\s+/g, '_'));
+                
+                setTimeout(() => {
+                  btn.disabled = false;
+                  btn.textContent = '⬇ Download Wallpaper';
+                }, 2000);
+              });
+          }
+        </script>
       </body>
       </html>
     `);
