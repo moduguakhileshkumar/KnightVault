@@ -65,7 +65,7 @@ Your site is running! Upload a wallpaper to test.
 3. Build command: `npm install`
 4. Start command: `node server.js`
 5. Add environment variables (MONGO_URI, PORT, BASE_URL)
-6. Deploy → you get a free URL like `https://knight-vault.onrender.com`
+6. Deploy → you get a free URL like `https://knightvault.onrender.com`
 7. Update BASE_URL in your env vars to that URL
 
 **Free tier note:** Render free tier sleeps after 15min of inactivity (first request wakes it up in ~30 seconds). Upgrade to $7/month for always-on.
