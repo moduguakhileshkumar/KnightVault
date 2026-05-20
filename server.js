@@ -120,7 +120,7 @@ app.post('/api/verify-admin', (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     let s = await Settings.findOne();
-    if (!s) s = await Settings.create({ adsensePublisherId: '' });
+    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '' });
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -130,6 +130,7 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     let s = await Settings.findOne();
     if (!s) s = new Settings();
     if (req.body.adsensePublisherId !== undefined) s.adsensePublisherId = req.body.adsensePublisherId;
+    if (req.body.googleAnalyticsId !== undefined) s.googleAnalyticsId = req.body.googleAnalyticsId;
     await s.save();
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -227,6 +228,9 @@ app.get('/w/:publicId', async (req, res) => {
     const adsenseScript = settings && settings.adsensePublisherId 
       ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsensePublisherId}" crossorigin="anonymous"></script>` 
       : '';
+    const gaScript = settings && settings.googleAnalyticsId
+      ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.googleAnalyticsId}');</script>`
+      : '';
 
     // Increment view counter
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
@@ -243,6 +247,7 @@ app.get('/w/:publicId', async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${w.title} — Knight Vault</title>
         ${adsenseScript}
+        ${gaScript}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
         
         <style>

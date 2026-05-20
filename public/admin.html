@@ -179,6 +179,10 @@ tr:hover td { background: var(--bg4); }
           If provided, this will automatically inject the AdSense script tag into your wallpaper pages so you can serve auto-ads.
         </div>
       </div>
+      <div class="field">
+        <label>Google Analytics ID (Measurement ID)</label>
+        <input type="text" id="setGa" placeholder="e.g. G-ABC123XYZ">
+      </div>
       <button class="btn" onclick="saveSettings()">Save Settings</button>
     </div>
   </div>
@@ -293,19 +297,21 @@ async function loadSettings() {
   try {
     const r = await fetch('/api/settings');
     const d = await r.json();
-    if(d && d.adsensePublisherId) {
-      document.getElementById('setAdsense').value = d.adsensePublisherId;
+    if(d) {
+      if(d.adsensePublisherId) document.getElementById('setAdsense').value = d.adsensePublisherId;
+      if(d.googleAnalyticsId) document.getElementById('setGa').value = d.googleAnalyticsId;
     }
   } catch(e) {}
 }
 
 async function saveSettings() {
   const pubId = document.getElementById('setAdsense').value.trim();
+  const gaId = document.getElementById('setGa').value.trim();
   try {
     await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
-      body: JSON.stringify({ adsensePublisherId: pubId })
+      body: JSON.stringify({ adsensePublisherId: pubId, googleAnalyticsId: gaId })
     });
     showToast('Settings saved!');
   } catch(e) {
