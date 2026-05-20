@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knight Vault — Admin Dashboard</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --gold:#C9A84C;--gold-l:#E8C96A;--gold-d:#8B6914;
-  --bg:#0A0A0F;--bg2:#111118;--bg3:#1A1A24;--bg4:#22222F;
-  --dim:#7A7A9A;--mid:#AAAAC0;--bright:#E8E8F0;
-  --radius:6px;
+  --gold:#F0D83A;--gold-l:#F5E364;--gold-d:#C4AD1D;
+  --bg:#050505;--bg2:#0B0B0E;--bg3:#121217;--bg4:#1A1A22;
+  --dim:#6B6B80;--mid:#9595B2;--bright:#E6E6F0;
+  --radius:4px;
 }
 body{background:var(--bg);color:var(--bright);font-family:'Inter',sans-serif;min-height:100vh;display:flex}
 a { text-decoration: none; color: inherit; }
@@ -90,8 +90,8 @@ tr:hover td { background: var(--bg4); }
 <!-- SIDEBAR -->
 <div class="sidebar">
   <a class="logo" href="/">
-    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-      <polygon points="16,1 19,11 30,11 21,17 24,28 16,22 8,28 11,17 2,11 13,11" fill="none" stroke="#C9A84C" stroke-width="1.5"/>
+    <svg width="24" height="24" viewBox="0 0 34 24" fill="var(--gold)">
+      <path d="M34,8.5 c-3.5,0 -7,4.5 -8.5,8.5 c0,-5 -2,-12 -6.5,-16.5 c-0.5,2.5 -1,4 -2,4 c-1,0 -1.5,-1.5 -2,-4 c-4.5,4.5 -6.5,11.5 -6.5,16.5 c-1.5,-4 -5,-8.5 -8.5,-8.5 c3.5,6 8.5,14.5 17,14.5 c8.5,0 13.5,-8.5 17,-14.5 Z" />
     </svg>
     <span class="logo-name">Vault Master</span>
   </a>
