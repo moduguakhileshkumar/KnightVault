@@ -312,6 +312,23 @@ app.get('/api/download-direct/:publicId', async (req, res) => {
 // ─── KEEP-ALIVE ───────────────────────────────────────────
 app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
+// ─── ADS.TXT (AdSense Verification) ─────────────────────
+app.get('/ads.txt', async (req, res) => {
+  try {
+    const s = await Settings.findOne();
+    if (s && s.adsensePublisherId) {
+      // Ensure the ID starts with 'pub-'
+      const pubId = s.adsensePublisherId.startsWith('pub-') ? s.adsensePublisherId : `pub-${s.adsensePublisherId}`;
+      res.type('text/plain');
+      res.send(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0`);
+    } else {
+      res.status(404).send('AdSense ID not configured');
+    }
+  } catch (err) {
+    res.status(500).send('Error');
+  }
+});
+
 // ─── CATCH-ALL → frontend ────────────────────────────────
 app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
