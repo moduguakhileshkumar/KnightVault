@@ -71,15 +71,16 @@ tr:hover td { background: var(--bg4); }
 .prog-bar { height: 100%; background: var(--gold); width: 0%; transition: .3s; }
 
 /* ── TAGS UI ── */
-.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); padding: 0.5rem; transition: .2s; }
+.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); padding: 0.5rem; transition: .2s; position: relative; cursor: text; }
 .tag-input-wrap:focus-within { border-color: var(--gold); }
 .tag-chip { background: var(--bg4); color: var(--bright); font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; display: flex; align-items: center; gap: 0.3rem; }
 .tag-chip button { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 0.7rem; }
 .tag-chip button:hover { color: #ff8080; }
 .tag-input-field { flex: 1; min-width: 60px; background: none !important; border: none !important; padding: 0 !important; color: var(--bright); outline: none; }
-.def-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-.def-tag { font-size: 0.65rem; color: var(--dim); background: rgba(255,255,255,.05); padding: 0.2rem 0.5rem; border-radius: 20px; cursor: pointer; transition: .2s; user-select: none; }
-.def-tag:hover { color: var(--gold); background: rgba(201,168,76,.1); }
+.autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg3); border: 1px solid rgba(201,168,76,.3); border-radius: var(--radius); max-height: 150px; overflow-y: auto; z-index: 10; display: none; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); list-style: none; padding: 0; }
+.autocomplete-item { padding: 0.6rem 1rem; cursor: pointer; color: var(--bright); font-size: 0.75rem; transition: 0.2s; }
+.autocomplete-item:hover, .autocomplete-item.active { background: rgba(201,168,76,.1); color: var(--gold); }
+.autocomplete-item.create { font-style: italic; color: var(--gold); }
 
 /* ── LOGIN MODAL ── */
 .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
@@ -161,17 +162,8 @@ tr:hover td { background: var(--bg4); }
         <div class="field">
           <label>Tags</label>
           <div class="tag-input-wrap" id="upTagWrap" onclick="document.getElementById('upTagInput').focus()">
-            <input type="text" class="tag-input-field" id="upTagInput" placeholder="Add tag..." onkeydown="handleTagInput(event, 'up')">
-          </div>
-          <div class="def-tags" id="upDefTags">
-            <span class="def-tag" onclick="addTag('dark', 'up')">dark</span>
-            <span class="def-tag" onclick="addTag('neon', 'up')">neon</span>
-            <span class="def-tag" onclick="addTag('abstract', 'up')">abstract</span>
-            <span class="def-tag" onclick="addTag('4k', 'up')">4k</span>
-            <span class="def-tag" onclick="addTag('amoled', 'up')">amoled</span>
-            <span class="def-tag" onclick="addTag('minimal', 'up')">minimal</span>
-            <span class="def-tag" onclick="addTag('nature', 'up')">nature</span>
-            <span class="def-tag" onclick="addTag('cars', 'up')">cars</span>
+            <input type="text" class="tag-input-field" id="upTagInput" placeholder="Add tag..." oninput="showAutocomplete(event, 'up')" onkeydown="handleTagKeydown(event, 'up')" autocomplete="off">
+            <ul class="autocomplete-list" id="upTagAuto"></ul>
           </div>
         </div>
       </div>
@@ -221,15 +213,8 @@ tr:hover td { background: var(--bg4); }
     <div class="field">
       <label style="text-align:left;color:var(--dim);font-size:.75rem;margin-bottom:.4rem;display:block;">Tags</label>
       <div class="tag-input-wrap" id="editTagWrap" onclick="document.getElementById('editTagInput').focus()">
-        <input type="text" class="tag-input-field" id="editTagInput" placeholder="Add tag..." onkeydown="handleTagInput(event, 'edit')">
-      </div>
-      <div class="def-tags" style="justify-content:center">
-        <span class="def-tag" onclick="addTag('dark', 'edit')">dark</span>
-        <span class="def-tag" onclick="addTag('neon', 'edit')">neon</span>
-        <span class="def-tag" onclick="addTag('abstract', 'edit')">abstract</span>
-        <span class="def-tag" onclick="addTag('4k', 'edit')">4k</span>
-        <span class="def-tag" onclick="addTag('amoled', 'edit')">amoled</span>
-        <span class="def-tag" onclick="addTag('minimal', 'edit')">minimal</span>
+        <input type="text" class="tag-input-field" id="editTagInput" placeholder="Add tag..." oninput="showAutocomplete(event, 'edit')" onkeydown="handleTagKeydown(event, 'edit')" autocomplete="off">
+        <ul class="autocomplete-list" id="editTagAuto"></ul>
       </div>
     </div>
     <div class="field" style="text-align:left;">
@@ -265,6 +250,15 @@ let adminPw = '';
 let editId = null;
 let upTagsArr = [];
 let editTagsArr = [];
+let allTagsList = [];
+let autoFocusIndex = -1;
+
+async function loadAllTags() {
+  try {
+    const r = await fetch('/api/tags');
+    allTagsList = await r.json();
+  } catch(e) {}
+}
 
 function renderTags(prefix) {
   const wrap = document.getElementById(prefix + 'TagWrap');
@@ -287,8 +281,10 @@ function addTag(tag, prefix) {
   const arr = prefix === 'up' ? upTagsArr : editTagsArr;
   if(!arr.includes(tag)) {
     arr.push(tag);
+    if(!allTagsList.includes(tag)) allTagsList.push(tag);
     renderTags(prefix);
   }
+  closeAutocomplete(prefix);
 }
 
 function removeTag(tag, prefix) {
@@ -297,20 +293,98 @@ function removeTag(tag, prefix) {
   renderTags(prefix);
 }
 
-function handleTagInput(e, prefix) {
-  if(e.key === 'Enter' || e.key === ',') {
+function showAutocomplete(e, prefix) {
+  const input = e.target;
+  const list = document.getElementById(prefix + 'TagAuto');
+  const val = input.value.trim().toLowerCase();
+  
+  autoFocusIndex = -1;
+  list.innerHTML = '';
+  
+  if(!val) {
+    list.style.display = 'none';
+    return;
+  }
+  
+  const arr = prefix === 'up' ? upTagsArr : editTagsArr;
+  const matches = allTagsList.filter(t => t.includes(val) && !arr.includes(t)).slice(0, 8);
+  
+  let hasExact = false;
+  
+  matches.forEach((m) => {
+    if(m === val) hasExact = true;
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item';
+    li.textContent = m;
+    li.onmousedown = (ev) => { ev.preventDefault(); addTag(m, prefix); };
+    list.appendChild(li);
+  });
+  
+  if(!hasExact && !arr.includes(val)) {
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item create';
+    li.textContent = `Create "${val}"`;
+    li.onmousedown = (ev) => { ev.preventDefault(); addTag(val, prefix); };
+    list.appendChild(li);
+  }
+  
+  list.style.display = 'block';
+}
+
+function handleTagKeydown(e, prefix) {
+  const input = e.target;
+  const list = document.getElementById(prefix + 'TagAuto');
+  const items = list.querySelectorAll('.autocomplete-item');
+  
+  if (e.key === 'ArrowDown') {
     e.preventDefault();
-    const input = document.getElementById(prefix + 'TagInput');
-    addTag(input.value, prefix);
-    input.value = '';
-  } else if (e.key === 'Backspace' && document.getElementById(prefix + 'TagInput').value === '') {
+    if(items.length > 0) {
+      autoFocusIndex = (autoFocusIndex + 1) % items.length;
+      updateAutoActive(items);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if(items.length > 0) {
+      autoFocusIndex = (autoFocusIndex - 1 + items.length) % items.length;
+      updateAutoActive(items);
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (autoFocusIndex >= 0 && autoFocusIndex < items.length) {
+      items[autoFocusIndex].onmousedown(e);
+    } else if (input.value.trim()) {
+      addTag(input.value, prefix);
+    }
+  } else if (e.key === 'Backspace' && input.value === '') {
     const arr = prefix === 'up' ? upTagsArr : editTagsArr;
     if(arr.length > 0) {
       arr.pop();
       renderTags(prefix);
+      closeAutocomplete(prefix);
     }
+  } else if (e.key === 'Escape') {
+    closeAutocomplete(prefix);
   }
 }
+
+function updateAutoActive(items) {
+  items.forEach((item, i) => {
+    if(i === autoFocusIndex) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+}
+
+function closeAutocomplete(prefix) {
+  const list = document.getElementById(prefix + 'TagAuto');
+  if (list) list.style.display = 'none';
+  const input = document.getElementById(prefix + 'TagInput');
+  if (input) input.value = '';
+}
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('#upTagWrap')) closeAutocomplete('up');
+  if(!e.target.closest('#editTagWrap')) closeAutocomplete('edit');
+});
 
 async function checkAuth() {
   const r = await fetch('/api/check-admin');
@@ -318,6 +392,7 @@ async function checkAuth() {
   if (!d.passwordRequired) {
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
+    loadAllTags();
   }
 }
 
@@ -331,6 +406,7 @@ async function login() {
     adminPw = pw;
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
+    loadAllTags();
   } else {
     document.getElementById('loginErr').textContent = 'Incorrect Password';
   }

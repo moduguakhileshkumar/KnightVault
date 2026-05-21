@@ -78,6 +78,13 @@ app.get('/api/categories', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/tags', async (req, res) => {
+  try {
+    const tags = await Wallpaper.distinct('tags');
+    res.json(tags.filter(Boolean).sort());
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.get('/api/wallpapers/:id', async (req, res) => {
   try {
     const w = await Wallpaper.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });

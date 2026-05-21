@@ -188,15 +188,16 @@ body::before{content:'';position:fixed;inset:0;
 .prog-text{font-size:.72rem;color:var(--dim);text-align:center}
 
 /* ── TAGS UI ── */
-.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; background: var(--bg2); border: 1px solid rgba(255,255,255,.09); border-radius: var(--radius); padding: 0.5rem; transition: border-color .2s; cursor: text; }
+.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; background: var(--bg2); border: 1px solid rgba(255,255,255,.09); border-radius: var(--radius); padding: 0.5rem; transition: border-color .2s; position: relative; cursor: text; }
 .tag-input-wrap:focus-within { border-color: rgba(201,168,76,.4); }
 .tag-chip { background: var(--bg4); color: var(--bright); font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; display: flex; align-items: center; gap: 0.3rem; }
 .tag-chip button { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 0.75rem; }
 .tag-chip button:hover { color: #ff8080; }
 .tag-input-field { flex: 1; min-width: 60px; background: none !important; border: none !important; padding: 0 !important; color: var(--bright); outline: none; }
-.def-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-.def-tag { font-size: 0.7rem; color: var(--dim); background: rgba(255,255,255,.05); padding: 0.2rem 0.5rem; border-radius: 20px; cursor: pointer; transition: .2s; user-select: none; }
-.def-tag:hover { color: var(--gold); background: rgba(201,168,76,.1); }
+.autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg3); border: 1px solid rgba(201,168,76,.3); border-radius: var(--radius); max-height: 150px; overflow-y: auto; z-index: 10; display: none; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); list-style: none; padding: 0; }
+.autocomplete-item { padding: 0.6rem 1rem; cursor: pointer; color: var(--bright); font-size: 0.75rem; transition: 0.2s; }
+.autocomplete-item:hover, .autocomplete-item.active { background: rgba(201,168,76,.1); color: var(--gold); }
+.autocomplete-item.create { font-style: italic; color: var(--gold); }
 
 /* ── LIGHTBOX ── */
 .lb-bg{display:none;position:fixed;inset:0;z-index:500;
@@ -372,17 +373,8 @@ body::before{content:'';position:fixed;inset:0;
       <div class="field">
         <label>Tags</label>
         <div class="tag-input-wrap" id="upTagWrap" onclick="document.getElementById('upTagInput').focus()">
-          <input type="text" class="tag-input-field" id="upTagInput" placeholder="Add tag..." onkeydown="handleTagInput(event)">
-        </div>
-        <div class="def-tags" id="upDefTags">
-          <span class="def-tag" onclick="addTag('dark')">dark</span>
-          <span class="def-tag" onclick="addTag('neon')">neon</span>
-          <span class="def-tag" onclick="addTag('abstract')">abstract</span>
-          <span class="def-tag" onclick="addTag('4k')">4k</span>
-          <span class="def-tag" onclick="addTag('amoled')">amoled</span>
-          <span class="def-tag" onclick="addTag('minimal')">minimal</span>
-          <span class="def-tag" onclick="addTag('nature')">nature</span>
-          <span class="def-tag" onclick="addTag('cars')">cars</span>
+          <input type="text" class="tag-input-field" id="upTagInput" placeholder="Add tag..." oninput="showAutocomplete(event)" onkeydown="handleTagKeydown(event)" autocomplete="off">
+          <ul class="autocomplete-list" id="upTagAuto"></ul>
         </div>
       </div>
     </div>
@@ -440,6 +432,15 @@ let isAdmin     = false;
 let adminPw     = '';
 let adsenseId   = '';
 let upTagsArr   = [];
+let allTagsList = [];
+let autoFocusIndex = -1;
+
+async function loadAllTags() {
+  try {
+    const r = await fetch(`${API}/api/tags`);
+    allTagsList = await r.json();
+  } catch(e) {}
+}
 
 function renderTags() {
   const wrap = document.getElementById('upTagWrap');
@@ -458,8 +459,10 @@ function addTag(tag) {
   if(!tag) return;
   if(!upTagsArr.includes(tag)) {
     upTagsArr.push(tag);
+    if(!allTagsList.includes(tag)) allTagsList.push(tag);
     renderTags();
   }
+  closeAutocomplete();
 }
 
 function removeTag(tag) {
@@ -467,19 +470,95 @@ function removeTag(tag) {
   renderTags();
 }
 
-function handleTagInput(e) {
-  if(e.key === 'Enter' || e.key === ',') {
+function showAutocomplete(e) {
+  const input = e.target;
+  const list = document.getElementById('upTagAuto');
+  const val = input.value.trim().toLowerCase();
+  
+  autoFocusIndex = -1;
+  list.innerHTML = '';
+  
+  if(!val) {
+    list.style.display = 'none';
+    return;
+  }
+  
+  const matches = allTagsList.filter(t => t.includes(val) && !upTagsArr.includes(t)).slice(0, 8);
+  
+  let hasExact = false;
+  
+  matches.forEach((m) => {
+    if(m === val) hasExact = true;
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item';
+    li.textContent = m;
+    li.onmousedown = (ev) => { ev.preventDefault(); addTag(m); };
+    list.appendChild(li);
+  });
+  
+  if(!hasExact && !upTagsArr.includes(val)) {
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item create';
+    li.textContent = `Create "${val}"`;
+    li.onmousedown = (ev) => { ev.preventDefault(); addTag(val); };
+    list.appendChild(li);
+  }
+  
+  list.style.display = 'block';
+}
+
+function handleTagKeydown(e) {
+  const input = e.target;
+  const list = document.getElementById('upTagAuto');
+  const items = list.querySelectorAll('.autocomplete-item');
+  
+  if (e.key === 'ArrowDown') {
     e.preventDefault();
-    const input = document.getElementById('upTagInput');
-    addTag(input.value);
-    input.value = '';
-  } else if (e.key === 'Backspace' && document.getElementById('upTagInput').value === '') {
+    if(items.length > 0) {
+      autoFocusIndex = (autoFocusIndex + 1) % items.length;
+      updateAutoActive(items);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if(items.length > 0) {
+      autoFocusIndex = (autoFocusIndex - 1 + items.length) % items.length;
+      updateAutoActive(items);
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (autoFocusIndex >= 0 && autoFocusIndex < items.length) {
+      items[autoFocusIndex].onmousedown(e);
+    } else if (input.value.trim()) {
+      addTag(input.value);
+    }
+  } else if (e.key === 'Backspace' && input.value === '') {
     if(upTagsArr.length > 0) {
       upTagsArr.pop();
       renderTags();
+      closeAutocomplete();
     }
+  } else if (e.key === 'Escape') {
+    closeAutocomplete();
   }
 }
+
+function updateAutoActive(items) {
+  items.forEach((item, i) => {
+    if(i === autoFocusIndex) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+}
+
+function closeAutocomplete() {
+  const list = document.getElementById('upTagAuto');
+  if (list) list.style.display = 'none';
+  const input = document.getElementById('upTagInput');
+  if (input) input.value = '';
+}
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('#upTagWrap')) closeAutocomplete();
+});
 
 /* ══════ INIT ══════ */
 async function init() {
@@ -518,7 +597,7 @@ async function init() {
     }
   } catch(e) {}
 
-  await Promise.all([loadStats(), loadCategories()]);
+  await Promise.all([loadStats(), loadCategories(), loadAllTags()]);
   await loadWallpapers(1);
 }
 
