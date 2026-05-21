@@ -187,6 +187,17 @@ body::before{content:'';position:fixed;inset:0;
 .prog-bar{height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:20px}
 .prog-text{font-size:.72rem;color:var(--dim);text-align:center}
 
+/* ── TAGS UI ── */
+.tag-input-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; background: var(--bg2); border: 1px solid rgba(255,255,255,.09); border-radius: var(--radius); padding: 0.5rem; transition: border-color .2s; cursor: text; }
+.tag-input-wrap:focus-within { border-color: rgba(201,168,76,.4); }
+.tag-chip { background: var(--bg4); color: var(--bright); font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; display: flex; align-items: center; gap: 0.3rem; }
+.tag-chip button { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 0.75rem; }
+.tag-chip button:hover { color: #ff8080; }
+.tag-input-field { flex: 1; min-width: 60px; background: none !important; border: none !important; padding: 0 !important; color: var(--bright); outline: none; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.def-tag { font-size: 0.7rem; color: var(--dim); background: rgba(255,255,255,.05); padding: 0.2rem 0.5rem; border-radius: 20px; cursor: pointer; transition: .2s; user-select: none; }
+.def-tag:hover { color: var(--gold); background: rgba(201,168,76,.1); }
+
 /* ── LIGHTBOX ── */
 .lb-bg{display:none;position:fixed;inset:0;z-index:500;
   background:rgba(0,0,0,.92);align-items:center;justify-content:center;backdrop-filter:blur(8px)}
@@ -234,8 +245,11 @@ body::before{content:'';position:fixed;inset:0;
   .main{padding:.8rem 1rem 2rem}
   .cat-bar,.toolbar,.admin-bar,.stats-bar{padding:.6rem 1rem}
   .wall-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  .lb-inner{flex-direction:column}
-  .lb-info{width:100%}
+  .lb-inner{flex-direction:column; overflow-y:auto; max-height:100vh; width:100%; padding:2.5rem 1rem 1rem; border-radius:0; gap:1rem; clip-path:none;}
+  .lb-img-wrap{max-height:50vh; width:100%; overflow:hidden;}
+  .lb-img-wrap img{max-height:50vh; width:100%; object-fit:contain;}
+  .lb-info{width:100%; flex-shrink:0;}
+  .lb-close{top:10px; right:10px; position:fixed; z-index:510; font-size:2rem; background:rgba(0,0,0,0.5); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;}
   .field-row{grid-template-columns:1fr}
 }
 </style>
@@ -356,8 +370,20 @@ body::before{content:'';position:fixed;inset:0;
         <datalist id="catSuggestions"></datalist>
       </div>
       <div class="field">
-        <label>Tags (comma separated)</label>
-        <input type="text" id="upTags" placeholder="4k, amoled, minimal">
+        <label>Tags</label>
+        <div class="tag-input-wrap" id="upTagWrap" onclick="document.getElementById('upTagInput').focus()">
+          <input type="text" class="tag-input-field" id="upTagInput" placeholder="Add tag..." onkeydown="handleTagInput(event)">
+        </div>
+        <div class="def-tags" id="upDefTags">
+          <span class="def-tag" onclick="addTag('dark')">dark</span>
+          <span class="def-tag" onclick="addTag('neon')">neon</span>
+          <span class="def-tag" onclick="addTag('abstract')">abstract</span>
+          <span class="def-tag" onclick="addTag('4k')">4k</span>
+          <span class="def-tag" onclick="addTag('amoled')">amoled</span>
+          <span class="def-tag" onclick="addTag('minimal')">minimal</span>
+          <span class="def-tag" onclick="addTag('nature')">nature</span>
+          <span class="def-tag" onclick="addTag('cars')">cars</span>
+        </div>
       </div>
     </div>
     <button class="btn-upload" id="uploadSubmitBtn" onclick="uploadWallpaper()">⚔ Upload to Vault</button>
@@ -413,6 +439,47 @@ let currentWall = null;
 let isAdmin     = false;
 let adminPw     = '';
 let adsenseId   = '';
+let upTagsArr   = [];
+
+function renderTags() {
+  const wrap = document.getElementById('upTagWrap');
+  const input = document.getElementById('upTagInput');
+  wrap.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  upTagsArr.forEach(tag => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${esc(tag)} <button type="button" onclick="removeTag('${esc(tag)}'); event.stopPropagation();">✕</button>`;
+    wrap.insertBefore(chip, input);
+  });
+}
+
+function addTag(tag) {
+  tag = tag.trim().toLowerCase();
+  if(!tag) return;
+  if(!upTagsArr.includes(tag)) {
+    upTagsArr.push(tag);
+    renderTags();
+  }
+}
+
+function removeTag(tag) {
+  upTagsArr = upTagsArr.filter(t => t !== tag);
+  renderTags();
+}
+
+function handleTagInput(e) {
+  if(e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const input = document.getElementById('upTagInput');
+    addTag(input.value);
+    input.value = '';
+  } else if (e.key === 'Backspace' && document.getElementById('upTagInput').value === '') {
+    if(upTagsArr.length > 0) {
+      upTagsArr.pop();
+      renderTags();
+    }
+  }
+}
 
 /* ══════ INIT ══════ */
 async function init() {
@@ -724,7 +791,9 @@ function closeUpload() {
   document.getElementById('previewImg').src         = '';
   document.getElementById('upTitle').value          = '';
   document.getElementById('upCat').value            = '';
-  document.getElementById('upTags').value           = '';
+  upTagsArr = [];
+  renderTags();
+  document.getElementById('upTagInput').value       = '';
   document.getElementById('uploadProg').style.display = 'none';
   document.getElementById('progBar').style.width    = '0%';
   document.getElementById('uploadSubmitBtn').disabled = false;
@@ -760,7 +829,7 @@ async function uploadWallpaper() {
   const file     = document.getElementById('fileInput').files[0];
   const title    = document.getElementById('upTitle').value.trim();
   const category = document.getElementById('upCat').value.trim();
-  const tags     = document.getElementById('upTags').value.trim();
+  const tags     = upTagsArr.join(',');
 
   if (!file)     return showToast('Please select an image');
   if (!title)    return showToast('Please enter a title');
