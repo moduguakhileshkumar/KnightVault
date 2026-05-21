@@ -74,14 +74,28 @@ app.get('/api/categories', async (req, res) => {
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
-    res.json(cats.map(c => ({ name: c._id, count: c.count })));
+    const s = await Settings.findOne();
+    const result = cats.map(c => ({ name: c._id, count: c.count }));
+    if (s && s.predefinedCategories) {
+      s.predefinedCategories.forEach(pc => {
+        if (!result.find(r => r.name === pc)) {
+          result.push({ name: pc, count: 0 });
+        }
+      });
+    }
+    res.json(result);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/tags', async (req, res) => {
   try {
     const tags = await Wallpaper.distinct('tags');
-    res.json(tags.filter(Boolean).sort());
+    const s = await Settings.findOne();
+    let allTags = tags.filter(Boolean);
+    if (s && s.predefinedTags) {
+      allTags = allTags.concat(s.predefinedTags);
+    }
+    res.json([...new Set(allTags)].sort());
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -127,7 +141,7 @@ app.post('/api/verify-admin', (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     let s = await Settings.findOne();
-    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '' });
+    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '', predefinedTags: [], predefinedCategories: [] });
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -138,6 +152,8 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     if (!s) s = new Settings();
     if (req.body.adsensePublisherId !== undefined) s.adsensePublisherId = req.body.adsensePublisherId;
     if (req.body.googleAnalyticsId !== undefined) s.googleAnalyticsId = req.body.googleAnalyticsId;
+    if (req.body.predefinedTags !== undefined) s.predefinedTags = req.body.predefinedTags;
+    if (req.body.predefinedCategories !== undefined) s.predefinedCategories = req.body.predefinedCategories;
     await s.save();
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }

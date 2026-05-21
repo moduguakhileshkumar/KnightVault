@@ -200,6 +200,25 @@ tr:hover td { background: var(--bg4); }
         <input type="text" id="setGa" placeholder="e.g. G-ABC123XYZ">
       </div>
       <button class="btn" onclick="saveSettings()">Save Settings</button>
+
+      <hr style="border-color:rgba(255,255,255,0.1); margin: 2rem 0;">
+      <h3 style="color:var(--gold); font-size:1rem; margin-bottom:1rem; font-weight:normal;">Taxonomy Management</h3>
+      
+      <div class="field">
+        <label>Add Predefined Category</label>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="newPredefinedCat" placeholder="e.g. sci-fi">
+          <button class="btn" onclick="addPredefinedCategory()" style="padding:0.5rem 1rem;">Add</button>
+        </div>
+      </div>
+      
+      <div class="field" style="margin-bottom:0;">
+        <label>Add Predefined Tag</label>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="newPredefinedTag" placeholder="e.g. cyberpunk">
+          <button class="btn" onclick="addPredefinedTag()" style="padding:0.5rem 1rem;">Add</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -552,6 +571,9 @@ async function loadWallpapers() {
   }
 }
 
+let predefinedTags = [];
+let predefinedCategories = [];
+
 async function loadSettings() {
   try {
     const r = await fetch('/api/settings');
@@ -559,22 +581,49 @@ async function loadSettings() {
     if(d) {
       if(d.adsensePublisherId) document.getElementById('setAdsense').value = d.adsensePublisherId;
       if(d.googleAnalyticsId) document.getElementById('setGa').value = d.googleAnalyticsId;
+      predefinedTags = d.predefinedTags || [];
+      predefinedCategories = d.predefinedCategories || [];
     }
   } catch(e) {}
 }
 
-async function saveSettings() {
+async function addPredefinedCategory() {
+  const cat = document.getElementById('newPredefinedCat').value.trim().toLowerCase();
+  if (!cat || predefinedCategories.includes(cat)) return;
+  predefinedCategories.push(cat);
+  await saveSettings(false);
+  document.getElementById('newPredefinedCat').value = '';
+  await loadCategories();
+  showToast(`Category "${cat}" added globally!`);
+}
+
+async function addPredefinedTag() {
+  const tag = document.getElementById('newPredefinedTag').value.trim().toLowerCase();
+  if (!tag || predefinedTags.includes(tag)) return;
+  predefinedTags.push(tag);
+  await saveSettings(false);
+  document.getElementById('newPredefinedTag').value = '';
+  await loadAllTags();
+  showToast(`Tag "${tag}" added globally!`);
+}
+
+async function saveSettings(showAlert = true) {
   const pubId = document.getElementById('setAdsense').value.trim();
   const gaId = document.getElementById('setGa').value.trim();
   try {
     await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
-      body: JSON.stringify({ adsensePublisherId: pubId, googleAnalyticsId: gaId })
+      body: JSON.stringify({ 
+        adsensePublisherId: pubId, 
+        googleAnalyticsId: gaId,
+        predefinedTags,
+        predefinedCategories
+      })
     });
-    showToast('Settings saved!');
+    if (showAlert) showToast('Settings saved!');
   } catch(e) {
-    showToast('Failed to save settings');
+    if (showAlert) showToast('Failed to save settings');
   }
 }
 
