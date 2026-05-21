@@ -6,7 +6,7 @@ const wallpaperSchema = new mongoose.Schema({
   originalName:{ type: String },                         // original upload name
   url:         { type: String, required: true },         // public access URL
   directLink:  { type: String, required: true },         // direct image link (shareable)
-  category:    { type: String, required: true, lowercase: true, trim: true },
+  category:    [{ type: String, lowercase: true, trim: true }],
   tags:        [{ type: String, lowercase: true, trim: true }],
   resolution:  { type: String },                         // e.g. "3840x2160"
   size:        { type: Number },                         // bytes

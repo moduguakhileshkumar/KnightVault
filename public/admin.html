@@ -155,10 +155,12 @@ tr:hover td { background: var(--bg4); }
         <input type="text" id="upTitle" placeholder="e.g. Dark Knight">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="field" id="upCatWrap" style="position:relative;">
+        <div class="field">
           <label>Category</label>
-          <input type="text" id="upCat" placeholder="e.g. dark" oninput="showCatAutocomplete(event, 'up')" onfocus="showCatAutocomplete(event, 'up')" onkeydown="handleCatKeydown(event, 'up')" autocomplete="off">
-          <ul class="autocomplete-list" id="upCatAuto"></ul>
+          <div class="tag-input-wrap" id="upCatWrap" onclick="document.getElementById('upCat').focus()">
+            <input type="text" class="tag-input-field" id="upCat" placeholder="Add category..." oninput="showCatAutocomplete(event, 'up')" onkeydown="handleCatKeydown(event, 'up')" autocomplete="off">
+            <ul class="autocomplete-list" id="upCatAuto"></ul>
+          </div>
         </div>
         <div class="field">
           <label>Tags</label>
@@ -229,9 +231,12 @@ tr:hover td { background: var(--bg4); }
   <div class="modal">
     <h2>Edit Wallpaper</h2>
     <div class="field"><input type="text" id="editTitle" placeholder="Title"></div>
-    <div class="field" id="editCatWrap" style="position:relative;">
-      <input type="text" id="editCat" placeholder="Category" oninput="showCatAutocomplete(event, 'edit')" onfocus="showCatAutocomplete(event, 'edit')" onkeydown="handleCatKeydown(event, 'edit')" autocomplete="off">
-      <ul class="autocomplete-list" id="editCatAuto"></ul>
+    <div class="field">
+      <label style="text-align:left;color:var(--dim);font-size:.75rem;margin-bottom:.4rem;display:block;">Category</label>
+      <div class="tag-input-wrap" id="editCatWrap" onclick="document.getElementById('editCat').focus()">
+        <input type="text" class="tag-input-field" id="editCat" placeholder="Add category..." oninput="showCatAutocomplete(event, 'edit')" onkeydown="handleCatKeydown(event, 'edit')" autocomplete="off">
+        <ul class="autocomplete-list" id="editCatAuto"></ul>
+      </div>
     </div>
     <div class="field">
       <label style="text-align:left;color:var(--dim);font-size:.75rem;margin-bottom:.4rem;display:block;">Tags</label>
@@ -273,6 +278,8 @@ let adminPw = '';
 let editId = null;
 let upTagsArr = [];
 let editTagsArr = [];
+let upCatsArr = [];
+let editCatsArr = [];
 let allTagsList = [];
 let allCatsList = [];
 let autoFocusIndex = -1;
@@ -291,6 +298,37 @@ async function loadCategories() {
     const cats = await r.json();
     allCatsList = cats.map(c => c.name);
   } catch(e) {}
+}
+
+function renderCats(prefix) {
+  const wrap = document.getElementById(prefix + 'CatWrap');
+  const input = document.getElementById(prefix + 'Cat');
+  wrap.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  const arr = prefix === 'up' ? upCatsArr : editCatsArr;
+  arr.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${esc(cat)} <button type="button" onclick="removeCategory('${esc(cat)}', '${prefix}'); event.stopPropagation();">✕</button>`;
+    wrap.insertBefore(chip, input);
+  });
+}
+
+function addCategory(cat, prefix) {
+  cat = cat.trim().toLowerCase();
+  if(!cat) return;
+  const arr = prefix === 'up' ? upCatsArr : editCatsArr;
+  if(!arr.includes(cat)) {
+    arr.push(cat);
+    if(!allCatsList.includes(cat)) allCatsList.push(cat);
+    renderCats(prefix);
+  }
+  closeCatAutocomplete(prefix);
+}
+
+function removeCategory(cat, prefix) {
+  if(prefix === 'up') upCatsArr = upCatsArr.filter(c => c !== cat);
+  else editCatsArr = editCatsArr.filter(c => c !== cat);
+  renderCats(prefix);
 }
 
 function renderTags(prefix) {
@@ -430,7 +468,7 @@ function showCatAutocomplete(e, prefix) {
     const li = document.createElement('li');
     li.className = 'autocomplete-item';
     li.textContent = m;
-    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(m, prefix); };
+    li.onmousedown = (ev) => { ev.preventDefault(); addCategory(m, prefix); };
     list.appendChild(li);
   });
   
@@ -438,7 +476,7 @@ function showCatAutocomplete(e, prefix) {
     const li = document.createElement('li');
     li.className = 'autocomplete-item create';
     li.textContent = `Create "${val}"`;
-    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(val, prefix); };
+    li.onmousedown = (ev) => { ev.preventDefault(); addCategory(val, prefix); };
     list.appendChild(li);
   }
   
@@ -470,7 +508,14 @@ function handleCatKeydown(e, prefix) {
     e.preventDefault();
     if (catAutoFocusIndex >= 0 && catAutoFocusIndex < items.length) {
       items[catAutoFocusIndex].onmousedown(e);
-    } else {
+    } else if (input.value.trim()) {
+      addCategory(input.value, prefix);
+    }
+  } else if (e.key === 'Backspace' && input.value === '') {
+    const arr = prefix === 'up' ? upCatsArr : editCatsArr;
+    if(arr.length > 0) {
+      arr.pop();
+      renderCats(prefix);
       closeCatAutocomplete(prefix);
     }
   } else if (e.key === 'Escape') {
@@ -488,11 +533,8 @@ function updateCatAutoActive(items) {
 function closeCatAutocomplete(prefix) {
   const list = document.getElementById(prefix + 'CatAuto');
   if (list) list.style.display = 'none';
-}
-
-function pickCat(cat, prefix) {
-  document.getElementById(prefix + 'Cat').value = cat;
-  closeCatAutocomplete(prefix);
+  const input = document.getElementById(prefix + 'Cat');
+  if (input) input.value = '';
 }
 
 document.addEventListener('click', e => {
@@ -555,7 +597,7 @@ async function loadWallpapers() {
       <tr>
         <td><img src="${w.directLink}" class="thumb"></td>
         <td>${esc(w.title)}</td>
-        <td>${esc(w.category)}</td>
+        <td>${Array.isArray(w.category) ? esc(w.category.join(', ')) : esc(w.category)}</td>
         <td>
           <span class="badge ${w.isPaid ? 'paid' : 'free'}">${w.isPaid ? 'Premium $'+w.price : 'Free'}</span>
         </td>
@@ -636,7 +678,9 @@ function deleteWall(id) {
 function openEdit(w) {
   editId = w._id;
   document.getElementById('editTitle').value = w.title;
-  document.getElementById('editCat').value = w.category;
+  editCatsArr = Array.isArray(w.category) ? [...w.category] : [w.category].filter(Boolean);
+  renderCats('edit');
+  document.getElementById('editCat').value = '';
   editTagsArr = [...(w.tags || [])];
   renderTags('edit');
   document.getElementById('editTagInput').value = '';
@@ -647,9 +691,9 @@ function openEdit(w) {
 }
 
 async function submitEdit() {
-  const title = document.getElementById('editTitle').value;
-  const category = document.getElementById('editCat').value;
-  const tags = document.getElementById('editTags').value;
+  const title = document.getElementById('editTitle').value.trim();
+  const category = editCatsArr.join(',');
+  const tags = editTagsArr.join(',');
   const isPaid = document.getElementById('editIsPaid').checked;
   const price = document.getElementById('editPrice').value;
   
@@ -713,7 +757,8 @@ function submitUpload() {
       document.getElementById('upFile').value = '';
       document.getElementById('upPreview').style.display = 'none';
       document.getElementById('upTitle').value = '';
-      document.getElementById('upCat').value = '';
+      upCatsArr = [];
+      renderCats('up');
       upTagsArr = [];
       renderTags('up');
       document.getElementById('upTagInput').value = '';

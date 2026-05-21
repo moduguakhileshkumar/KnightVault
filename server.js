@@ -71,6 +71,8 @@ app.get('/api/wallpapers', async (req, res) => {
 app.get('/api/categories', async (req, res) => {
   try {
     const cats = await Wallpaper.aggregate([
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+      { $match: { category: { $ne: null, $ne: '' } } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
@@ -200,8 +202,8 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
       originalName: req.file.originalname,
       url:          pageUrl,
       directLink:   directLink,
-      category:     category.toLowerCase().trim(),
-      tags:         tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      category:     category ? category.split(',').map(c => c.trim().toLowerCase()).filter(Boolean) : [],
+      tags:         tags ? tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [],
       size:         req.file.size || 0,
       mimeType:     req.file.mimetype,
       isPaid:       isPaid === 'true' || isPaid === true,
@@ -287,7 +289,7 @@ app.get('/w/:publicId', async (req, res) => {
         <div class="container">
           <img src="${w.directLink}" alt="${w.title}">
           <h1>${w.title}</h1>
-          <p>Category: ${w.category}</p>
+          <p>Category: ${Array.isArray(w.category) ? w.category.join(', ') : w.category}</p>
           
           <a href="${downloadLink}" class="btn">Explicit Download</a>
         </div>

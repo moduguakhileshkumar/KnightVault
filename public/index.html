@@ -365,10 +365,12 @@ body::before{content:'';position:fixed;inset:0;
       <input type="text" id="upTitle" placeholder="e.g. Dark Knight Cityscape">
     </div>
     <div class="field-row">
-      <div class="field" id="upCatWrap" style="position:relative;">
+      <div class="field">
         <label>Category *</label>
-        <input type="text" id="upCat" placeholder="e.g. dark, nature, abstract" oninput="showCatAutocomplete(event)" onfocus="showCatAutocomplete(event)" onkeydown="handleCatKeydown(event)" autocomplete="off">
-        <ul class="autocomplete-list" id="upCatAuto"></ul>
+        <div class="tag-input-wrap" id="upCatWrap" onclick="document.getElementById('upCat').focus()">
+          <input type="text" class="tag-input-field" id="upCat" placeholder="Add category..." oninput="showCatAutocomplete(event)" onkeydown="handleCatKeydown(event)" autocomplete="off">
+          <ul class="autocomplete-list" id="upCatAuto"></ul>
+        </div>
       </div>
       <div class="field">
         <label>Tags</label>
@@ -432,6 +434,7 @@ let isAdmin     = false;
 let adminPw     = '';
 let adsenseId   = '';
 let upTagsArr   = [];
+let upCatsArr   = [];
 let allTagsList = [];
 let allCatsList = [];
 let autoFocusIndex = -1;
@@ -442,6 +445,34 @@ async function loadAllTags() {
     const r = await fetch(`${API}/api/tags`);
     allTagsList = await r.json();
   } catch(e) {}
+}
+
+function renderCats() {
+  const wrap = document.getElementById('upCatWrap');
+  const input = document.getElementById('upCat');
+  wrap.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  upCatsArr.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${esc(cat)} <button type="button" onclick="removeCategory('${esc(cat)}'); event.stopPropagation();">✕</button>`;
+    wrap.insertBefore(chip, input);
+  });
+}
+
+function addCategory(cat) {
+  cat = cat.trim().toLowerCase();
+  if(!cat) return;
+  if(!upCatsArr.includes(cat)) {
+    upCatsArr.push(cat);
+    if(!allCatsList.includes(cat)) allCatsList.push(cat);
+    renderCats();
+  }
+  closeCatAutocomplete();
+}
+
+function removeCategory(cat) {
+  upCatsArr = upCatsArr.filter(c => c !== cat);
+  renderCats();
 }
 
 function renderTags() {
@@ -574,7 +605,7 @@ function showCatAutocomplete(e) {
     const li = document.createElement('li');
     li.className = 'autocomplete-item';
     li.textContent = m;
-    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(m); };
+    li.onmousedown = (ev) => { ev.preventDefault(); addCategory(m); };
     list.appendChild(li);
   });
   
@@ -582,7 +613,7 @@ function showCatAutocomplete(e) {
     const li = document.createElement('li');
     li.className = 'autocomplete-item create';
     li.textContent = `Create "${val}"`;
-    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(val); };
+    li.onmousedown = (ev) => { ev.preventDefault(); addCategory(val); };
     list.appendChild(li);
   }
   
@@ -614,7 +645,13 @@ function handleCatKeydown(e) {
     e.preventDefault();
     if (catAutoFocusIndex >= 0 && catAutoFocusIndex < items.length) {
       items[catAutoFocusIndex].onmousedown(e);
-    } else {
+    } else if (input.value.trim()) {
+      addCategory(input.value);
+    }
+  } else if (e.key === 'Backspace' && input.value === '') {
+    if(upCatsArr.length > 0) {
+      upCatsArr.pop();
+      renderCats();
       closeCatAutocomplete();
     }
   } else if (e.key === 'Escape') {
@@ -632,11 +669,8 @@ function updateCatAutoActive(items) {
 function closeCatAutocomplete() {
   const list = document.getElementById('upCatAuto');
   if (list) list.style.display = 'none';
-}
-
-function pickCat(cat) {
-  document.getElementById('upCat').value = cat;
-  closeCatAutocomplete();
+  const input = document.getElementById('upCat');
+  if (input) input.value = '';
 }
 
 document.addEventListener('click', e => {
@@ -767,7 +801,7 @@ function renderGrid(walls) {
         onload="this.classList.remove('loading')">
       <div class="card-overlay">
         <div class="card-title">${esc(w.title)}</div>
-        <div class="card-cat">${esc(w.category)}</div>
+        <div class="card-cat">${Array.isArray(w.category) ? w.category.map(c=>esc(c)).join(', ') : esc(w.category)}</div>
         <div class="card-actions">
           <button class="card-btn card-btn-dl"
             onclick="event.stopPropagation();downloadWall('${w._id}','${esc(w.directLink)}','${esc(w.title)}')">
@@ -819,11 +853,13 @@ async function openLb(id) {
 
     document.getElementById('lbImg').src = w.directLink;
     document.getElementById('lbTitle').textContent = w.title;
-    document.getElementById('lbCat').textContent   = w.category;
+    document.getElementById('lbCat').textContent   = Array.isArray(w.category) ? w.category.join(', ') : w.category;
     document.getElementById('lbTags').innerHTML    = (w.tags||[]).map(t=>`<span class="lb-tag">${esc(t)}</span>`).join('');
-    document.getElementById('lbMeta').innerHTML    =
-      `<span>Views:</span> ${w.views} &nbsp;·&nbsp; <span>Downloads:</span> ${w.downloads}<br>` +
-      `<span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}`;
+    document.getElementById('lbMeta').innerHTML = `
+      Category: ${Array.isArray(w.category) ? w.category.map(c => esc(c)).join(', ') : esc(w.category)}<br>
+      ${w.tags && w.tags.length ? `Tags: ${w.tags.map(t=>esc(t)).join(', ')}<br>` : ''}
+      Downloads: ${w.downloads} | Views: ${w.views}<br>
+      <span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}`;
     document.getElementById('lbDirectUrl').textContent = w.directLink;
     
     const pageLink = window.location.origin + '/w/' + w.filename.split('/').pop();
@@ -950,7 +986,8 @@ function closeUpload() {
   document.getElementById('previewImg').style.display = 'none';
   document.getElementById('previewImg').src         = '';
   document.getElementById('upTitle').value          = '';
-  document.getElementById('upCat').value            = '';
+  upCatsArr = [];
+  renderCats();
   upTagsArr = [];
   renderTags();
   document.getElementById('upTagInput').value       = '';
@@ -988,7 +1025,7 @@ dz.addEventListener('drop',      e => {
 async function uploadWallpaper() {
   const file     = document.getElementById('fileInput').files[0];
   const title    = document.getElementById('upTitle').value.trim();
-  const category = document.getElementById('upCat').value.trim();
+  const category = upCatsArr.join(',');
   const tags     = upTagsArr.join(',');
 
   if (!file)     return showToast('Please select an image');
