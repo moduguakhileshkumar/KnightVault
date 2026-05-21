@@ -365,10 +365,10 @@ body::before{content:'';position:fixed;inset:0;
       <input type="text" id="upTitle" placeholder="e.g. Dark Knight Cityscape">
     </div>
     <div class="field-row">
-      <div class="field">
+      <div class="field" id="upCatWrap" style="position:relative;">
         <label>Category *</label>
-        <input type="text" id="upCat" placeholder="e.g. dark, nature, abstract" list="catSuggestions">
-        <datalist id="catSuggestions"></datalist>
+        <input type="text" id="upCat" placeholder="e.g. dark, nature, abstract" oninput="showCatAutocomplete(event)" onfocus="showCatAutocomplete(event)" onkeydown="handleCatKeydown(event)" autocomplete="off">
+        <ul class="autocomplete-list" id="upCatAuto"></ul>
       </div>
       <div class="field">
         <label>Tags</label>
@@ -433,7 +433,9 @@ let adminPw     = '';
 let adsenseId   = '';
 let upTagsArr   = [];
 let allTagsList = [];
+let allCatsList = [];
 let autoFocusIndex = -1;
+let catAutoFocusIndex = -1;
 
 async function loadAllTags() {
   try {
@@ -556,8 +558,90 @@ function closeAutocomplete() {
   if (input) input.value = '';
 }
 
+function showCatAutocomplete(e) {
+  const input = e.target;
+  const list = document.getElementById('upCatAuto');
+  const val = input.value.trim().toLowerCase();
+  
+  catAutoFocusIndex = -1;
+  list.innerHTML = '';
+  
+  const matches = allCatsList.filter(c => c.includes(val)).slice(0, 8);
+  let hasExact = false;
+  
+  matches.forEach((m) => {
+    if(m === val) hasExact = true;
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item';
+    li.textContent = m;
+    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(m); };
+    list.appendChild(li);
+  });
+  
+  if(val && !hasExact) {
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item create';
+    li.textContent = `Create "${val}"`;
+    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(val); };
+    list.appendChild(li);
+  }
+  
+  if (matches.length > 0 || (val && !hasExact)) {
+    list.style.display = 'block';
+  } else {
+    list.style.display = 'none';
+  }
+}
+
+function handleCatKeydown(e) {
+  const input = e.target;
+  const list = document.getElementById('upCatAuto');
+  const items = list.querySelectorAll('.autocomplete-item');
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if(items.length > 0) {
+      catAutoFocusIndex = (catAutoFocusIndex + 1) % items.length;
+      updateCatAutoActive(items);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if(items.length > 0) {
+      catAutoFocusIndex = (catAutoFocusIndex - 1 + items.length) % items.length;
+      updateCatAutoActive(items);
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (catAutoFocusIndex >= 0 && catAutoFocusIndex < items.length) {
+      items[catAutoFocusIndex].onmousedown(e);
+    } else {
+      closeCatAutocomplete();
+    }
+  } else if (e.key === 'Escape') {
+    closeCatAutocomplete();
+  }
+}
+
+function updateCatAutoActive(items) {
+  items.forEach((item, i) => {
+    if(i === catAutoFocusIndex) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+}
+
+function closeCatAutocomplete() {
+  const list = document.getElementById('upCatAuto');
+  if (list) list.style.display = 'none';
+}
+
+function pickCat(cat) {
+  document.getElementById('upCat').value = cat;
+  closeCatAutocomplete();
+}
+
 document.addEventListener('click', e => {
   if(!e.target.closest('#upTagWrap')) closeAutocomplete();
+  if(!e.target.closest('#upCatWrap')) closeCatAutocomplete();
 });
 
 /* ══════ INIT ══════ */
@@ -618,10 +702,10 @@ async function loadCategories() {
     const r    = await fetch(`${API}/api/categories`);
     const cats = await r.json();
     const bar  = document.getElementById('catBar');
-    const dl   = document.getElementById('catSuggestions');
 
     bar.querySelectorAll('.cat-pill:not(:first-child)').forEach(p => p.remove());
-    dl.innerHTML = '';
+
+    allCatsList = cats.map(c => c.name);
 
     cats.forEach(c => {
       const btn = document.createElement('button');
@@ -629,9 +713,6 @@ async function loadCategories() {
       btn.textContent = `${c.name} (${c.count})`;
       btn.onclick = () => selectCat(c.name, btn);
       bar.appendChild(btn);
-      const opt = document.createElement('option');
-      opt.value = c.name;
-      dl.appendChild(opt);
     });
   } catch(e) {}
 }

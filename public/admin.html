@@ -155,9 +155,10 @@ tr:hover td { background: var(--bg4); }
         <input type="text" id="upTitle" placeholder="e.g. Dark Knight">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="field">
+        <div class="field" id="upCatWrap" style="position:relative;">
           <label>Category</label>
-          <input type="text" id="upCat" placeholder="e.g. dark">
+          <input type="text" id="upCat" placeholder="e.g. dark" oninput="showCatAutocomplete(event, 'up')" onfocus="showCatAutocomplete(event, 'up')" onkeydown="handleCatKeydown(event, 'up')" autocomplete="off">
+          <ul class="autocomplete-list" id="upCatAuto"></ul>
         </div>
         <div class="field">
           <label>Tags</label>
@@ -209,7 +210,10 @@ tr:hover td { background: var(--bg4); }
   <div class="modal">
     <h2>Edit Wallpaper</h2>
     <div class="field"><input type="text" id="editTitle" placeholder="Title"></div>
-    <div class="field"><input type="text" id="editCat" placeholder="Category"></div>
+    <div class="field" id="editCatWrap" style="position:relative;">
+      <input type="text" id="editCat" placeholder="Category" oninput="showCatAutocomplete(event, 'edit')" onfocus="showCatAutocomplete(event, 'edit')" onkeydown="handleCatKeydown(event, 'edit')" autocomplete="off">
+      <ul class="autocomplete-list" id="editCatAuto"></ul>
+    </div>
     <div class="field">
       <label style="text-align:left;color:var(--dim);font-size:.75rem;margin-bottom:.4rem;display:block;">Tags</label>
       <div class="tag-input-wrap" id="editTagWrap" onclick="document.getElementById('editTagInput').focus()">
@@ -251,12 +255,22 @@ let editId = null;
 let upTagsArr = [];
 let editTagsArr = [];
 let allTagsList = [];
+let allCatsList = [];
 let autoFocusIndex = -1;
+let catAutoFocusIndex = -1;
 
 async function loadAllTags() {
   try {
     const r = await fetch('/api/tags');
     allTagsList = await r.json();
+  } catch(e) {}
+}
+
+async function loadCategories() {
+  try {
+    const r = await fetch('/api/categories');
+    const cats = await r.json();
+    allCatsList = cats.map(c => c.name);
   } catch(e) {}
 }
 
@@ -381,9 +395,92 @@ function closeAutocomplete(prefix) {
   if (input) input.value = '';
 }
 
+function showCatAutocomplete(e, prefix) {
+  const input = e.target;
+  const list = document.getElementById(prefix + 'CatAuto');
+  const val = input.value.trim().toLowerCase();
+  
+  catAutoFocusIndex = -1;
+  list.innerHTML = '';
+  
+  const matches = allCatsList.filter(c => c.includes(val)).slice(0, 8);
+  let hasExact = false;
+  
+  matches.forEach((m) => {
+    if(m === val) hasExact = true;
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item';
+    li.textContent = m;
+    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(m, prefix); };
+    list.appendChild(li);
+  });
+  
+  if(val && !hasExact) {
+    const li = document.createElement('li');
+    li.className = 'autocomplete-item create';
+    li.textContent = `Create "${val}"`;
+    li.onmousedown = (ev) => { ev.preventDefault(); pickCat(val, prefix); };
+    list.appendChild(li);
+  }
+  
+  if (matches.length > 0 || (val && !hasExact)) {
+    list.style.display = 'block';
+  } else {
+    list.style.display = 'none';
+  }
+}
+
+function handleCatKeydown(e, prefix) {
+  const input = e.target;
+  const list = document.getElementById(prefix + 'CatAuto');
+  const items = list.querySelectorAll('.autocomplete-item');
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if(items.length > 0) {
+      catAutoFocusIndex = (catAutoFocusIndex + 1) % items.length;
+      updateCatAutoActive(items);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if(items.length > 0) {
+      catAutoFocusIndex = (catAutoFocusIndex - 1 + items.length) % items.length;
+      updateCatAutoActive(items);
+    }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (catAutoFocusIndex >= 0 && catAutoFocusIndex < items.length) {
+      items[catAutoFocusIndex].onmousedown(e);
+    } else {
+      closeCatAutocomplete(prefix);
+    }
+  } else if (e.key === 'Escape') {
+    closeCatAutocomplete(prefix);
+  }
+}
+
+function updateCatAutoActive(items) {
+  items.forEach((item, i) => {
+    if(i === catAutoFocusIndex) item.classList.add('active');
+    else item.classList.remove('active');
+  });
+}
+
+function closeCatAutocomplete(prefix) {
+  const list = document.getElementById(prefix + 'CatAuto');
+  if (list) list.style.display = 'none';
+}
+
+function pickCat(cat, prefix) {
+  document.getElementById(prefix + 'Cat').value = cat;
+  closeCatAutocomplete(prefix);
+}
+
 document.addEventListener('click', e => {
   if(!e.target.closest('#upTagWrap')) closeAutocomplete('up');
   if(!e.target.closest('#editTagWrap')) closeAutocomplete('edit');
+  if(!e.target.closest('#upCatWrap')) closeCatAutocomplete('up');
+  if(!e.target.closest('#editCatWrap')) closeCatAutocomplete('edit');
 });
 
 async function checkAuth() {
@@ -393,6 +490,7 @@ async function checkAuth() {
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
     loadAllTags();
+    loadCategories();
   }
 }
 
@@ -407,6 +505,7 @@ async function login() {
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
     loadAllTags();
+    loadCategories();
   } else {
     document.getElementById('loginErr').textContent = 'Incorrect Password';
   }
