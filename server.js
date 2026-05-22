@@ -47,7 +47,51 @@ function adminOnly(req, res, next) {
 
 // ─── MONGODB ──────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✓ MongoDB connected'))
+  .then(async () => {
+    console.log('✓ MongoDB connected');
+    
+    // MIGRATION: Fix comma-separated categories and tags saved previously
+    try {
+      const walls = await Wallpaper.find({});
+      for (let w of walls) {
+        let changed = false;
+        let newCats = [];
+        if (w.category && Array.isArray(w.category)) {
+          w.category.forEach(c => {
+            if (c.includes(',')) {
+              c.split(',').forEach(sc => {
+                const trimmed = sc.trim().toLowerCase();
+                if (trimmed && !newCats.includes(trimmed)) newCats.push(trimmed);
+              });
+              changed = true;
+            } else if (!newCats.includes(c)) {
+              newCats.push(c);
+            }
+          });
+        }
+        let newTags = [];
+        if (w.tags && Array.isArray(w.tags)) {
+          w.tags.forEach(t => {
+            if (t.includes(',')) {
+              t.split(',').forEach(st => {
+                const trimmed = st.trim().toLowerCase();
+                if (trimmed && !newTags.includes(trimmed)) newTags.push(trimmed);
+              });
+              changed = true;
+            } else if (!newTags.includes(t)) {
+              newTags.push(t);
+            }
+          });
+        }
+        if (changed) {
+          w.category = newCats;
+          w.tags = newTags;
+          await w.save();
+          console.log(`Migrated wallpaper: ${w.title}`);
+        }
+      }
+    } catch(e) { console.error('Migration failed', e); }
+  })
   .catch(err => console.error('✗ MongoDB:', err.message));
 
 // ═══════════════════════════════════════
