@@ -723,10 +723,33 @@ function previewFile(e) {
 function submitUpload() {
   const file = document.getElementById('upFile').files[0];
   if(!file) return showToast('Select a file');
+  const titleVal = document.getElementById('upTitle').value.trim();
+  const catInput = document.getElementById('upCat').value.trim();
+  if (catInput) {
+    catInput.split(',').forEach(c => {
+      const cat = c.trim().toLowerCase();
+      if (cat && !upCatsArr.includes(cat)) upCatsArr.push(cat);
+    });
+    document.getElementById('upCat').value = '';
+    renderCats('up');
+  }
   
+  const tagInput = document.getElementById('upTagInput').value.trim();
+  if (tagInput) {
+    tagInput.split(',').forEach(t => {
+      const tag = t.trim().toLowerCase();
+      if (tag && !upTagsArr.includes(tag)) upTagsArr.push(tag);
+    });
+    document.getElementById('upTagInput').value = '';
+    renderTags('up');
+  }
+
+  if (!titleVal) return showToast('Please enter a title');
+  if (upCatsArr.length === 0) return showToast('Please add at least one category');
+
   const fd = new FormData();
   fd.append('image', file);
-  fd.append('title', document.getElementById('upTitle').value);
+  fd.append('title', titleVal);
   fd.append('category', upCatsArr.join(','));
   fd.append('tags', upTagsArr.join(','));
   fd.append('isPaid', document.getElementById('upIsPaid').checked);

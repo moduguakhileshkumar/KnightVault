@@ -1028,12 +1028,32 @@ dz.addEventListener('drop',      e => {
 async function uploadWallpaper() {
   const file     = document.getElementById('fileInput').files[0];
   const title    = document.getElementById('upTitle').value.trim();
+  const catInputStr = document.getElementById('upCat').value.trim();
+  if (catInputStr) {
+    catInputStr.split(',').forEach(c => {
+      const cat = c.trim().toLowerCase();
+      if (cat && !upCatsArr.includes(cat)) upCatsArr.push(cat);
+    });
+    document.getElementById('upCat').value = '';
+    renderCats();
+  }
+  
+  const tagInputStr = document.getElementById('upTagInput').value.trim();
+  if (tagInputStr) {
+    tagInputStr.split(',').forEach(t => {
+      const tag = t.trim().toLowerCase();
+      if (tag && !upTagsArr.includes(tag)) upTagsArr.push(tag);
+    });
+    document.getElementById('upTagInput').value = '';
+    renderTags();
+  }
+
   const category = upCatsArr.join(',');
   const tags     = upTagsArr.join(',');
 
   if (!file)     return showToast('Please select an image');
   if (!title)    return showToast('Please enter a title');
-  if (!category) return showToast('Please enter a category');
+  if (!category) return showToast('Please add at least one category');
 
   const fd = new FormData();
   fd.append('image',    file);
