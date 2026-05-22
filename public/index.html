@@ -1090,8 +1090,10 @@ async function uploadWallpaper() {
     } else {
       try {
         const err = JSON.parse(xhr.responseText);
-        showToast('Error: ' + err.error);
-      } catch(e) { showToast('Upload failed'); }
+        showToast('Error: ' + (err.error || 'Unknown'));
+      } catch(e) { 
+        showToast('Upload failed: ' + xhr.responseText.substring(0, 40)); 
+      }
       document.getElementById('uploadSubmitBtn').disabled = false;
       document.getElementById('uploadSubmitBtn').textContent = '⚔ Upload to Vault';
     }

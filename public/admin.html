@@ -789,7 +789,12 @@ function submitUpload() {
       loadWallpapers();
       switchTab('wallpapers');
     } else {
-      showToast('Upload failed');
+      try {
+        const err = JSON.parse(xhr.responseText);
+        showToast('Upload failed: ' + (err.error || 'Unknown'));
+      } catch(e) {
+        showToast('Upload failed');
+      }
     }
   };
   xhr.send(fd);
