@@ -597,7 +597,7 @@ async function loadWallpapers() {
       <tr>
         <td><img src="${w.directLink}" class="thumb"></td>
         <td>${esc(w.title)}</td>
-        <td>${Array.isArray(w.category) ? esc(w.category.join(', ')) : esc(w.category)}</td>
+        <td>${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="badge free" style="margin-right:2px;text-transform:capitalize;">${esc(c)}</span>`).join('')}</td>
         <td>
           <span class="badge ${w.isPaid ? 'paid' : 'free'}">${w.isPaid ? 'Premium $'+w.price : 'Free'}</span>
         </td>
@@ -692,8 +692,6 @@ function openEdit(w) {
 
 async function submitEdit() {
   const title = document.getElementById('editTitle').value.trim();
-  const category = editCatsArr.join(',');
-  const tags = editTagsArr.join(',');
   const isPaid = document.getElementById('editIsPaid').checked;
   const price = document.getElementById('editPrice').value;
   
@@ -701,7 +699,7 @@ async function submitEdit() {
     await fetch(`/api/wallpapers/${editId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
-      body: JSON.stringify({ title, category, tags: editTagsArr, isPaid, price: parseFloat(price)||0 })
+      body: JSON.stringify({ title, category: editCatsArr, tags: editTagsArr, isPaid, price: parseFloat(price)||0 })
     });
     document.getElementById('editModal').classList.add('hidden');
     showToast('Wallpaper updated!');
@@ -729,7 +727,7 @@ function submitUpload() {
   const fd = new FormData();
   fd.append('image', file);
   fd.append('title', document.getElementById('upTitle').value);
-  fd.append('category', document.getElementById('upCat').value);
+  fd.append('category', upCatsArr.join(','));
   fd.append('tags', upTagsArr.join(','));
   fd.append('isPaid', document.getElementById('upIsPaid').checked);
   fd.append('price', document.getElementById('upPrice').value || 0);

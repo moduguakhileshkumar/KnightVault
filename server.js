@@ -281,6 +281,7 @@ app.get('/w/:publicId', async (req, res) => {
           img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
           h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
           p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+          .chip { display: inline-block; font-size: 0.7rem; padding: 0.2rem 0.6rem; background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; color: #C9A84C; margin: 0 2px; text-transform: capitalize; }
           .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; transition: filter 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
           .btn:hover { filter: brightness(1.1); }
         </style>
@@ -289,7 +290,9 @@ app.get('/w/:publicId', async (req, res) => {
         <div class="container">
           <img src="${w.directLink}" alt="${w.title}">
           <h1>${w.title}</h1>
-          <p>Category: ${Array.isArray(w.category) ? w.category.join(', ') : w.category}</p>
+          <div style="margin-bottom: 20px;">
+            ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="chip">${c}</span>`).join('')}
+          </div>
           
           <a href="${downloadLink}" class="btn">Explicit Download</a>
         </div>
