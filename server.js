@@ -304,9 +304,36 @@ app.get('/w/:publicId', async (req, res) => {
     // Increment view counter
     await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
 
-    // CREATE THE FL_ATTACHMENT DOWNLOAD LINK
-    // This tells Cloudinary's servers to force the browser to download the file instead of opening it
-    const downloadLink = w.directLink.replace('/upload/', '/upload/fl_attachment/');
+    // Find similar wallpapers
+    let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
+    categoryArr = categoryArr.filter(Boolean);
+    const similar = await Wallpaper.find({
+      _id: { $ne: w._id },
+      category: { $in: categoryArr }
+    }).limit(8).sort({ uploadedAt: -1 });
+
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+    let similarHtml = '';
+    if (similar.length > 0) {
+      similarHtml = `
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--gold);margin:3rem 0 1.5rem;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:.8rem;">Similar Wallpapers</h2>
+        <div class="wall-grid">
+          ${similar.map(sw => {
+            const pageLink = '/w/' + sw.filename.split('/').pop();
+            return `
+            <div class="wall-card" onclick="window.location.href='${pageLink}'">
+              <img src="${esc(sw.directLink)}" alt="${esc(sw.title)}" loading="lazy">
+              <div class="card-overlay" style="opacity:1;background:linear-gradient(to top,rgba(5,5,5,0.9) 0%,transparent 60%);">
+                <div class="card-title">${esc(sw.title)}</div>
+              </div>
+            </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+    const cleanTitle = w.title.replace(/\s+/g, '_');
 
     res.send(`
       <!DOCTYPE html>
@@ -314,32 +341,118 @@ app.get('/w/:publicId', async (req, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${w.title} — Knight Vault</title>
+        <title>${esc(w.title)} — Knight Vault</title>
         ${adsenseScript}
         ${gaScript}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
-        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/style.css">
         <style>
-          body { margin: 0; background: #0A0A0F; color: #E8E8F0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-          .container { text-align: center; max-width: 600px; }
-          img { max-width: 100%; max-height: 75vh; border-radius: 6px; border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
-          h1 { font-size: 1.4rem; color: #C9A84C; margin: 20px 0 5px; }
-          p { margin: 0 0 20px; color: #7A7A9A; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-          .chip { display: inline-block; font-size: 0.7rem; padding: 0.2rem 0.6rem; background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; color: #C9A84C; margin: 0 2px; text-transform: capitalize; }
-          .btn { display: inline-block; background: #C9A84C; color: #0A0A0F; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; transition: filter 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
-          .btn:hover { filter: brightness(1.1); }
+          .wp-container { max-width: 1000px; margin: 0 auto; padding: 2rem; display: flex; gap: 2rem; align-items: flex-start; }
+          .wp-img-wrap { flex: 1; text-align: center; }
+          .wp-img-wrap img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); border: 1px solid rgba(201,168,76,.15); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+          .wp-info { width: 300px; flex-shrink: 0; background: var(--bg3); border: 1px solid rgba(255,255,255,.07); clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); padding: 1.5rem; }
+          .wp-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--gold); letter-spacing: .08em; margin-bottom: .5rem; }
+          .wp-meta { font-size: .75rem; color: var(--dim); margin-bottom: 1.5rem; line-height: 1.6; }
+          .wp-meta span { color: var(--mid); }
+          .res-label { display: block; font-size: .7rem; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
+          .res-select { width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); color: var(--bright); font-size: .85rem; padding: .6rem; outline: none; margin-bottom: 1rem; cursor: pointer; }
+          .res-select:focus { border-color: rgba(201,168,76,.4); }
+          .wp-btn-dl { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); width: 100%; font-family: 'Orbitron', sans-serif; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; padding: .85rem; background: linear-gradient(135deg, var(--gold-d), var(--gold)); color: var(--bg); border: none; cursor: pointer; font-weight: 600; border-radius: var(--radius); transition: filter .2s; }
+          .wp-btn-dl:hover { filter: brightness(1.1); }
+          .cat-tag { display: inline-block; font-size: .65rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: var(--gold); text-transform: capitalize; margin: 0 4px 4px 0; }
+          @media (max-width: 768px) {
+            .wp-container { flex-direction: column; padding: 1rem; }
+            .wp-info { width: 100%; }
+          }
         </style>
       </head>
       <body>
-        <div class="container">
-          <img src="${w.directLink}" alt="${w.title}">
-          <h1>${w.title}</h1>
-          <div style="margin-bottom: 20px;">
-            ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="chip">${c}</span>`).join('')}
-          </div>
-          
-          <a href="${downloadLink}" class="btn">Explicit Download</a>
+        <div class="app">
+          <header class="topbar">
+            <a class="logo" href="/">
+              <svg width="32" height="32" viewBox="0 0 34 24" fill="var(--gold)">
+                <path d="M34,8.5 c-3.5,0 -7,4.5 -8.5,8.5 c0,-5 -2,-12 -6.5,-16.5 c-0.5,2.5 -1,4 -2,4 c-1,0 -1.5,-1.5 -2,-4 c-4.5,4.5 -6.5,11.5 -6.5,16.5 c-1.5,-4 -5,-8.5 -8.5,-8.5 c3.5,6 8.5,14.5 17,14.5 c8.5,0 13.5,-8.5 17,-14.5 Z" />
+              </svg>
+              <div>
+                <span class="logo-name">Knight Vault</span>
+                <span class="logo-tag">BATCOMPUTER TERMINAL</span>
+              </div>
+            </a>
+            <div class="topbar-actions">
+              <button class="btn btn-gold" onclick="window.location.href='/'">← Back to Vault</button>
+            </div>
+          </header>
+
+          <main class="main" style="padding: 0;">
+            <div class="wp-container">
+              <div class="wp-img-wrap">
+                <img src="${esc(w.directLink)}" alt="${esc(w.title)}">
+              </div>
+              <div class="wp-info">
+                <h1 class="wp-title">${esc(w.title)}</h1>
+                <div style="margin-bottom: 1rem;">
+                  ${categoryArr.map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
+                </div>
+                <div class="wp-meta">
+                  ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
+                  <div><span>Downloads:</span> ${w.downloads}</div>
+                  <div><span>Views:</span> ${w.views}</div>
+                  <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
+                </div>
+
+                <label class="res-label">Select Resolution</label>
+                <select id="resSelect" class="res-select">
+                  <option value="original">Original Size</option>
+                  <option value="tv">4K TV (3840x2160)</option>
+                  <option value="laptop">Laptop (1920x1080)</option>
+                  <option value="mobile">Mobile (1080x1920)</option>
+                </select>
+
+                ${w.isPaid 
+                  ? `<button class="wp-btn-dl" onclick="alert('Payment gateway not integrated yet!')">👑 Premium $${w.price}</button>` 
+                  : `<button class="wp-btn-dl" onclick="downloadImage()">⬇ Download</button>`
+                }
+              </div>
+            </div>
+            
+            <div style="max-width: 1000px; margin: 0 auto; padding: 0 2rem 3rem;">
+              ${similarHtml}
+            </div>
+          </main>
         </div>
+
+        <script>
+          async function downloadImage() {
+            const btn = document.querySelector('.wp-btn-dl');
+            btn.textContent = 'Downloading...';
+            
+            // Record download stat via API
+            try { await fetch('/api/wallpapers/${w._id}/download', { method:'POST' }); } catch(e) {}
+            
+            const res = document.getElementById('resSelect').value;
+            let url = "${w.directLink}";
+            let proxyFilename = "${esc(cleanTitle)}";
+
+            if (res === 'tv') {
+              url = url.replace('/upload/', '/upload/w_3840,h_2160,c_fill,g_auto/');
+              proxyFilename += "_4K";
+            } else if (res === 'laptop') {
+              url = url.replace('/upload/', '/upload/w_1920,h_1080,c_fill,g_auto/');
+              proxyFilename += "_FHD";
+            } else if (res === 'mobile') {
+              url = url.replace('/upload/', '/upload/w_1080,h_1920,c_fill,g_auto/');
+              proxyFilename += "_Mobile";
+            }
+
+            // Using download-proxy to trigger actual file download instead of browser view
+            const dlUrl = '/api/download-proxy?url=' + encodeURIComponent(url) + '&filename=' + encodeURIComponent(proxyFilename);
+            window.location.href = dlUrl;
+            
+            setTimeout(() => { btn.textContent = '⬇ Download'; }, 2000);
+          }
+        </script>
       </body>
       </html>
     `);
