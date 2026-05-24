@@ -514,6 +514,43 @@ app.get('/ads.txt', async (req, res) => {
   }
 });
 
+// ─── SITEMAP.XML ──────────────────────────────────────────
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const walls = await Wallpaper.find({}, 'filename uploadedAt').sort({ uploadedAt: -1 });
+    
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    
+    // Static routes
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/</loc>\n`;
+    xml += '    <changefreq>daily</changefreq>\n';
+    xml += '    <priority>1.0</priority>\n';
+    xml += '  </url>\n';
+    
+    // Dynamic wallpaper routes
+    walls.forEach(w => {
+      const publicId = w.filename.replace('knight-vault/', '');
+      xml += '  <url>\n';
+      xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(publicId)}</loc>\n`;
+      if (w.uploadedAt) {
+        xml += `    <lastmod>${w.uploadedAt.toISOString().split('T')[0]}</lastmod>\n`;
+      }
+      xml += '    <changefreq>weekly</changefreq>\n';
+      xml += '    <priority>0.8</priority>\n';
+      xml += '  </url>\n';
+    });
+    
+    xml += '</urlset>';
+    
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 // ─── CATCH-ALL → frontend ────────────────────────────────
 app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
