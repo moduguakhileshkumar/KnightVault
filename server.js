@@ -342,6 +342,7 @@ app.get('/w/:publicId', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${esc(w.title)} — Knight Vault</title>
+        <link rel="amphtml" href="${BASE_URL}/amp/w/${encodeURIComponent(req.params.publicId)}">
         ${adsenseScript}
         ${gaScript}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
@@ -460,6 +461,65 @@ app.get('/w/:publicId', async (req, res) => {
     res.status(500).send('Error loading wallpaper page.'); 
   }
 });
+// ─── AMP WALLPAPER PAGE ───────────────────────────────────
+app.get('/amp/w/:publicId', async (req, res) => {
+  try {
+    const fullFilename = `knight-vault/${req.params.publicId}`;
+    const w = await Wallpaper.findOne({ filename: fullFilename });
+    if (!w) return res.status(404).send('Not found');
+
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    
+    // Using 1080x1920 as a portrait placeholder layout ratio for mobile devices
+    res.send(`
+      <!doctype html>
+      <html ⚡ lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>${esc(w.title)} — Knight Vault</title>
+        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
+        <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+        <script async src="https://cdn.ampproject.org/v0.js"></script>
+        <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+        <style amp-custom>
+          body { background: #0A0A0F; color: #E5E7EB; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+          header { background: #111116; padding: 1rem; text-align: center; border-bottom: 1px solid rgba(201,168,76,0.2); }
+          .logo { color: #C9A84C; text-decoration: none; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
+          main { padding: 1rem; max-width: 600px; margin: 0 auto; text-align: center; }
+          h1 { color: #C9A84C; font-size: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
+          .img-wrap { border-radius: 8px; overflow: hidden; border: 1px solid rgba(201,168,76,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 1rem; }
+          .btn { display: block; background: linear-gradient(135deg, #A8862F, #C9A84C); color: #0A0A0F; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
+          .meta { font-size: 0.85rem; color: #7A7A9A; margin: 1rem 0; line-height: 1.6; display: flex; flex-direction: column; gap: 0.3rem; }
+          .cat-tag { display: inline-block; font-size: .75rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: #C9A84C; text-transform: capitalize; margin: 0.2rem; }
+        </style>
+      </head>
+      <body>
+        <header>
+          <a href="${BASE_URL}/" class="logo">Knight Vault</a>
+        </header>
+        <main>
+          <h1>${esc(w.title)}</h1>
+          <div class="img-wrap">
+            <amp-img src="${esc(w.directLink)}" width="1080" height="1920" layout="responsive" alt="${esc(w.title)}"></amp-img>
+          </div>
+          <div>
+            ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => \`<span class="cat-tag">\${esc(c)}</span>\`).join('')}
+          </div>
+          <div class="meta">
+            <div><strong>Downloads:</strong> ${w.downloads}</div>
+            <div><strong>Size:</strong> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
+          </div>
+          ${w.isPaid 
+            ? `<a href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}" class="btn">👑 Premium $${w.price}</a>`
+            : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(req.params.publicId)}" class="btn">⬇ Download Now</a>`
+          }
+        </main>
+      </body>
+      </html>
+    `);
+  } catch (err) { res.status(500).send('Error loading AMP page.'); }
+});
+
 // ─── FORCE DOWNLOAD ENDPOINT ──────────────────────────────
 app.get('/api/download-direct/:publicId', async (req, res) => {
   try {
