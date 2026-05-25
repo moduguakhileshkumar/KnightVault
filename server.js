@@ -503,7 +503,7 @@ app.get('/amp/w/:publicId', async (req, res) => {
             <amp-img src="${esc(w.directLink)}" width="1080" height="1920" layout="responsive" alt="${esc(w.title)}"></amp-img>
           </div>
           <div>
-            ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => \`<span class="cat-tag">\${esc(c)}</span>\`).join('')}
+            ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
           </div>
           <div class="meta">
             <div><strong>Downloads:</strong> ${w.downloads}</div>
