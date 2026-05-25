@@ -35,8 +35,8 @@
 
   <div class="topbar-actions">
     <!-- Only shows after admin login -->
-    <button class="btn btn-gold hidden" id="uploadBtn-top" onclick="window.location.href='/admin.html'">⚙ Vault Master</button>
-    <button class="btn hidden" id="adminBtn" onclick="window.location.href='/admin.html'">⚙ Vault Master</button>
+    <button class="btn btn-gold hidden" id="uploadBtn-top" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Vault Master</button>
+    <button class="btn hidden" id="adminBtn" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Vault Master</button>
     <button class="btn" id="loginBtn" style="display:none;" onclick="openLogin()" title="Admin Login">🔐</button>
     <button class="btn hidden" id="logoutBtn" onclick="logout()">Log out</button>
   </div>
