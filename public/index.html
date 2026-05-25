@@ -407,11 +407,18 @@ document.addEventListener('click', e => {
   if(!e.target.closest('#upCatWrap')) closeCatAutocomplete();
 });
 
+let secretBuffer = '';
+const SECRET_PASSPHRASE = 'batman';
 document.addEventListener('keydown', e => {
-  // Secret admin portal access: Ctrl + Shift + V
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'v') {
-    e.preventDefault();
-    openLogin();
+  if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    secretBuffer += e.key.toLowerCase();
+    if (secretBuffer.length > SECRET_PASSPHRASE.length) {
+      secretBuffer = secretBuffer.slice(-SECRET_PASSPHRASE.length);
+    }
+    if (secretBuffer === SECRET_PASSPHRASE) {
+      openLogin();
+      secretBuffer = '';
+    }
   }
 });
 

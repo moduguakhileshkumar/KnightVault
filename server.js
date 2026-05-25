@@ -611,6 +611,14 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 });
 
+// ─── SECRET ADMIN ROUTE ───────────────────────────────────
+app.get('/vault-access/:secret', (req, res) => {
+  if (process.env.ADMIN_PASSWORD && req.params.secret === process.env.ADMIN_PASSWORD) {
+    return res.sendFile(path.join(__dirname, 'admin_panel.html'));
+  }
+  return res.redirect('/');
+});
+
 // ─── CATCH-ALL → frontend ────────────────────────────────
 app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
