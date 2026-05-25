@@ -37,7 +37,7 @@
     <!-- Only shows after admin login -->
     <button class="btn btn-gold hidden" id="uploadBtn-top" onclick="window.location.href='/admin.html'">⚙ Vault Master</button>
     <button class="btn hidden" id="adminBtn" onclick="window.location.href='/admin.html'">⚙ Vault Master</button>
-    <button class="btn" id="loginBtn" onclick="openLogin()" title="Admin Login">🔐</button>
+    <button class="btn" id="loginBtn" style="display:none;" onclick="openLogin()" title="Admin Login">🔐</button>
     <button class="btn hidden" id="logoutBtn" onclick="logout()">Log out</button>
   </div>
 </header>
@@ -405,6 +405,14 @@ function closeCatAutocomplete() {
 document.addEventListener('click', e => {
   if(!e.target.closest('#upTagWrap')) closeAutocomplete();
   if(!e.target.closest('#upCatWrap')) closeCatAutocomplete();
+});
+
+document.addEventListener('keydown', e => {
+  // Secret admin portal access: Ctrl + Shift + V
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'v') {
+    e.preventDefault();
+    openLogin();
+  }
 });
 
 /* ══════ INIT ══════ */
