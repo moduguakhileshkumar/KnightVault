@@ -30,7 +30,7 @@ for (const file of files) {
   c = c.replace(oldBgRegex, newBg);
 
   // Sub-branding
-  c = c.replace(/<span class="logo-tag">Wallpaper Hosting<\/span>/g, '<span class="logo-tag">BATCOMPUTER TERMINAL</span>');
+  c = c.replace(/<span class="logo-tag">Wallpaper Hosting<\/span>/g, '<span class="logo-tag">High Quality Wallpapers</span>');
   c = c.replace(/<span class="logo-tag">Vault Master<\/span>/g, '<span class="logo-tag">WAYNE TECH ADMIN</span>');
 
   // Clip Paths (Tactical edges)

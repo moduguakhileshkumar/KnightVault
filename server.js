@@ -24,7 +24,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder:          'knight-vault',
+    folder:          'waynelab',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     transformation:  [{ quality: 'auto', fetch_format: 'auto' }],
   },
@@ -238,7 +238,7 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
 
     const directLink = req.file.path;
     const publicId   = req.file.filename;
-    const pageUrl    = `${BASE_URL}/w/${encodeURIComponent(publicId.replace('knight-vault/', ''))}`;
+    const pageUrl    = `${BASE_URL}/w/${encodeURIComponent(publicId.replace('waynelab/', ''))}`;
 
     const wall = await Wallpaper.create({
       title:        title.trim(),
@@ -280,7 +280,7 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
 // ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
 app.get('/w/:publicId', async (req, res) => {
   try {
-    const fullFilename = `knight-vault/${req.params.publicId}`;
+    const fullFilename = `waynelab/${req.params.publicId}`;
     const w = await Wallpaper.findOne({ filename: fullFilename });
     
     if (!w) {
@@ -341,7 +341,7 @@ app.get('/w/:publicId', async (req, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${esc(w.title)} — Knight Vault</title>
+        <title>${esc(w.title)} — Waynelab</title>
         <link rel="amphtml" href="${BASE_URL}/amp/w/${encodeURIComponent(req.params.publicId)}">
         ${adsenseScript}
         ${gaScript}
@@ -377,8 +377,8 @@ app.get('/w/:publicId', async (req, res) => {
                 <path d="M34,8.5 c-3.5,0 -7,4.5 -8.5,8.5 c0,-5 -2,-12 -6.5,-16.5 c-0.5,2.5 -1,4 -2,4 c-1,0 -1.5,-1.5 -2,-4 c-4.5,4.5 -6.5,11.5 -6.5,16.5 c-1.5,-4 -5,-8.5 -8.5,-8.5 c3.5,6 8.5,14.5 17,14.5 c8.5,0 13.5,-8.5 17,-14.5 Z" />
               </svg>
               <div>
-                <span class="logo-name">Knight Vault</span>
-                <span class="logo-tag">BATCOMPUTER TERMINAL</span>
+                <span class="logo-name">Waynelab</span>
+                <span class="logo-tag">High Quality Wallpapers</span>
               </div>
             </a>
             <div class="topbar-actions">
@@ -464,7 +464,7 @@ app.get('/w/:publicId', async (req, res) => {
 // ─── AMP WALLPAPER PAGE ───────────────────────────────────
 app.get('/amp/w/:publicId', async (req, res) => {
   try {
-    const fullFilename = `knight-vault/${req.params.publicId}`;
+    const fullFilename = `waynelab/${req.params.publicId}`;
     const w = await Wallpaper.findOne({ filename: fullFilename });
     if (!w) return res.status(404).send('Not found');
 
@@ -476,7 +476,7 @@ app.get('/amp/w/:publicId', async (req, res) => {
       <html ⚡ lang="en">
       <head>
         <meta charset="utf-8">
-        <title>${esc(w.title)} — Knight Vault</title>
+        <title>${esc(w.title)} — Waynelab</title>
         <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
         <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
         <script async src="https://cdn.ampproject.org/v0.js"></script>
@@ -495,7 +495,7 @@ app.get('/amp/w/:publicId', async (req, res) => {
       </head>
       <body>
         <header>
-          <a href="${BASE_URL}/" class="logo">Knight Vault</a>
+          <a href="${BASE_URL}/" class="logo">Waynelab</a>
         </header>
         <main>
           <h1>${esc(w.title)}</h1>
@@ -523,7 +523,7 @@ app.get('/amp/w/:publicId', async (req, res) => {
 // ─── FORCE DOWNLOAD ENDPOINT ──────────────────────────────
 app.get('/api/download-direct/:publicId', async (req, res) => {
   try {
-    const fullFilename = `knight-vault/${req.params.publicId}`;
+    const fullFilename = `waynelab/${req.params.publicId}`;
     const w = await Wallpaper.findOne({ filename: fullFilename });
     
     if (!w) return res.status(404).send('Wallpaper record not found.');
@@ -574,6 +574,12 @@ app.get('/ads.txt', async (req, res) => {
   }
 });
 
+// ─── ROBOTS.TXT (Crawler Config) ────────────────────────
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(`User-agent: *\nAllow: /\nSitemap: ${BASE_URL}/sitemap.xml`);
+});
+
 // ─── SITEMAP.XML ──────────────────────────────────────────
 app.get('/sitemap.xml', async (req, res) => {
   try {
@@ -591,7 +597,7 @@ app.get('/sitemap.xml', async (req, res) => {
     
     // Dynamic wallpaper routes
     walls.forEach(w => {
-      const publicId = w.filename.replace('knight-vault/', '');
+      const publicId = w.filename.replace('waynelab/', '');
       xml += '  <url>\n';
       xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(publicId)}</loc>\n`;
       if (w.uploadedAt) {
@@ -622,4 +628,4 @@ app.get('/vault-access/:secret', (req, res) => {
 // ─── CATCH-ALL → frontend ────────────────────────────────
 app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.listen(PORT, () => console.log(`⚔  Knight Vault → ${BASE_URL}`));
+app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));

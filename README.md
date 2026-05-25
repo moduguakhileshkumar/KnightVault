@@ -1,9 +1,9 @@
-# ⚔ Knight Vault — Setup Guide
+# ⚔ Waynelab — Setup Guide
 
 ## What's in this folder
 
 ```
-knight-vault/
+waynelab/
 ├── server.js          ← Express backend (API + file uploads)
 ├── model.js           ← MongoDB wallpaper schema
 ├── package.json       ← Dependencies
@@ -34,7 +34,7 @@ knight-vault/
 cp .env.example .env
 
 # Edit .env:
-MONGO_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/knight-vault?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/waynelab?retryWrites=true&w=majority
 PORT=3000
 BASE_URL=http://localhost:3000
 ```
@@ -81,11 +81,11 @@ Your site is running! Upload a wallpaper to test.
 ```bash
 # On your server
 git clone <your-repo>
-cd knight-vault
+cd waynelab
 npm install
 # Install pm2 to keep it running
 npm install -g pm2
-pm2 start server.js --name knight-vault
+pm2 start server.js --name waynelab
 pm2 save
 ```
 
