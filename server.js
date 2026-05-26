@@ -342,7 +342,16 @@ app.get('/w/:publicId', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${esc(w.title)} — Waynelab</title>
+        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
         <link rel="amphtml" href="${BASE_URL}/amp/w/${encodeURIComponent(req.params.publicId)}">
+        <meta name="robots" content="index, follow">
+        <meta name="description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
+        <meta property="og:title" content="${esc(w.title)} — Waynelab">
+        <meta property="og:description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
+        <meta property="og:image" content="${esc(w.directLink)}">
+        <meta property="og:url" content="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
+        <meta property="og:type" content="website">
+        <meta name="twitter:card" content="summary_large_image">
         ${adsenseScript}
         ${gaScript}
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
@@ -478,6 +487,8 @@ app.get('/amp/w/:publicId', async (req, res) => {
         <meta charset="utf-8">
         <title>${esc(w.title)} — Waynelab</title>
         <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
+        <meta name="robots" content="index, follow">
+        <meta name="description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
         <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
         <script async src="https://cdn.ampproject.org/v0.js"></script>
         <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>

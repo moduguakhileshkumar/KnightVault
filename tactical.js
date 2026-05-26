@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const files = ['public/index.html', 'public/admin.html'];
+const files = ['public/index.html', 'admin_panel.html'];
 
 for (const file of files) {
   let c = fs.readFileSync(file, 'utf8');
