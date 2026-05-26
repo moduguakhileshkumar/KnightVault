@@ -431,6 +431,16 @@ app.get('/w/:publicId', async (req, res) => {
               ${similarHtml}
             </div>
           </main>
+
+          <footer class="main-footer">
+            <div class="main-footer-links">
+              <a href="/about.html">About Us</a>
+              <a href="/contact.html">Contact</a>
+              <a href="/privacy.html">Privacy Policy</a>
+              <a href="/terms.html">Terms of Service</a>
+            </div>
+            <p class="main-footer-copy">© 2026 Waynelab. All rights reserved. High Quality Wallpapers.</p>
+          </footer>
         </div>
 
         <script>
@@ -521,10 +531,19 @@ app.get('/amp/w/:publicId', async (req, res) => {
             <div><strong>Size:</strong> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
           </div>
           ${w.isPaid 
-            ? `<a href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}" class="btn">👑 Premium $${w.price}</a>`
+            ? `<a href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}" class="btn">👑 Premium ${w.price}</a>`
             : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(req.params.publicId)}" class="btn">⬇ Download Now</a>`
           }
         </main>
+        <footer class="main-footer" style="margin-top: 2rem; padding: 2rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; color: #7A7A9A;">
+          <div class="main-footer-links" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.8rem;">
+            <a href="${BASE_URL}/about.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">About Us</a>
+            <a href="${BASE_URL}/contact.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Contact</a>
+            <a href="${BASE_URL}/privacy.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Privacy</a>
+            <a href="${BASE_URL}/terms.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Terms</a>
+          </div>
+          <p>© 2026 Waynelab. All rights reserved.</p>
+        </footer>
       </body>
       </html>
     `);
@@ -605,6 +624,15 @@ app.get('/sitemap.xml', async (req, res) => {
     xml += '    <changefreq>daily</changefreq>\n';
     xml += '    <priority>1.0</priority>\n';
     xml += '  </url>\n';
+
+    const staticRoutes = ['/about.html', '/contact.html', '/privacy.html', '/terms.html'];
+    staticRoutes.forEach(route => {
+      xml += '  <url>\n';
+      xml += `    <loc>${BASE_URL}${route}</loc>\n`;
+      xml += '    <changefreq>monthly</changefreq>\n';
+      xml += '    <priority>0.5</priority>\n';
+      xml += '  </url>\n';
+    });
     
     // Dynamic wallpaper routes
     walls.forEach(w => {

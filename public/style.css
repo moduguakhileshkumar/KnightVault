@@ -241,3 +241,115 @@ body::before{content:'';position:fixed;inset:0;
   .lb-close{top:10px; right:10px; position:fixed; z-index:510; font-size:2rem; background:rgba(0,0,0,0.5); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;}
   .field-row{grid-template-columns:1fr}
 }
+
+
+/* ── FOOTER ── */
+.main-footer {
+  background: var(--bg2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 3rem 1.5rem;
+  margin-top: 4rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--dim);
+}
+.main-footer-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.main-footer-links a {
+  color: var(--mid);
+  text-decoration: none;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  transition: color 0.2s ease;
+}
+.main-footer-links a:hover {
+  color: var(--gold);
+}
+.main-footer-copy {
+  color: var(--dim);
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── LEGAL/DOCUMENT PAGES ── */
+.doc-container {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: var(--bg3);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+}
+.doc-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.8rem;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  padding-bottom: 0.5rem;
+}
+.doc-content {
+  font-size: 0.88rem;
+  line-height: 1.8;
+  color: var(--bright);
+}
+.doc-content h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin: 2rem 0 0.8rem;
+  letter-spacing: 0.05em;
+}
+.doc-content p {
+  margin-bottom: 1rem;
+  color: #c9c9d0;
+}
+.doc-content ul {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+.doc-content li {
+  margin-bottom: 0.5rem;
+  color: #c9c9d0;
+}
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+}
+.contact-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.contact-form label {
+  font-size: 0.72rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.contact-form input, .contact-form textarea {
+  background: var(--bg2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--bright);
+  padding: 0.8rem;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.contact-form input:focus, .contact-form textarea:focus {
+  border-color: rgba(201, 168, 76, 0.4);
+}
+.contact-form button {
+  align-self: flex-start;
+}
