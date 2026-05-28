@@ -326,19 +326,28 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
 });
 
 // ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
-app.get('/w/:publicId', async (req, res) => {
+app.get('/w/:slugOrId', async (req, res) => {
   try {
-    const fullFilename = `waynelab/${req.params.publicId}`;
-    const w = await Wallpaper.findOne({ filename: fullFilename });
+    const slugOrId = req.params.slugOrId;
+    const w = await Wallpaper.findOne({
+      $or: [
+        { slug: slugOrId },
+        { filename: `waynelab/${slugOrId}` }
+      ]
+    });
     
     if (!w) {
       return res.status(404).send(`
         <body style="background:#0A0A0F;color:#7A7A9A;font-family:sans-serif;text-align:center;padding-top:100px;">
           <h1 style="color:#C9A84C;">Vault Error</h1>
           <p>Wallpaper not found in our database records.</p>
-          <a href="/" style="color:#C9A84C;text-decoration:none;">← Return to Vault</a>
+          <a href="/" style="color:#C9A84C;text-decoration:none;">⚙️ Return to Vault</a>
         </body>
       `);
+    }
+
+    if (w.slug && slugOrId !== w.slug) {
+      return res.redirect(301, `/w/${encodeURIComponent(w.slug)}`);
     }
 
     const settings = await Settings.findOne();
@@ -537,11 +546,20 @@ app.get('/w/:publicId', async (req, res) => {
   }
 });
 // ─── AMP WALLPAPER PAGE ───────────────────────────────────
-app.get('/amp/w/:publicId', async (req, res) => {
+app.get('/amp/w/:slugOrId', async (req, res) => {
   try {
-    const fullFilename = `waynelab/${req.params.publicId}`;
-    const w = await Wallpaper.findOne({ filename: fullFilename });
+    const slugOrId = req.params.slugOrId;
+    const w = await Wallpaper.findOne({
+      $or: [
+        { slug: slugOrId },
+        { filename: `waynelab/${slugOrId}` }
+      ]
+    });
     if (!w) return res.status(404).send('Not found');
+
+    if (w.slug && slugOrId !== w.slug) {
+      return res.redirect(301, `/amp/w/${encodeURIComponent(w.slug)}`);
+    }
 
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     
@@ -607,10 +625,15 @@ app.get('/amp/w/:publicId', async (req, res) => {
 });
 
 // ─── FORCE DOWNLOAD ENDPOINT ──────────────────────────────
-app.get('/api/download-direct/:publicId', async (req, res) => {
+app.get('/api/download-direct/:slugOrId', async (req, res) => {
   try {
-    const fullFilename = `waynelab/${req.params.publicId}`;
-    const w = await Wallpaper.findOne({ filename: fullFilename });
+    const slugOrId = req.params.slugOrId;
+    const w = await Wallpaper.findOne({
+      $or: [
+        { slug: slugOrId },
+        { filename: `waynelab/${slugOrId}` }
+      ]
+    });
     
     if (!w) return res.status(404).send('Wallpaper record not found.');
 
