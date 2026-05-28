@@ -1,0 +1,20 @@
+{
+  "short_name": "KnightVault",
+  "name": "Waynelab - KnightVault Wallpapers",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
+  "display": "standalone"
+}

@@ -24,6 +24,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -48,7 +51,7 @@
     <input type="text" class="search-input" id="searchInput" placeholder="Search wallpapers, categories, tags…" oninput="debounceSearch()">
   </div>
 
-  <div class="topbar-actions">
+  <div class="topbar-actions" data-nosnippet>
     <!-- Only shows after admin login -->
     <button class="btn btn-gold hidden" id="uploadBtn-top" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Vault Master</button>
     <button class="btn hidden" id="adminBtn" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Vault Master</button>
@@ -58,7 +61,7 @@
 </header>
 
 <!-- STATS BAR — visible to everyone -->
-<div class="stats-bar" id="statsBar">
+<div class="stats-bar" id="statsBar" data-nosnippet>
   <span id="statTotal">—</span>
   <span>·</span>
   <span id="statDownloads">—</span>
@@ -67,7 +70,7 @@
 </div>
 
 <!-- ADMIN BAR — only visible after admin login -->
-<div class="admin-bar hidden" id="adminBar">
+<div class="admin-bar hidden" id="adminBar" data-nosnippet>
   <div class="admin-info" id="adminInfo">Vault Master · Logged in</div>
   <button class="btn btn-gold" onclick="window.location.href='/admin.html'">Open Dashboard</button>
 </div>
@@ -96,7 +99,7 @@
   <div class="pagination" id="pagination"></div>
 </main>
 
-<footer class="main-footer">
+<footer class="main-footer" data-nosnippet>
   <div class="main-footer-links">
     <a href="/about.html">About Us</a>
     <a href="/contact.html">Contact</a>
@@ -109,7 +112,7 @@
 <!-- ════════════════════════════════════
      ADMIN LOGIN MODAL
 ════════════════════════════════════ -->
-<div class="modal-bg" id="loginModal">
+<div class="modal-bg" id="loginModal" data-nosnippet>
   <div class="modal" style="max-width:380px">
     <div class="modal-hdr">
       <div class="modal-title">Vault Master</div>
@@ -128,7 +131,7 @@
 <!-- ════════════════════════════════════
      UPLOAD MODAL
 ════════════════════════════════════ -->
-<div class="modal-bg" id="uploadModal">
+<div class="modal-bg" id="uploadModal" data-nosnippet>
   <div class="modal">
     <div class="modal-hdr">
       <div class="modal-title">Upload Wallpaper</div>
