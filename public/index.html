@@ -568,11 +568,11 @@ function renderGrid(walls) {
     const pageLink = window.location.origin + '/w/' + (w.slug || w.filename.split('/').pop());
     html += `
     <div class="wall-card" onclick="window.location.href='${pageLink}'">
-      <img src="${esc(w.directLink)}" alt="${esc(w.title)}" loading="lazy"
+      <img src="${esc(w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
         onerror="this.style.opacity='0.3'" class="loading"
         onload="this.classList.remove('loading')">
       <div class="card-overlay">
-        <div class="card-title">${esc(w.title)}</div>
+        <h3 class="card-title">${esc(w.title)}</h3>
         <div class="card-cats">
           ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
         </div>

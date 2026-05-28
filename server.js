@@ -383,7 +383,7 @@ app.get('/w/:slugOrId', async (req, res) => {
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
               <img src="${esc(sw.directLink)}" alt="${esc(sw.title)}" loading="lazy">
               <div class="card-overlay" style="opacity:1;background:linear-gradient(to top,rgba(5,5,5,0.9) 0%,transparent 60%);">
-                <div class="card-title">${esc(sw.title)}</div>
+                <h3 class="card-title">${esc(sw.title)}</h3>
               </div>
             </div>
             `;
@@ -464,7 +464,7 @@ app.get('/w/:slugOrId', async (req, res) => {
           <main class="main" style="padding: 0;">
             <div class="wp-container">
               <div class="wp-img-wrap">
-                <img src="${esc(w.directLink)}" alt="${esc(w.title)}">
+                <img src="${esc(w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper">
               </div>
               <div class="wp-info">
                 <h1 class="wp-title">${esc(w.title)}</h1>
