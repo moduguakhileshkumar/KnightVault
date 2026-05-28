@@ -9,6 +9,30 @@ const path       = require('path');
 const Wallpaper  = require('./model');
 const Settings   = require('./settingsModel');
 
+async function getUniqueSlug(title, WallpaperModel, excludeId = null) {
+  let slug = title.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+  if (!slug) slug = 'wallpaper';
+  
+  let uniqueSlug = slug;
+  let counter = 1;
+  while (true) {
+    const query = { slug: uniqueSlug };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+    const existing = await WallpaperModel.findOne(query);
+    if (!existing) {
+      break;
+    }
+    uniqueSlug = `${slug}-${counter}`;
+    counter++;
+  }
+  return uniqueSlug;
+}
+
+
 const app      = express();
 const PORT     = process.env.PORT || 3000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
@@ -91,6 +115,21 @@ mongoose.connect(process.env.MONGO_URI)
         }
       }
     } catch(e) { console.error('Migration failed', e); }
+
+    // MIGRATION: Generate slugs for wallpapers that don't have them
+    try {
+      const wallsWithoutSlug = await Wallpaper.find({ $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }] });
+      if (wallsWithoutSlug.length > 0) {
+        console.log(`Migrating ${wallsWithoutSlug.length} wallpapers to add slugs...`);
+        for (let w of wallsWithoutSlug) {
+          const slug = await getUniqueSlug(w.title, Wallpaper);
+          w.slug = slug;
+          w.url = `${BASE_URL}/w/${slug}`;
+          await w.save();
+          console.log(`Generated slug for: ${w.title} -> ${slug}`);
+        }
+      }
+    } catch(e) { console.error('Slug migration failed', e); }
   })
   .catch(err => console.error('✗ MongoDB:', err.message));
 
@@ -238,10 +277,12 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
 
     const directLink = req.file.path;
     const publicId   = req.file.filename;
-    const pageUrl    = `${BASE_URL}/w/${encodeURIComponent(publicId.replace('waynelab/', ''))}`;
+    const slug       = await getUniqueSlug(title, Wallpaper);
+    const pageUrl    = `${BASE_URL}/w/${slug}`;
 
     const wall = await Wallpaper.create({
       title:        title.trim(),
+      slug:         slug,
       filename:     publicId,
       originalName: req.file.originalname,
       url:          pageUrl,
@@ -271,6 +312,13 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
     const allowed = ['title', 'category', 'tags', 'isPaid', 'price'];
     const update  = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
+    
+    if (req.body.title !== undefined) {
+      const newSlug = await getUniqueSlug(req.body.title, Wallpaper, req.params.id);
+      update.slug = newSlug;
+      update.url = `${BASE_URL}/w/${newSlug}`;
+    }
+
     const w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!w) return res.status(404).json({ error: 'Not found' });
     res.json(w);
@@ -320,7 +368,7 @@ app.get('/w/:publicId', async (req, res) => {
         <h2 style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--gold);margin:3rem 0 1.5rem;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:.8rem;">Similar Wallpapers</h2>
         <div class="wall-grid">
           ${similar.map(sw => {
-            const pageLink = '/w/' + sw.filename.split('/').pop();
+            const pageLink = '/w/' + (sw.slug || sw.filename.split('/').pop());
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
               <img src="${esc(sw.directLink)}" alt="${esc(sw.title)}" loading="lazy">
@@ -342,19 +390,24 @@ app.get('/w/:publicId', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${esc(w.title)} — Waynelab</title>
-        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
-        <link rel="amphtml" href="${BASE_URL}/amp/w/${encodeURIComponent(req.params.publicId)}">
+        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}">
+        <link rel="amphtml" href="${BASE_URL}/amp/w/${encodeURIComponent(w.slug || slugOrId)}">
         <meta name="robots" content="index, follow">
-        <meta name="description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
+        <meta name="description" content="Download ${esc(w.title)} wallpaper in high quality (4K, HD, mobile sizes) on Waynelab's KnightVault. Find dark themed hero backgrounds and premium artwork.">
         <meta property="og:title" content="${esc(w.title)} — Waynelab">
-        <meta property="og:description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
+        <meta property="og:description" content="Download ${esc(w.title)} wallpaper in high quality (4K, HD, mobile sizes) on Waynelab's KnightVault. Find dark themed hero backgrounds and premium artwork.">
         <meta property="og:image" content="${esc(w.directLink)}">
-        <meta property="og:url" content="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
+        <meta property="og:url" content="${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}">
         <meta property="og:type" content="website">
         <meta name="twitter:card" content="summary_large_image">
         ${adsenseScript}
         ${gaScript}
-        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
+        
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="shortcut icon" href="/favicon.ico">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/style.css">
@@ -496,9 +549,9 @@ app.get('/amp/w/:publicId', async (req, res) => {
       <head>
         <meta charset="utf-8">
         <title>${esc(w.title)} — Waynelab</title>
-        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}">
+        <link rel="canonical" href="${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}">
         <meta name="robots" content="index, follow">
-        <meta name="description" content="Download ${esc(w.title)} wallpaper for your desktop, laptop, or phone. High-quality wallpaper from Waynelab.">
+        <meta name="description" content="Download ${esc(w.title)} wallpaper in high quality (4K, HD, mobile sizes) on Waynelab's KnightVault. Find dark themed hero backgrounds and premium artwork.">
         <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
         <script async src="https://cdn.ampproject.org/v0.js"></script>
         <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
@@ -531,8 +584,8 @@ app.get('/amp/w/:publicId', async (req, res) => {
             <div><strong>Size:</strong> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
           </div>
           ${w.isPaid 
-            ? `<a href="${BASE_URL}/w/${encodeURIComponent(req.params.publicId)}" class="btn">👑 Premium ${w.price}</a>`
-            : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(req.params.publicId)}" class="btn">⬇ Download Now</a>`
+            ? `<a href="${BASE_URL}/w/${encodeURIComponent(w.slug)}" class="btn">👑 Premium ${w.price}</a>`
+            : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(w.slug)}" class="btn">⬇ Download Now</a>`
           }
         </main>
         <footer class="main-footer" style="margin-top: 2rem; padding: 2rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; color: #7A7A9A;">
@@ -638,7 +691,8 @@ app.get('/sitemap.xml', async (req, res) => {
     walls.forEach(w => {
       const publicId = w.filename.replace('waynelab/', '');
       xml += '  <url>\n';
-      xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(publicId)}</loc>\n`;
+      const slug = w.slug || w.filename.replace('waynelab/', '');
+      xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(slug)}</loc>\n`;
       if (w.uploadedAt) {
         xml += `    <lastmod>${w.uploadedAt.toISOString().split('T')[0]}</lastmod>\n`;
       }

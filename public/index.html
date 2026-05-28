@@ -18,8 +18,12 @@
 <title>Waynelab — Wallpapers</title>
 <link rel="canonical" href="https://waynelab.studio/">
 <meta name="robots" content="index, follow">
-<meta name="description" content="Premium wallpapers. Browse, download, share.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C9A84C'%3E%3Cpath d='M2 6s2 2 4 1c2-1 3-3 6-3 3 0 4 2 6 3 2 1 4-1 4-1s-1 4-2 6c-1 2-3 4-8 7-5-3-7-5-8-7-1-2-2-6-2-6zm10 2l-1 2h2l-1-2z'/%3E%3C/svg%3E">
+<meta name="description" content="Welcome to Waynelab's KnightVault, the ultimate catalog of premium high-quality 4K and HD wallpapers. Browse, download, and personalize your devices with stunning dark themes, hero artwork, and minimalist designs.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -558,7 +562,7 @@ function renderGrid(walls) {
   }
   let html = '';
   walls.forEach((w, i) => {
-    const pageLink = window.location.origin + '/w/' + w.filename.split('/').pop();
+    const pageLink = window.location.origin + '/w/' + (w.slug || w.filename.split('/').pop());
     html += `
     <div class="wall-card" onclick="window.location.href='${pageLink}'">
       <img src="${esc(w.directLink)}" alt="${esc(w.title)}" loading="lazy"

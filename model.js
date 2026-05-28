@@ -4,6 +4,7 @@ const wallpaperSchema = new mongoose.Schema({
   title:       { type: String, required: true, trim: true },
   filename:    { type: String, required: true },         // stored file name on disk
   originalName:{ type: String },                         // original upload name
+  slug:        { type: String, unique: true, sparse: true, trim: true },
   url:         { type: String, required: true },         // public access URL
   directLink:  { type: String, required: true },         // direct image link (shareable)
   category:    [{ type: String, lowercase: true, trim: true }],
@@ -20,5 +21,6 @@ const wallpaperSchema = new mongoose.Schema({
 
 // Full-text search index
 wallpaperSchema.index({ title: 'text', tags: 'text', category: 'text' });
+wallpaperSchema.index({ slug: 1 });
 
 module.exports = mongoose.model('Wallpaper', wallpaperSchema);
