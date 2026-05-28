@@ -8,6 +8,7 @@ const cors       = require('cors');
 const path       = require('path');
 const Wallpaper  = require('./model');
 const Settings   = require('./settingsModel');
+const fs         = require('fs');
 
 async function getUniqueSlug(title, WallpaperModel, excludeId = null) {
   let slug = title.toLowerCase()
@@ -745,6 +746,39 @@ app.get('/vault-access/:secret', (req, res) => {
 });
 
 // ─── CATCH-ALL → frontend ────────────────────────────────
-app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/*', async (req, res) => {
+  try {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(404).send('index.html not found');
+    }
+    
+    let html = fs.readFileSync(indexPath, 'utf8');
+    
+    // Fetch up to 100 wallpapers to pre-render as links for search engines
+    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(100);
+    
+    let seoHtml = '\n<div style="display:none;" class="seo-catalog">\n';
+    seoHtml += '  <h2>Waynelab Wallpapers Catalog</h2>\n';
+    seoHtml += '  <ul>\n';
+    walls.forEach(w => {
+      const slug = w.slug || w.filename.replace('waynelab/', '');
+      seoHtml += `    <li><a href="/w/${encodeURIComponent(slug)}">${w.title} Wallpaper</a></li>\n`;
+    });
+    seoHtml += '  </ul>\n';
+    seoHtml += '</div>';
+
+    // Inject the SEO block before the footer (if it exists) or before the end of the body
+    if (html.includes('<footer class="main-footer" data-nosnippet>')) {
+      html = html.replace('<footer class="main-footer" data-nosnippet>', seoHtml + '\n<footer class="main-footer" data-nosnippet>');
+    } else {
+      html = html.replace('</body>', seoHtml + '\n</body>');
+    }
+    
+    res.send(html);
+  } catch (err) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+});
 
 app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));
