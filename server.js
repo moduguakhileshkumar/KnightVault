@@ -381,9 +381,23 @@ app.get('/w/:slugOrId', async (req, res) => {
             const pageLink = '/w/' + (sw.slug || sw.filename.split('/').pop());
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
-              <img src="${esc(sw.directLink)}" alt="${esc(sw.title)}" loading="lazy">
-              <div class="card-overlay" style="opacity:1;background:linear-gradient(to top,rgba(5,5,5,0.9) 0%,transparent 60%);">
+              <img src="${esc(sw.directLink)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
+                onerror="this.style.opacity='0.3'" class="loading"
+                onload="this.classList.remove('loading')">
+              <div class="card-overlay">
                 <h3 class="card-title">${esc(sw.title)}</h3>
+                <div class="card-cats">
+                  ${(Array.isArray(sw.category) ? sw.category : [sw.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
+                </div>
+                <div class="card-actions">
+                  <button class="card-btn card-btn-dl"
+                    onclick="event.stopPropagation();window.location.href='${pageLink}'">
+                    VIEW DETAILS
+                  </button>
+                </div>
+              </div>
+              <div class="card-info-footer">
+                <span class="card-info-title">${esc(sw.title)}</span>
               </div>
             </div>
             `;
@@ -567,7 +581,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
     // Using 1080x1920 as a portrait placeholder layout ratio for mobile devices
     res.send(`
       <!doctype html>
-      <html ⚡ lang="en">
+      <html amp lang="en">
       <head>
         <meta charset="utf-8">
         <title>${esc(w.title)} — Waynelab</title>
@@ -587,6 +601,9 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
           .btn { display: block; background: linear-gradient(135deg, #A8862F, #C9A84C); color: #0A0A0F; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
           .meta { font-size: 0.85rem; color: #7A7A9A; margin: 1rem 0; line-height: 1.6; display: flex; flex-direction: column; gap: 0.3rem; }
           .cat-tag { display: inline-block; font-size: .75rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: #C9A84C; text-transform: capitalize; margin: 0.2rem; }
+          .main-footer { margin-top: 2rem; padding: 2rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; color: #7A7A9A; }
+          .main-footer-links { display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.8rem; }
+          .main-footer-links a { color: #C9A84C; text-decoration: none; font-weight: 700; }
         </style>
       </head>
       <body>
@@ -610,12 +627,12 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(w.slug)}" class="btn">⬇ Download Now</a>`
           }
         </main>
-        <footer class="main-footer" style="margin-top: 2rem; padding: 2rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; color: #7A7A9A;">
-          <div class="main-footer-links" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.8rem;">
-            <a href="${BASE_URL}/about.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">About Us</a>
-            <a href="${BASE_URL}/contact.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Contact</a>
-            <a href="${BASE_URL}/privacy.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Privacy</a>
-            <a href="${BASE_URL}/terms.html" style="color: #C9A84C; text-decoration: none; font-weight: 700;">Terms</a>
+        <footer class="main-footer">
+          <div class="main-footer-links">
+            <a href="${BASE_URL}/about.html">About Us</a>
+            <a href="${BASE_URL}/contact.html">Contact</a>
+            <a href="${BASE_URL}/privacy.html">Privacy</a>
+            <a href="${BASE_URL}/terms.html">Terms</a>
           </div>
           <p>© 2026 Waynelab. All rights reserved.</p>
         </footer>

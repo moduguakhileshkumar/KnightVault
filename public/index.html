@@ -516,7 +516,7 @@ async function loadCategories() {
     cats.forEach(c => {
       const btn = document.createElement('button');
       btn.className = 'cat-pill';
-      btn.textContent = `${c.name} (${c.count})`;
+      btn.textContent = c.name;
       btn.onclick = () => selectCat(c.name, btn);
       bar.appendChild(btn);
     });
@@ -587,6 +587,9 @@ function renderGrid(walls) {
       ${w.tags && w.tags.length ? `<div class="card-badge">${esc(w.tags[0])}</div>` : ''}
       ${w.isPaid ? `<div class="card-badge" style="top:auto;bottom:8px;right:8px;background:rgba(201,168,76,0.9);color:#0A0A0F;border:none;">Premium $${w.price}</div>` : ''}
       ${isAdmin ? `<button class="card-del" onclick="event.stopPropagation();deleteWall('${w._id}','${esc(w.title)}')" title="Delete">✕</button>` : ''}
+      <div class="card-info-footer">
+        <span class="card-info-title">${esc(w.title)}</span>
+      </div>
     </div>
   `;
     if (adsenseId && (i + 1) % 8 === 0) {
