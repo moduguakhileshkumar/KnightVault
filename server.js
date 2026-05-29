@@ -352,8 +352,19 @@ app.get('/w/:slugOrId', async (req, res) => {
     }
 
     const settings = await Settings.findOne();
-    const adsenseScript = settings && settings.adsensePublisherId 
-      ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${settings.adsensePublisherId}" crossorigin="anonymous"></script>` 
+    let clientAdsenseId = '';
+    if (settings && settings.adsensePublisherId) {
+      const rawAdsenseId = settings.adsensePublisherId.trim();
+      if (rawAdsenseId.startsWith('ca-pub-')) {
+        clientAdsenseId = rawAdsenseId;
+      } else if (rawAdsenseId.startsWith('pub-')) {
+        clientAdsenseId = `ca-${rawAdsenseId}`;
+      } else {
+        clientAdsenseId = `ca-pub-${rawAdsenseId}`;
+      }
+    }
+    const adsenseScript = clientAdsenseId 
+      ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientAdsenseId}" crossorigin="anonymous"></script>` 
       : '';
     const gaScript = settings && settings.googleAnalyticsId
       ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.googleAnalyticsId}');</script>`
@@ -690,8 +701,13 @@ app.get('/ads.txt', async (req, res) => {
   try {
     const s = await Settings.findOne();
     if (s && s.adsensePublisherId) {
-      // Ensure the ID starts with 'pub-'
-      const pubId = s.adsensePublisherId.startsWith('pub-') ? s.adsensePublisherId : `pub-${s.adsensePublisherId}`;
+      let pubId = s.adsensePublisherId.trim();
+      if (pubId.startsWith('ca-')) {
+        pubId = pubId.substring(3);
+      }
+      if (!pubId.startsWith('pub-')) {
+        pubId = `pub-${pubId}`;
+      }
       res.type('text/plain');
       res.send(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0`);
     } else {

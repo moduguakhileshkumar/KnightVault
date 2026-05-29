@@ -457,7 +457,14 @@ async function init() {
     const sd = await sr.json();
     if (sd) {
       if (sd.adsensePublisherId) {
-        adsenseId = sd.adsensePublisherId;
+        const rawId = sd.adsensePublisherId.trim();
+        if (rawId.startsWith('ca-pub-')) {
+          adsenseId = rawId;
+        } else if (rawId.startsWith('pub-')) {
+          adsenseId = 'ca-' + rawId;
+        } else {
+          adsenseId = 'ca-pub-' + rawId;
+        }
         const script = document.createElement('script');
         script.async = true;
         script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`;
