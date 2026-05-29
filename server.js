@@ -597,7 +597,8 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
           .logo { color: #C9A84C; text-decoration: none; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
           main { padding: 1rem; max-width: 600px; margin: 0 auto; text-align: center; }
           h1 { color: #C9A84C; font-size: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-          .img-wrap { border-radius: 8px; overflow: hidden; border: 1px solid rgba(201,168,76,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 1rem; }
+          .img-wrap { position: relative; width: 100%; height: 480px; max-height: 70vh; background: #0A0A0F; border-radius: 8px; overflow: hidden; border: 1px solid rgba(201,168,76,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 1rem; }
+          .img-wrap amp-img img { object-fit: contain; }
           .btn { display: block; background: linear-gradient(135deg, #A8862F, #C9A84C); color: #0A0A0F; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
           .meta { font-size: 0.85rem; color: #7A7A9A; margin: 1rem 0; line-height: 1.6; display: flex; flex-direction: column; gap: 0.3rem; }
           .cat-tag { display: inline-block; font-size: .75rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: #C9A84C; text-transform: capitalize; margin: 0.2rem; }
@@ -613,7 +614,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
         <main>
           <h1>${esc(w.title)}</h1>
           <div class="img-wrap">
-            <amp-img src="${esc(w.directLink)}" width="1080" height="1920" layout="responsive" alt="${esc(w.title)}"></amp-img>
+            <amp-img src="${esc(w.directLink)}" layout="fill" alt="${esc(w.title)}"></amp-img>
           </div>
           <div>
             ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
