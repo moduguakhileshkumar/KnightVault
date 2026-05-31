@@ -777,7 +777,8 @@ async function refreshPinterestToken(settings) {
     params.append('grant_type', 'refresh_token');
     params.append('refresh_token', settings.pinterestRefreshToken);
 
-    const tokenResponse = await fetch('https://api.pinterest.com/v5/oauth/token', {
+    const oauthUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com/v5/oauth/token' : 'https://api.pinterest.com/v5/oauth/token';
+    const tokenResponse = await fetch(oauthUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${authHeader}`,
@@ -816,7 +817,8 @@ app.get('/api/pinterest/auth', adminOnly, async (req, res) => {
       return res.status(400).send('Please configure your Pinterest App ID in Settings first.');
     }
     const redirectUri = `${BASE_URL}/api/pinterest/callback`;
-    const authUrl = `https://www.pinterest.com/oauth/?client_id=${settings.pinterestClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=boards:read,boards:write,pins:read,pins:write`;
+    const authDomain = settings.pinterestSandbox ? 'sandbox.pinterest.com' : 'www.pinterest.com';
+    const authUrl = `https://${authDomain}/oauth/?client_id=${settings.pinterestClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=boards:read,boards:write,pins:read,pins:write`;
     res.redirect(authUrl);
   } catch (err) {
     res.status(500).send(err.message);
@@ -842,7 +844,8 @@ app.get('/api/pinterest/callback', async (req, res) => {
     params.append('code', code);
     params.append('redirect_uri', redirectUri);
 
-    const tokenResponse = await fetch('https://api.pinterest.com/v5/oauth/token', {
+    const oauthUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com/v5/oauth/token' : 'https://api.pinterest.com/v5/oauth/token';
+    const tokenResponse = await fetch(oauthUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${authHeader}`,
