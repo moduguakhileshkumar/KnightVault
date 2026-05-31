@@ -36,7 +36,9 @@ async function getUniqueSlug(title, WallpaperModel, excludeId = null) {
 
 const app      = express();
 const PORT     = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+let BASE_URL = process.env.BASE_URL || 'https://waynelab.studio';
+// Normalize BASE_URL by stripping any trailing slashes
+BASE_URL = BASE_URL.replace(/\/+$/, '');
 
 // ─── CLOUDINARY CONFIG ────────────────────────────────────
 cloudinary.config({
@@ -116,6 +118,19 @@ mongoose.connect(process.env.MONGO_URI)
         }
       }
     } catch(e) { console.error('Migration failed', e); }
+
+    // MIGRATION: Fix duplicate slashes in wallpaper urls
+    try {
+      const wallsWithDoubleSlash = await Wallpaper.find({ url: /\/\// });
+      if (wallsWithDoubleSlash.length > 0) {
+        console.log(`Fixing double slashes in ${wallsWithDoubleSlash.length} wallpaper urls...`);
+        for (let w of wallsWithDoubleSlash) {
+          const cleanUrl = w.url.replace(/([^:])\/\/+/g, '$1/');
+          w.url = cleanUrl;
+          await w.save();
+        }
+      }
+    } catch(e) { console.error('Double slash migration failed', e); }
 
     // MIGRATION: Generate slugs for wallpapers that don't have them
     try {
@@ -227,7 +242,7 @@ app.post('/api/verify-admin', (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     let s = await Settings.findOne();
-    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '', predefinedTags: [], predefinedCategories: [] });
+    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '', predefinedTags: [], predefinedCategories: [], pinterestAccessToken: '', pinterestBoardId: '' });
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -240,6 +255,8 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     if (req.body.googleAnalyticsId !== undefined) s.googleAnalyticsId = req.body.googleAnalyticsId;
     if (req.body.predefinedTags !== undefined) s.predefinedTags = req.body.predefinedTags;
     if (req.body.predefinedCategories !== undefined) s.predefinedCategories = req.body.predefinedCategories;
+    if (req.body.pinterestAccessToken !== undefined) s.pinterestAccessToken = req.body.pinterestAccessToken;
+    if (req.body.pinterestBoardId !== undefined) s.pinterestBoardId = req.body.pinterestBoardId;
     await s.save();
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -295,6 +312,11 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
       isPaid:       isPaid === 'true' || isPaid === true,
       price:        parseFloat(price) || 0,
     });
+    // Pinterest Auto-Post hook
+    try {
+      const settings = await Settings.findOne();
+      if (settings) postToPinterest(wall, settings);
+    } catch(e) { console.error('Pinterest upload trigger error:', e.message); }
     res.status(201).json(wall);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -449,6 +471,17 @@ app.get('/w/:slugOrId', async (req, res) => {
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/style.css">
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "ImageObject",
+          "name": "${esc(w.title)}",
+          "caption": "${esc(w.title)} High Quality Wallpaper",
+          "contentUrl": "${esc(w.directLink)}",
+          "thumbnailUrl": "${esc(w.directLink)}",
+          "url": "${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}"
+        }
+        </script>
         <style>
           .wp-container { max-width: 1000px; margin: 0 auto; padding: 2rem; display: flex; gap: 2rem; align-items: flex-start; }
           .wp-img-wrap { flex: 1; text-align: center; }
@@ -652,6 +685,58 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
       </html>
     `);
   } catch (err) { res.status(500).send('Error loading AMP page.'); }
+});
+
+// Pinterest Auto-Post Helper
+async function postToPinterest(wall, settings) {
+  if (!settings.pinterestAccessToken || !settings.pinterestBoardId) return;
+  try {
+    const pinData = {
+      board_id: settings.pinterestBoardId,
+      link: wall.url,
+      title: wall.title,
+      description: `Download this wallpaper in high resolution on my website: ${wall.url}`,
+      media_source: {
+        source_type: 'image_url',
+        url: wall.directLink
+      }
+    };
+    const response = await fetch('https://api.pinterest.com/v5/pins', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.pinterestAccessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(pinData)
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Pinterest API failed with status ${response.status}:`, errText);
+    } else {
+      console.log(`Successfully posted pin to Pinterest for wallpaper: ${wall.title}`);
+    }
+  } catch (err) {
+    console.error('Failed to post to Pinterest:', err.message);
+  }
+}
+
+// Pinterest proxy endpoint to list boards
+app.get('/api/pinterest/boards', adminOnly, async (req, res) => {
+  try {
+    const token = req.headers['x-pinterest-token'];
+    if (!token) return res.status(400).send('Pinterest Token required');
+    const response = await fetch('https://api.pinterest.com/v5/boards', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).send(errorText);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch(err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // ─── FORCE DOWNLOAD ENDPOINT ──────────────────────────────

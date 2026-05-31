@@ -89,8 +89,8 @@ body::before{content:'';position:fixed;inset:0;
 
 /* ── GRID ── */
 .main{flex:1;padding:1.2rem 2rem 3rem}
-.wall-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:24px;width:100%;align-items:start}
-.wall-card{position:relative;border-radius:0;clip-path:polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);overflow:hidden;cursor:pointer;background:var(--bg4);border:1px solid rgba(255,255,255,.06);transition:transform .22s,border-color .22s,box-shadow .22s;display:flex;flex-direction:column}
+.wall-grid{column-count:3;column-gap:20px;width:100%;display:block}
+.wall-card{position:relative;border-radius:0;clip-path:polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);overflow:hidden;cursor:pointer;background:var(--bg4);border:1px solid rgba(255,255,255,.06);transition:transform .22s,border-color .22s,box-shadow .22s;display:inline-block;width:100%;margin-bottom:20px;break-inside:avoid}
 .wall-card:hover{transform:translateY(-5px);border-color:rgba(240,216,58,.4);box-shadow:0 12px 32px rgba(0,0,0,1), 0 0 15px rgba(240,216,58,.15)}
 .wall-card img{width:100%;height:auto;display:block;transition:transform .3s}
 .wall-card:hover img{transform:scale(1.03)}
@@ -276,7 +276,8 @@ body::before{content:'';position:fixed;inset:0;
   .main{padding:.8rem 1rem 2rem}
   .cat-bar,.toolbar,.admin-bar,.stats-bar{padding:.6rem 1rem}
   .cat-bar{justify-content:flex-start;gap:1.2rem}
-  .wall-grid{grid-template-columns:repeat(2, 1fr);gap:12px;align-items:start}
+  .wall-grid{column-count:2;column-gap:12px;display:block}
+  .wall-card{margin-bottom:12px}
   .lb-inner{flex-direction:column; overflow-y:auto; max-height:100vh; width:100%; padding:2.5rem 1rem 1rem; border-radius:0; gap:1rem; clip-path:none;}
   .lb-img-wrap{max-height:50vh; width:100%; overflow:hidden;}
   .lb-img-wrap img{max-height:50vh; width:100%; object-fit:contain;}

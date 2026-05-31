@@ -209,6 +209,27 @@ tr:hover td { background: var(--bg4); }
         <label>Google Analytics ID (Measurement ID)</label>
         <input type="text" id="setGa" placeholder="e.g. G-ABC123XYZ">
       </div>
+      
+      <!-- Pinterest Integration -->
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.08);">
+        <h3 style="color:var(--gold); font-size:1rem; margin-bottom:1rem; font-weight:normal; font-family:'Orbitron',sans-serif; letter-spacing:0.05em;">Pinterest Integration</h3>
+        <div class="field">
+          <label>Pinterest Access Token</label>
+          <input type="text" id="setPinterestToken" placeholder="Developer Access Token (starts with pds_)">
+          <div style="font-size: .7rem; color: var(--dim); margin-top: .5rem;">
+            You can generate a developer token inside the <a href="https://developers.pinterest.com/" target="_blank" style="color:var(--gold); text-decoration:none;">Pinterest Developer Portal</a>.
+          </div>
+        </div>
+        <div class="field">
+          <label>Pinterest Anime Wallpaper Board ID</label>
+          <input type="text" id="setPinterestBoard" placeholder="e.g. 123456789012345678">
+          <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button type="button" class="btn" onclick="fetchPinterestBoards()" style="padding:0.4rem 0.8rem; font-size:.65rem; border-color:var(--mid); color:var(--mid); background:transparent;">Fetch & List Boards</button>
+          </div>
+          <div id="pinterestBoardsList" style="font-size: 0.72rem; color: var(--mid); margin-top: 0.5rem; max-height: 150px; overflow-y: auto; display:none; background: var(--bg2); border: 1px solid rgba(255,255,255,0.06); padding: 0.5rem;"></div>
+        </div>
+      </div>
+      
       <button class="btn" onclick="saveSettings()">Save Settings</button>
 
       <hr style="border-color:rgba(255,255,255,0.1); margin: 2rem 0;">
@@ -624,6 +645,41 @@ async function loadWallpapers() {
 let predefinedTags = [];
 let predefinedCategories = [];
 
+async function fetchPinterestBoards() {
+  const token = document.getElementById('setPinterestToken').value.trim();
+  const listDiv = document.getElementById('pinterestBoardsList');
+  if (!token) {
+    showToast('Please enter Pinterest Access Token first.');
+    return;
+  }
+  listDiv.style.display = 'block';
+  listDiv.innerHTML = 'Loading boards...';
+  try {
+    const r = await fetch('/api/pinterest/boards', {
+      headers: { 'x-admin-password': adminPw, 'x-pinterest-token': token }
+    });
+    if (!r.ok) {
+      throw new Error(await r.text() || 'Failed to fetch boards');
+    }
+    const d = await r.json();
+    if (d && d.items && d.items.length > 0) {
+      let html = '<ul style="list-style:none; padding:0; margin:0;">';
+      d.items.forEach(b => {
+        html += `<li style="padding:0.3rem 0; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; justify-content:space-between; align-items:center;">
+          <span><strong>${esc(b.name)}</strong> (${esc(b.id)})</span>
+          <button class="btn" style="padding:0.15rem 0.4rem; font-size:.58rem; background:transparent; border-color:var(--gold); color:var(--gold);" onclick="document.getElementById('setPinterestBoard').value='${esc(b.id)}'; showToast('Board ID copied!')">Select</button>
+        </li>`;
+      });
+      html += '</ul>';
+      listDiv.innerHTML = html;
+    } else {
+      listDiv.innerHTML = 'No boards found.';
+    }
+  } catch(e) {
+    listDiv.innerHTML = `<span style="color:#ff8080;">Error: ${esc(e.message)}</span>`;
+  }
+}
+
 async function loadSettings() {
   try {
     const r = await fetch('/api/settings');
@@ -631,6 +687,8 @@ async function loadSettings() {
     if(d) {
       if(d.adsensePublisherId) document.getElementById('setAdsense').value = d.adsensePublisherId;
       if(d.googleAnalyticsId) document.getElementById('setGa').value = d.googleAnalyticsId;
+      if(d.pinterestAccessToken) document.getElementById('setPinterestToken').value = d.pinterestAccessToken;
+      if(d.pinterestBoardId) document.getElementById('setPinterestBoard').value = d.pinterestBoardId;
       predefinedTags = d.predefinedTags || [];
       predefinedCategories = d.predefinedCategories || [];
     }
@@ -661,12 +719,16 @@ async function saveSettings(showAlert = true) {
   const pubId = document.getElementById('setAdsense').value.trim();
   const gaId = document.getElementById('setGa').value.trim();
   try {
+    const pinToken = document.getElementById('setPinterestToken').value.trim();
+    const pinBoard = document.getElementById('setPinterestBoard').value.trim();
     await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
       body: JSON.stringify({ 
         adsensePublisherId: pubId, 
         googleAnalyticsId: gaId,
+        pinterestAccessToken: pinToken,
+        pinterestBoardId: pinBoard,
         predefinedTags,
         predefinedCategories
       })

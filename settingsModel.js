@@ -5,6 +5,8 @@ const settingsSchema = new mongoose.Schema({
   googleAnalyticsId: { type: String, default: '' },
   predefinedTags: [{ type: String }],
   predefinedCategories: [{ type: String }],
+  pinterestAccessToken: { type: String, default: '' },
+  pinterestBoardId: { type: String, default: '' },
 });
 
 module.exports = mongoose.model('Settings', settingsSchema);
