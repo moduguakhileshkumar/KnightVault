@@ -242,8 +242,28 @@ app.post('/api/verify-admin', (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     let s = await Settings.findOne();
-    if (!s) s = await Settings.create({ adsensePublisherId: '', googleAnalyticsId: '', predefinedTags: [], predefinedCategories: [], pinterestAccessToken: '', pinterestBoardId: '' });
-    res.json(s);
+    if (!s) s = await Settings.create({
+      adsensePublisherId: '',
+      googleAnalyticsId: '',
+      predefinedTags: [],
+      predefinedCategories: [],
+      pinterestAccessToken: '',
+      pinterestBoardId: '',
+      pinterestClientId: '',
+      pinterestClientSecret: '',
+      pinterestRefreshToken: ''
+    });
+
+    let pinterestStatus = 'Not Connected';
+    if (s.pinterestRefreshToken) {
+      pinterestStatus = 'Connected (Auto-refresh enabled)';
+    } else if (s.pinterestAccessToken) {
+      pinterestStatus = 'Temporary Token Active (Expires in 24h)';
+    }
+
+    const data = s.toObject();
+    data.pinterestStatus = pinterestStatus;
+    res.json(data);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -257,6 +277,8 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     if (req.body.predefinedCategories !== undefined) s.predefinedCategories = req.body.predefinedCategories;
     if (req.body.pinterestAccessToken !== undefined) s.pinterestAccessToken = req.body.pinterestAccessToken;
     if (req.body.pinterestBoardId !== undefined) s.pinterestBoardId = req.body.pinterestBoardId;
+    if (req.body.pinterestClientId !== undefined) s.pinterestClientId = req.body.pinterestClientId;
+    if (req.body.pinterestClientSecret !== undefined) s.pinterestClientSecret = req.body.pinterestClientSecret;
     await s.save();
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -691,6 +713,16 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
 async function postToPinterest(wall, settings) {
   if (!settings.pinterestAccessToken || !settings.pinterestBoardId) return;
   try {
+    // If token has expired or is expiring soon, attempt auto-refresh
+    if (settings.pinterestTokenExpiresAt && new Date() >= new Date(settings.pinterestTokenExpiresAt)) {
+      console.log('Pinterest token is expired/expiring. Refreshing...');
+      const refreshed = await refreshPinterestToken(settings);
+      if (!refreshed) {
+        console.error('Skipping Pinterest upload: Failed to refresh token.');
+        return;
+      }
+    }
+
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
@@ -732,10 +764,125 @@ async function postToPinterest(wall, settings) {
   }
 }
 
+// Helper to auto-refresh access token using refresh token
+async function refreshPinterestToken(settings) {
+  if (!settings.pinterestRefreshToken || !settings.pinterestClientId || !settings.pinterestClientSecret) return false;
+  try {
+    const authHeader = Buffer.from(`${settings.pinterestClientId}:${settings.pinterestClientSecret}`).toString('base64');
+    const params = new URLSearchParams();
+    params.append('grant_type', 'refresh_token');
+    params.append('refresh_token', settings.pinterestRefreshToken);
+
+    const tokenResponse = await fetch('https://api.pinterest.com/v5/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authHeader}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error(`Failed to refresh Pinterest token: ${errorText}`);
+      return false;
+    }
+
+    const tokenData = await tokenResponse.json();
+    settings.pinterestAccessToken = tokenData.access_token;
+    if (tokenData.refresh_token) {
+      settings.pinterestRefreshToken = tokenData.refresh_token;
+    }
+    const expiresIn = tokenData.expires_in || 86400;
+    settings.pinterestTokenExpiresAt = new Date(Date.now() + (expiresIn - 300) * 1000); // 5 min buffer
+    await settings.save();
+    console.log('Successfully refreshed Pinterest Access Token.');
+    return true;
+  } catch(e) {
+    console.error('Error refreshing Pinterest token:', e.message);
+    return false;
+  }
+}
+
+// OAuth start route
+app.get('/api/pinterest/auth', adminOnly, async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    if (!settings || !settings.pinterestClientId) {
+      return res.status(400).send('Please configure your Pinterest App ID in Settings first.');
+    }
+    const redirectUri = `${BASE_URL}/api/pinterest/callback`;
+    const authUrl = `https://www.pinterest.com/oauth/?client_id=${settings.pinterestClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=boards:read,pins:write`;
+    res.redirect(authUrl);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// OAuth callback route
+app.get('/api/pinterest/callback', async (req, res) => {
+  try {
+    const code = req.query.code;
+    if (!code) return res.status(400).send('Authorization code missing');
+
+    const settings = await Settings.findOne();
+    if (!settings || !settings.pinterestClientId || !settings.pinterestClientSecret) {
+      return res.status(400).send('App configurations missing in Settings');
+    }
+
+    const redirectUri = `${BASE_URL}/api/pinterest/callback`;
+    const authHeader = Buffer.from(`${settings.pinterestClientId}:${settings.pinterestClientSecret}`).toString('base64');
+    
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', redirectUri);
+
+    const tokenResponse = await fetch('https://api.pinterest.com/v5/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authHeader}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      return res.status(tokenResponse.status).send(`Token exchange failed: ${errorText}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    settings.pinterestAccessToken = tokenData.access_token;
+    if (tokenData.refresh_token) {
+      settings.pinterestRefreshToken = tokenData.refresh_token;
+    }
+    const expiresIn = tokenData.expires_in || 86400;
+    settings.pinterestTokenExpiresAt = new Date(Date.now() + (expiresIn - 300) * 1000); // 5 min buffer
+    await settings.save();
+
+    res.send(`
+      <html>
+        <body style="font-family:sans-serif; text-align:center; background:#121212; color:#fff; padding-top:5rem;">
+          <h2 style="color:#f0d83a;">Pinterest Connected Successfully!</h2>
+          <p>This window will close automatically in 3 seconds...</p>
+          <script>
+            setTimeout(() => {
+              window.close();
+            }, 3000);
+          </script>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).send(`OAuth Error: ${err.message}`);
+  }
+});
+
 // Pinterest proxy endpoint to list boards
 app.get('/api/pinterest/boards', adminOnly, async (req, res) => {
   try {
-    const token = req.headers['x-pinterest-token'];
+    const token = req.headers['x-pinterest-token'] || (await Settings.findOne()).pinterestAccessToken;
     if (!token) return res.status(400).send('Pinterest Token required');
     const response = await fetch('https://api.pinterest.com/v5/boards', {
       headers: { 'Authorization': `Bearer ${token}` }

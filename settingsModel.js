@@ -7,6 +7,10 @@ const settingsSchema = new mongoose.Schema({
   predefinedCategories: [{ type: String }],
   pinterestAccessToken: { type: String, default: '' },
   pinterestBoardId: { type: String, default: '' },
+  pinterestClientId: { type: String, default: '' },
+  pinterestClientSecret: { type: String, default: '' },
+  pinterestRefreshToken: { type: String, default: '' },
+  pinterestTokenExpiresAt: { type: Date }
 });
 
 module.exports = mongoose.model('Settings', settingsSchema);
