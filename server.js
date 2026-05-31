@@ -691,14 +691,26 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
 async function postToPinterest(wall, settings) {
   if (!settings.pinterestAccessToken || !settings.pinterestBoardId) return;
   try {
+    // Generate watermarked preview link for Pinterest using Cloudinary transformation
+    let previewLink = wall.directLink;
+    if (previewLink && previewLink.includes('/upload/')) {
+      // co_rgb:000000 -> text color black
+      // b_rgb:f0d83a -> background color gold (#f0d83a matches site theme)
+      // l_text:Arial_40_bold -> Arial font, size 40, bold
+      // g_south -> aligned to bottom
+      // y_60 -> offset 60px from bottom edge
+      const overlayText = 'co_rgb:000000,l_text:Arial_40_bold:DOWNLOAD%204K%20AT%20WAYNELAB.STUDIO,g_south,y_60,b_rgb:f0d83a';
+      previewLink = previewLink.replace('/upload/', `/upload/${overlayText}/`);
+    }
+
     const pinData = {
       board_id: settings.pinterestBoardId,
       link: wall.url,
       title: wall.title,
-      description: `Download this wallpaper in high resolution on my website: ${wall.url}`,
+      description: `👇 CLICK the link to download the uncompressed 4K resolution version of this anime wallpaper on my website for free! 📲 Beautiful lockscreen and homescreen setups at waynelab.studio. Direct Page: ${wall.url}`,
       media_source: {
         source_type: 'image_url',
-        url: wall.directLink
+        url: previewLink
       }
     };
     const response = await fetch('https://api.pinterest.com/v5/pins', {
