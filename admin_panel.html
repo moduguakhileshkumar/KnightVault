@@ -219,6 +219,10 @@ tr:hover td { background: var(--bg4); }
           <button type="button" class="btn" onclick="startPinterestOAuth()" style="padding:0.3rem 0.6rem; font-size:.65rem; background:var(--gold); color:#000; font-weight:bold; border:none; border-radius:2px; cursor:pointer;">Connect (Auto-Refresh)</button>
         </div>
 
+        <div class="field" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.5rem;">
+          <input type="checkbox" id="setPinterestSandbox" style="width:auto; cursor:pointer;">
+          <label for="setPinterestSandbox" style="margin-bottom:0; cursor:pointer; font-size:0.75rem; color:var(--mid);">Use Sandbox Environment (recommended for Trial/Testing status)</label>
+        </div>
         <div class="field">
           <label>Pinterest App ID</label>
           <input type="text" id="setPinterestClientId" placeholder="e.g. 1576177">
@@ -707,6 +711,7 @@ async function loadSettings() {
       if(d.pinterestClientId) document.getElementById('setPinterestClientId').value = d.pinterestClientId;
       if(d.pinterestClientSecret) document.getElementById('setPinterestClientSecret').value = d.pinterestClientSecret;
       document.getElementById('pinterestStatusText').textContent = d.pinterestStatus || 'Not Connected';
+      document.getElementById('setPinterestSandbox').checked = !!d.pinterestSandbox;
       predefinedTags = d.predefinedTags || [];
       predefinedCategories = d.predefinedCategories || [];
     }
@@ -753,6 +758,7 @@ async function saveSettings(showAlert = true) {
     const pinBoard = document.getElementById('setPinterestBoard').value.trim();
     const pinClientId = document.getElementById('setPinterestClientId').value.trim();
     const pinClientSecret = document.getElementById('setPinterestClientSecret').value.trim();
+    const pinSandbox = document.getElementById('setPinterestSandbox').checked;
     await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
@@ -763,6 +769,7 @@ async function saveSettings(showAlert = true) {
         pinterestBoardId: pinBoard,
         pinterestClientId: pinClientId,
         pinterestClientSecret: pinClientSecret,
+        pinterestSandbox: pinSandbox,
         predefinedTags,
         predefinedCategories
       })

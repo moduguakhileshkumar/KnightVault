@@ -251,7 +251,8 @@ app.get('/api/settings', async (req, res) => {
       pinterestBoardId: '',
       pinterestClientId: '',
       pinterestClientSecret: '',
-      pinterestRefreshToken: ''
+      pinterestRefreshToken: '',
+      pinterestSandbox: false
     });
 
     let pinterestStatus = 'Not Connected';
@@ -279,6 +280,7 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     if (req.body.pinterestBoardId !== undefined) s.pinterestBoardId = req.body.pinterestBoardId;
     if (req.body.pinterestClientId !== undefined) s.pinterestClientId = req.body.pinterestClientId;
     if (req.body.pinterestClientSecret !== undefined) s.pinterestClientSecret = req.body.pinterestClientSecret;
+    if (req.body.pinterestSandbox !== undefined) s.pinterestSandbox = req.body.pinterestSandbox;
     await s.save();
     res.json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -745,10 +747,12 @@ async function postToPinterest(wall, settings) {
         url: previewLink
       }
     };
-    const response = await fetch('https://api.pinterest.com/v5/pins', {
+    
+    const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
+    const response = await fetch(baseUrl + '/v5/pins', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${settings.pinterestAccessToken}`,
+        'Authorization': 'Bearer ' + settings.pinterestAccessToken,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(pinData)
@@ -757,7 +761,7 @@ async function postToPinterest(wall, settings) {
       const errText = await response.text();
       console.error(`Pinterest API failed with status ${response.status}:`, errText);
     } else {
-      console.log(`Successfully posted pin to Pinterest for wallpaper: ${wall.title}`);
+      console.log(`Successfully posted pin to Pinterest for wallpaper: ${wall.title} (Sandbox: ${!!settings.pinterestSandbox})`);
     }
   } catch (err) {
     console.error('Failed to post to Pinterest:', err.message);
@@ -882,10 +886,13 @@ app.get('/api/pinterest/callback', async (req, res) => {
 // Pinterest proxy endpoint to list boards
 app.get('/api/pinterest/boards', adminOnly, async (req, res) => {
   try {
-    const token = req.headers['x-pinterest-token'] || (await Settings.findOne()).pinterestAccessToken;
+    const settings = await Settings.findOne();
+    const token = req.headers['x-pinterest-token'] || settings.pinterestAccessToken;
     if (!token) return res.status(400).send('Pinterest Token required');
-    const response = await fetch('https://api.pinterest.com/v5/boards', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    
+    const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
+    const response = await fetch(baseUrl + '/v5/boards', {
+      headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!response.ok) {
       const errorText = await response.text();
