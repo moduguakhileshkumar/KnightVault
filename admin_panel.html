@@ -715,7 +715,7 @@ async function loadSettings() {
 
 function startPinterestOAuth() {
   saveSettings(false).then(() => {
-    const authWindow = window.open('/api/pinterest/auth', 'PinterestAuth', 'width=600,height=700,top=100,left=100');
+    const authWindow = window.open('/api/pinterest/auth?password=' + encodeURIComponent(adminPw), 'PinterestAuth', 'width=600,height=700,top=100,left=100');
     const timer = setInterval(() => {
       if (authWindow.closed) {
         clearInterval(timer);

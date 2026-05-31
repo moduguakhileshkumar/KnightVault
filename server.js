@@ -66,7 +66,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
 function adminOnly(req, res, next) {
-  const pw = req.headers['x-admin-password'];
+  const pw = req.headers['x-admin-password'] || req.query.password;
   if (!process.env.ADMIN_PASSWORD) return next(); // no password set = dev mode
   if (pw && pw === process.env.ADMIN_PASSWORD) return next();
   return res.status(401).json({ error: 'Unauthorized' });
