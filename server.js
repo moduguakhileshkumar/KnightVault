@@ -812,7 +812,7 @@ app.get('/api/pinterest/auth', adminOnly, async (req, res) => {
       return res.status(400).send('Please configure your Pinterest App ID in Settings first.');
     }
     const redirectUri = `${BASE_URL}/api/pinterest/callback`;
-    const authUrl = `https://www.pinterest.com/oauth/?client_id=${settings.pinterestClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=boards:read,pins:write`;
+    const authUrl = `https://www.pinterest.com/oauth/?client_id=${settings.pinterestClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=boards:read,boards:write,pins:read,pins:write`;
     res.redirect(authUrl);
   } catch (err) {
     res.status(500).send(err.message);
