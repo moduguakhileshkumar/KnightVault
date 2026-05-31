@@ -893,7 +893,8 @@ app.get('/api/pinterest/boards', adminOnly, async (req, res) => {
     const token = req.headers['x-pinterest-token'] || settings.pinterestAccessToken;
     if (!token) return res.status(400).send('Pinterest Token required');
     
-    const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
+    const isSandbox = req.query.sandbox === 'true' || settings.pinterestSandbox;
+    const baseUrl = isSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
     const response = await fetch(baseUrl + '/v5/boards', {
       headers: { 'Authorization': 'Bearer ' + token }
     });

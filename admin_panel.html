@@ -666,6 +666,7 @@ let predefinedCategories = [];
 
 async function fetchPinterestBoards() {
   const token = document.getElementById('setPinterestToken').value.trim();
+  const sandbox = document.getElementById('setPinterestSandbox').checked;
   const listDiv = document.getElementById('pinterestBoardsList');
   if (!token) {
     showToast('Please enter Pinterest Access Token first.');
@@ -674,7 +675,7 @@ async function fetchPinterestBoards() {
   listDiv.style.display = 'block';
   listDiv.innerHTML = 'Loading boards...';
   try {
-    const r = await fetch('/api/pinterest/boards', {
+    const r = await fetch('/api/pinterest/boards?sandbox=' + sandbox, {
       headers: { 'x-admin-password': adminPw, 'x-pinterest-token': token }
     });
     if (!r.ok) {
