@@ -982,7 +982,7 @@ app.get('/robots.txt', (req, res) => {
 // ─── SITEMAP.XML ──────────────────────────────────────────
 app.get('/sitemap.xml', async (req, res) => {
   try {
-    const walls = await Wallpaper.find({}, 'filename uploadedAt').sort({ uploadedAt: -1 });
+    const walls = await Wallpaper.find({}, 'filename uploadedAt slug').sort({ uploadedAt: -1 });
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
