@@ -83,7 +83,7 @@
 <!-- ADMIN BAR — only visible after admin login -->
 <div class="admin-bar hidden" id="adminBar" data-nosnippet>
   <div class="admin-info" id="adminInfo">Vault Master · Logged in</div>
-  <button class="btn btn-gold" onclick="window.location.href='/admin.html'">Open Dashboard</button>
+  <button class="btn btn-gold" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">Open Dashboard</button>
 </div>
 
 <!-- CATEGORY PILLS -->
@@ -505,6 +505,24 @@ async function init() {
     }
   } catch(e) {}
 
+  // Restore admin session if available in localStorage
+  const savedPw = localStorage.getItem('adminPw');
+  if (savedPw) {
+    try {
+      const r = await fetch(`${API}/api/verify-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: savedPw })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        setAdminMode(true, savedPw);
+      } else {
+        localStorage.removeItem('adminPw');
+      }
+    } catch (e) {}
+  }
+
   await Promise.all([loadStats(), loadCategories(), loadAllTags()]);
   await loadWallpapers(1);
 }
@@ -514,9 +532,19 @@ async function loadStats() {
   try {
     const r = await fetch(`${API}/api/stats`);
     const d = await r.json();
-    document.getElementById('statTotal').innerHTML     = `<strong>${d.total}</strong> wallpapers`;
-    document.getElementById('statDownloads').innerHTML = `<strong>${d.downloads}</strong> downloads`;
-    document.getElementById('statViews').innerHTML     = `<strong>${d.views}</strong> views`;
+    
+    let totalHtml = `<strong>${d.total}</strong> wallpapers`;
+    let downloadsHtml = `<strong>${d.downloads}</strong> downloads`;
+    let viewsHtml = `<strong>${d.views}</strong> views`;
+    
+    if (d.isAdmin || isAdmin) {
+      downloadsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminDownloads || 0} by you)</span>`;
+      viewsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminViews || 0} by you)</span>`;
+    }
+    
+    document.getElementById('statTotal').innerHTML     = totalHtml;
+    document.getElementById('statDownloads').innerHTML = downloadsHtml;
+    document.getElementById('statViews').innerHTML     = viewsHtml;
   } catch(e) {}
 }
 
@@ -688,9 +716,12 @@ async function submitLogin() {
     const d = await r.json();
     if (d.ok) {
       adminPw = pw;
+      localStorage.setItem('adminPw', pw);
+      document.cookie = 'adminPw=' + encodeURIComponent(pw) + '; Path=/; Max-Age=31536000; SameSite=Strict';
       setAdminMode(true, pw);
       closeLogin();
       showToast('Welcome, Vault Master');
+      loadStats();
     } else {
       err.textContent = 'Wrong password';
       btn.disabled = false;
@@ -705,9 +736,12 @@ async function submitLogin() {
 
 function logout() {
   adminPw = '';
+  localStorage.removeItem('adminPw');
+  document.cookie = 'adminPw=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
   setAdminMode(false);
   loadWallpapers(currentPage); // re-render to remove delete buttons
   showToast('Logged out');
+  loadStats();
 }
 
 function setAdminMode(on, pw) {

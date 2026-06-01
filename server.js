@@ -72,6 +72,44 @@ function adminOnly(req, res, next) {
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
+async function updateAdminIp(req) {
+  const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  if (clientIp) {
+    try {
+      await Settings.findOneAndUpdate({}, { adminIp: clientIp }, { upsert: true, new: true });
+      console.log('Updated adminIp in settings: ' + clientIp);
+    } catch (e) {
+      console.error('Failed to update adminIp:', e);
+    }
+  }
+}
+
+async function isRequestAdmin(req) {
+  const pw = req.headers['x-admin-password'] || req.query.password;
+  if (process.env.ADMIN_PASSWORD && pw === process.env.ADMIN_PASSWORD) {
+    return true;
+  }
+  const cookies = req.headers.cookie || '';
+  const adminPwCookie = cookies.split(';').find(c => c.trim().startsWith('adminPw='));
+  if (adminPwCookie) {
+    const cookieVal = decodeURIComponent(adminPwCookie.split('=')[1] || '').trim();
+    if (process.env.ADMIN_PASSWORD && cookieVal === process.env.ADMIN_PASSWORD) {
+      return true;
+    }
+  }
+  const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  try {
+    const settings = await Settings.findOne();
+    if (settings && settings.adminIp && clientIp === settings.adminIp) {
+      return true;
+    }
+  } catch (e) {}
+  if (!process.env.ADMIN_PASSWORD) {
+    return true;
+  }
+  return false;
+}
+
 // ─── MONGODB ──────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
@@ -202,7 +240,9 @@ app.get('/api/tags', async (req, res) => {
 
 app.get('/api/wallpapers/:id', async (req, res) => {
   try {
-    const w = await Wallpaper.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
+    const isAdmin = await isRequestAdmin(req);
+    const update = isAdmin ? { $inc: { adminViews: 1 } } : { $inc: { views: 1 } };
+    const w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!w) return res.status(404).json({ error: 'Not found' });
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -210,19 +250,31 @@ app.get('/api/wallpapers/:id', async (req, res) => {
 
 app.post('/api/wallpapers/:id/download', async (req, res) => {
   try {
-    await Wallpaper.findByIdAndUpdate(req.params.id, { $inc: { downloads: 1 } });
+    const isAdmin = await isRequestAdmin(req);
+    const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
+    await Wallpaper.findByIdAndUpdate(req.params.id, update);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/stats', async (req, res) => {
   try {
-    const [total, dl, vw] = await Promise.all([
+    const [total, dl, vw, adl, avw] = await Promise.all([
       Wallpaper.countDocuments(),
       Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$downloads' } } }]),
       Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$views'     } } }]),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminDownloads' } } }]),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminViews'     } } }]),
     ]);
-    res.json({ total, downloads: dl[0]?.sum || 0, views: vw[0]?.sum || 0 });
+    const isAdmin = await isRequestAdmin(req);
+    res.json({
+      total,
+      downloads: dl[0]?.sum || 0,
+      views: vw[0]?.sum || 0,
+      adminDownloads: adl[0]?.sum || 0,
+      adminViews: avw[0]?.sum || 0,
+      isAdmin
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -230,9 +282,11 @@ app.get('/api/check-admin', (req, res) => {
   res.json({ passwordRequired: !!process.env.ADMIN_PASSWORD });
 });
 
-app.post('/api/verify-admin', (req, res) => {
+app.post('/api/verify-admin', async (req, res) => {
   const { password } = req.body;
   if (!process.env.ADMIN_PASSWORD || password === process.env.ADMIN_PASSWORD) {
+    await updateAdminIp(req);
+    res.setHeader('Set-Cookie', 'adminPw=' + encodeURIComponent(password || '') + '; Path=/; Max-Age=31536000; SameSite=Strict');
     return res.json({ ok: true });
   }
   res.status(401).json({ ok: false, error: 'Wrong password' });
@@ -417,7 +471,12 @@ app.get('/w/:slugOrId', async (req, res) => {
       : '';
 
     // Increment view counter
-    await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+    const isAdminReq = await isRequestAdmin(req);
+    if (isAdminReq) {
+      await Wallpaper.findByIdAndUpdate(w._id, { $inc: { adminViews: 1 } });
+    } else {
+      await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+    }
 
     // Find similar wallpapers
     let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
@@ -923,7 +982,9 @@ app.get('/api/download-direct/:slugOrId', async (req, res) => {
     if (!w) return res.status(404).send('Wallpaper record not found.');
 
     // 1. Increment the download count in MongoDB
-    await Wallpaper.findByIdAndUpdate(w._id, { $inc: { downloads: 1 } });
+    const isAdmin = await isRequestAdmin(req);
+    const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
+    await Wallpaper.findByIdAndUpdate(w._id, update);
 
     // 2. Format a clean filename for their device saving
     const safeName = w.title.trim().replace(/\s+/g, '_') + '.jpg';
@@ -1027,8 +1088,10 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // ─── SECRET ADMIN ROUTE ───────────────────────────────────
-app.get('/vault-access/:secret', (req, res) => {
+app.get('/vault-access/:secret', async (req, res) => {
   if (process.env.ADMIN_PASSWORD && req.params.secret === process.env.ADMIN_PASSWORD) {
+    await updateAdminIp(req);
+    res.setHeader('Set-Cookie', 'adminPw=' + encodeURIComponent(req.params.secret) + '; Path=/; Max-Age=31536000; SameSite=Strict');
     return res.sendFile(path.join(__dirname, 'admin_panel.html'));
   }
   return res.redirect('/');

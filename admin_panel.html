@@ -593,6 +593,27 @@ document.addEventListener('click', e => {
 });
 
 async function checkAuth() {
+  // Check if saved password in localStorage
+  const savedPw = localStorage.getItem('adminPw');
+  if (savedPw) {
+    try {
+      const r = await fetch('/api/verify-admin', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password:savedPw})
+      });
+      const d = await r.json();
+      if (d.ok) {
+        adminPw = savedPw;
+        document.getElementById('loginModal').classList.add('hidden');
+        loadData();
+        loadAllTags();
+        loadCategories();
+        return;
+      } else {
+        localStorage.removeItem('adminPw');
+      }
+    } catch (e) {}
+  }
+
   const r = await fetch('/api/check-admin');
   const d = await r.json();
   if (!d.passwordRequired) {
@@ -611,6 +632,8 @@ async function login() {
   const d = await r.json();
   if (d.ok) {
     adminPw = pw;
+    localStorage.setItem('adminPw', pw);
+    document.cookie = 'adminPw=' + encodeURIComponent(pw) + '; Path=/; Max-Age=31536000; SameSite=Strict';
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
     loadAllTags();
@@ -649,7 +672,7 @@ async function loadWallpapers() {
         <td>
           <span class="badge ${w.isPaid ? 'paid' : 'free'}">${w.isPaid ? 'Premium $'+w.price : 'Free'}</span>
         </td>
-        <td style="color:var(--dim);font-size:.75rem;">DL: ${w.downloads} | V: ${w.views}</td>
+        <td style="color:var(--dim);font-size:.75rem;">DL: ${w.downloads} (${w.adminDownloads || 0}) | V: ${w.views} (${w.adminViews || 0})</td>
         <td>
           <button class="action-btn" onclick='openEdit(${JSON.stringify(w).replace(/'/g, "&apos;")})'>✎</button>
           <button class="action-btn del" onclick="deleteWall('${w._id}')">✕</button>

@@ -17,6 +17,8 @@ const wallpaperSchema = new mongoose.Schema({
   isPaid:      { type: Boolean, default: false },
   price:       { type: Number, default: 0 },
   uploadedAt:  { type: Date, default: Date.now },
+  adminViews:  { type: Number, default: 0 },
+  adminDownloads:{ type: Number, default: 0 },
 });
 
 // Full-text search index
