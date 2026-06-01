@@ -12,7 +12,8 @@ const settingsSchema = new mongoose.Schema({
   pinterestRefreshToken: { type: String, default: '' },
   pinterestTokenExpiresAt: { type: Date },
   pinterestSandbox: { type: Boolean, default: false },
-  adminIp: { type: String, default: '' }
+  adminIp: { type: String, default: '' },
+  statsResetCompleted: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('Settings', settingsSchema);

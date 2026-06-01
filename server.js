@@ -184,6 +184,28 @@ mongoose.connect(process.env.MONGO_URI)
         }
       }
     } catch(e) { console.error('Slug migration failed', e); }
+
+    // MIGRATION: One-time reset of views and downloads to 0
+    try {
+      let s = await Settings.findOne();
+      if (!s) {
+        s = await Settings.create({});
+      }
+      if (!s.statsResetCompleted) {
+        console.log('Resetting views/downloads stats for all wallpapers to 0...');
+        const res = await Wallpaper.updateMany({}, {
+          $set: {
+            views: 0,
+            downloads: 0,
+            adminViews: 0,
+            adminDownloads: 0
+          }
+        });
+        console.log('Reset stats successfully. Modified ' + res.modifiedCount + ' wallpapers.');
+        s.statsResetCompleted = true;
+        await s.save();
+      }
+    } catch(e) { console.error('One-time stats reset migration failed:', e); }
   })
   .catch(err => console.error('✗ MongoDB:', err.message));
 
