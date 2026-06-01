@@ -21,6 +21,5 @@ const wallpaperSchema = new mongoose.Schema({
 
 // Full-text search index
 wallpaperSchema.index({ title: 'text', tags: 'text', category: 'text' });
-wallpaperSchema.index({ slug: 1 });
 
 module.exports = mongoose.model('Wallpaper', wallpaperSchema);

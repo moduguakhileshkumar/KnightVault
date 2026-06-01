@@ -1035,7 +1035,8 @@ app.get('/vault-access/:secret', (req, res) => {
 });
 
 // ─── CATCH-ALL → frontend ────────────────────────────────
-app.get('/*', async (req, res) => {
+// ─── HOMEPAGE SEO DYNAMIC INJECTION ───────────────────────
+app.get(['/', '/index.html'], async (req, res) => {
   try {
     const indexPath = path.join(__dirname, 'public', 'index.html');
     if (!fs.existsSync(indexPath)) {
@@ -1068,6 +1069,31 @@ app.get('/*', async (req, res) => {
   } catch (err) {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   }
+});
+
+// 404 NOT FOUND FALLBACK (Prevents Soft 404s for invalid pages)
+app.use((req, res) => {
+  res.status(404).send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>404 Not Found - Waynelab</title>
+      <style>
+        body { background: #0A0A0F; color: #7A7A9A; font-family: sans-serif; text-align: center; padding-top: 100px; }
+        h1 { color: #C9A84C; font-family: sans-serif; }
+        a { color: #C9A84C; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+      </style>
+    </head>
+    <body>
+      <h1>Page Not Found</h1>
+      <p>The requested page does not exist on our server.</p>
+      <p><a href="/">Return to Vault</a></p>
+    </body>
+    </html>
+  `);
 });
 
 app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));
