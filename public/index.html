@@ -537,7 +537,7 @@ async function loadStats() {
     let downloadsHtml = `<strong>${d.downloads}</strong> downloads`;
     let viewsHtml = `<strong>${d.views}</strong> views`;
     
-    if (d.isAdmin || isAdmin) {
+    if (isAdmin) {
       downloadsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminDownloads || 0} by you)</span>`;
       viewsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminViews || 0} by you)</span>`;
     }
