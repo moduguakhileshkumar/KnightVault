@@ -523,6 +523,7 @@ app.get('/w/:slugOrId', async (req, res) => {
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
               <img src="${esc(thumbUrl)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
+                style="${sw.resolution && sw.resolution.includes('x') && !isNaN(sw.resolution.split('x')[0]) && !isNaN(sw.resolution.split('x')[1]) ? 'aspect-ratio: ' + sw.resolution.split('x')[0] + ' / ' + sw.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;"
                 onerror="this.style.opacity='0.3'" class="loading"
                 onload="this.classList.remove('loading')">
               <div class="card-overlay">
@@ -630,7 +631,10 @@ app.get('/w/:slugOrId', async (req, res) => {
           <main class="main" style="padding: 0;">
             <div class="wp-container">
               <div class="wp-img-wrap">
-                <img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper">
+                <img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : w.directLink)}" 
+                  style="${w.resolution && w.resolution.includes('x') && !isNaN(w.resolution.split('x')[0]) && !isNaN(w.resolution.split('x')[1]) ? 'aspect-ratio: ' + w.resolution.split('x')[0] + ' / ' + w.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;" 
+                  fetchpriority="high" 
+                  alt="${esc(w.title)} High Quality Wallpaper">
               </div>
               <div class="wp-info">
                 <h1 class="wp-title">${esc(w.title)}</h1>

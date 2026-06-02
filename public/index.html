@@ -631,11 +631,25 @@ function renderGrid(walls) {
     const thumbUrl = w.directLink.includes('/upload/') 
       ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
       : w.directLink;
+    
+    // Calculate aspect ratio to prevent CLS
+    let aspectStyle = '';
+    if (w.resolution && w.resolution.includes('x')) {
+      const [width, height] = w.resolution.split('x');
+      if (width && height && !isNaN(width) && !isNaN(height)) {
+        aspectStyle = `style="aspect-ratio: ${width} / ${height}; width: 100%; height: auto;"`;
+      }
+    }
+
+    // Optimize LCP: first 4 images are above-the-fold, load them immediately with fetchpriority="high"
+    const isAboveFold = i < 4;
+    const loadAttr = isAboveFold ? 'fetchpriority="high"' : 'loading="lazy"';
+
     html += `
     <div class="wall-card" onclick="window.location.href='${pageLink}'">
-      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
+      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
         onerror="this.style.opacity='0.3'" class="loading"
-        onload="this.classList.remove('loading')">
+        onload="this.classList.remove('loading')">`;
       <div class="card-overlay">
         <h3 class="card-title">${esc(w.title)}</h3>
         <div class="card-cats">
