@@ -34,11 +34,27 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Waynelab",
-  "alternateName": "KnightVault",
-  "url": "https://waynelab.studio",
-  "logo": "https://waynelab.studio/favicon.svg"
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://waynelab.studio/#website",
+      "url": "https://waynelab.studio",
+      "name": "Waynelab",
+      "alternateName": "KnightVault"
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://waynelab.studio/#organization",
+      "name": "Waynelab",
+      "url": "https://waynelab.studio",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://waynelab.studio/favicon-512x512.png",
+        "width": 512,
+        "height": 512
+      }
+    }
+  ]
 }
 </script>
 </head>
