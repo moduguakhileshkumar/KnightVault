@@ -614,9 +614,32 @@ async function checkAuth() {
     } catch (e) {}
   }
 
+  // Also check if URL pathname has the secret
+  if (window.location.pathname.startsWith('/vault-access/')) {
+    const urlPw = decodeURIComponent(window.location.pathname.split('/').pop());
+    if (urlPw) {
+      try {
+        const r = await fetch('/api/verify-admin', {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password:urlPw})
+        });
+        const d = await r.json();
+        if (d.ok) {
+          adminPw = urlPw;
+          localStorage.setItem('adminPw', urlPw);
+          document.cookie = 'adminPw=' + encodeURIComponent(urlPw) + '; Path=/; Max-Age=31536000; SameSite=Strict';
+          document.getElementById('loginModal').classList.add('hidden');
+          loadData();
+          loadAllTags();
+          loadCategories();
+          return;
+        }
+      } catch (e) {}
+    }
+  }
+
   const r = await fetch('/api/check-admin');
   const d = await r.json();
-  if (!d.passwordRequired) {
+  if (!d.passwordRequired || d.alreadyAuthenticated) {
     document.getElementById('loginModal').classList.add('hidden');
     loadData();
     loadAllTags();

@@ -302,8 +302,12 @@ app.get('/api/stats', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/check-admin', (req, res) => {
-  res.json({ passwordRequired: !!process.env.ADMIN_PASSWORD });
+app.get('/api/check-admin', async (req, res) => {
+  const isAdmin = await isRequestAdmin(req);
+  res.json({ 
+    passwordRequired: !!process.env.ADMIN_PASSWORD,
+    alreadyAuthenticated: isAdmin 
+  });
 });
 
 app.post('/api/verify-admin', async (req, res) => {
@@ -1144,12 +1148,20 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 // ─── SECRET ADMIN ROUTE ───────────────────────────────────
-app.get('/vault-access/:secret', async (req, res) => {
-  if (process.env.ADMIN_PASSWORD && req.params.secret === process.env.ADMIN_PASSWORD) {
+app.get(['/vault-access', '/vault-access/:secret'], async (req, res) => {
+  const secret = req.params.secret;
+  const isAlreadyAdmin = await isRequestAdmin(req);
+  
+  if (process.env.ADMIN_PASSWORD && secret === process.env.ADMIN_PASSWORD) {
     await updateAdminIp(req);
-    res.setHeader('Set-Cookie', 'adminPw=' + encodeURIComponent(req.params.secret) + '; Path=/; Max-Age=31536000; SameSite=Strict');
+    res.setHeader('Set-Cookie', 'adminPw=' + encodeURIComponent(secret) + '; Path=/; Max-Age=31536000; SameSite=Strict');
     return res.sendFile(path.join(__dirname, 'admin_panel.html'));
   }
+  
+  if (isAlreadyAdmin) {
+    return res.sendFile(path.join(__dirname, 'admin_panel.html'));
+  }
+  
   return res.redirect('/');
 });
 
