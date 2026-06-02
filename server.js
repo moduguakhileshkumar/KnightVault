@@ -1155,10 +1155,16 @@ app.get(['/vault-access', '/vault-access/:secret'], async (req, res) => {
   if (process.env.ADMIN_PASSWORD && secret === process.env.ADMIN_PASSWORD) {
     await updateAdminIp(req);
     res.setHeader('Set-Cookie', 'adminPw=' + encodeURIComponent(secret) + '; Path=/; Max-Age=31536000; SameSite=Strict');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.sendFile(path.join(__dirname, 'admin_panel.html'));
   }
   
   if (isAlreadyAdmin) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.sendFile(path.join(__dirname, 'admin_panel.html'));
   }
   
