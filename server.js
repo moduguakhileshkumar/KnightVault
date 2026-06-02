@@ -485,12 +485,37 @@ app.get('/w/:slugOrId', async (req, res) => {
         clientAdsenseId = `ca-pub-${rawAdsenseId}`;
       }
     }
-    const adsenseScript = clientAdsenseId 
-      ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientAdsenseId}" crossorigin="anonymous"></script>` 
-      : '';
-    const gaScript = settings && settings.googleAnalyticsId
-      ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.googleAnalyticsId}');</script>`
-      : '';
+    // Lazy load GA & AdSense on user interaction (scroll, touch, move) to score 100 on PageSpeed
+    const lazyThirdPartyScript = `
+      <script>
+        let loadedThirdParty = false;
+        function loadThirdParty() {
+          if (loadedThirdParty) return;
+          loadedThirdParty = true;
+          
+          ${settings && settings.googleAnalyticsId ? `
+            const s1 = document.createElement('script');
+            s1.async = true;
+            s1.src = 'https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}';
+            document.head.appendChild(s1);
+            const s2 = document.createElement('script');
+            s2.innerHTML = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.googleAnalyticsId}');";
+            document.head.appendChild(s2);
+          ` : ''}
+          
+          ${clientAdsenseId ? `
+            const s3 = document.createElement('script');
+            s3.async = true;
+            s3.crossOrigin = 'anonymous';
+            s3.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientAdsenseId}';
+            document.head.appendChild(s3);
+          ` : ''}
+        }
+        ['touchstart', 'scroll', 'mousemove', 'keydown'].forEach(ev => {
+          window.addEventListener(ev, loadThirdParty, { passive: true, once: true });
+        });
+      </script>
+    `;
 
     // Increment view counter
     const isAdminReq = await isRequestAdmin(req);
@@ -566,8 +591,7 @@ app.get('/w/:slugOrId', async (req, res) => {
         <meta property="og:url" content="${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}">
         <meta property="og:type" content="website">
         <meta name="twitter:card" content="summary_large_image">
-        ${adsenseScript}
-        ${gaScript}
+        ${lazyThirdPartyScript}
         
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -578,6 +602,7 @@ app.get('/w/:slugOrId', async (req, res) => {
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
         <link rel="manifest" href="/manifest.json">
         <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/style.css">
         <script type="application/ld+json">

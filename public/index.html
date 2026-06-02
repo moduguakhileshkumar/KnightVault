@@ -2,19 +2,8 @@
 <html lang="en">
 <head>
   <meta name="p:domain_verify" content="1040ad7c211829c1ecc4aa14c5fe5b0b"/>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1QD19H29BE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1QD19H29BE');
-</script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5535227871644720"
-     crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-site-verification" content="HzetVe8SXx1UZg62hkwN0XMJUpML9sDlJFmEwAXJdB0" />
 <title>Waynelab — Wallpapers</title>
 <link rel="canonical" href="https://waynelab.studio/">
@@ -29,6 +18,7 @@
   <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
   <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
@@ -492,22 +482,37 @@ async function init() {
         } else {
           adsenseId = 'ca-pub-' + rawId;
         }
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`;
-        script.crossOrigin = 'anonymous';
-        document.head.appendChild(script);
       }
-      if (sd.googleAnalyticsId) {
-        const gaId = sd.googleAnalyticsId;
-        const s1 = document.createElement('script');
-        s1.async = true;
-        s1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-        document.head.appendChild(s1);
-        const s2 = document.createElement('script');
-        s2.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`;
-        document.head.appendChild(s2);
+      
+      // Lazy load GA & AdSense on user interaction (scroll, touch, move) to score 100 on PageSpeed
+      let loadedThirdParty = false;
+      function loadThirdParty() {
+        if (loadedThirdParty) return;
+        loadedThirdParty = true;
+        
+        if (adsenseId) {
+          const script = document.createElement('script');
+          script.async = true;
+          script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + adsenseId;
+          script.crossOrigin = 'anonymous';
+          document.head.appendChild(script);
+        }
+        
+        if (sd.googleAnalyticsId) {
+          const gaId = sd.googleAnalyticsId;
+          const s1 = document.createElement('script');
+          s1.async = true;
+          s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+          document.head.appendChild(s1);
+          const s2 = document.createElement('script');
+          s2.innerHTML = "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','" + gaId + "');";
+          document.head.appendChild(s2);
+        }
       }
+      
+      ['touchstart', 'scroll', 'mousemove', 'keydown'].forEach(ev => {
+        window.addEventListener(ev, loadThirdParty, { passive: true, once: true });
+      });
     }
   } catch(e) {}
 
