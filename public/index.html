@@ -633,9 +633,9 @@ function renderGrid(walls) {
   let html = '';
   walls.forEach((w, i) => {
     const pageLink = window.location.origin + '/w/' + (w.slug || w.filename.split('/').pop());
-    const thumbUrl = w.directLink.includes('/upload/') 
+    const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
       ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
-      : w.directLink;
+      : (w.directLink || '');
     
     // Calculate aspect ratio to prevent CLS
     let aspectStyle = '';

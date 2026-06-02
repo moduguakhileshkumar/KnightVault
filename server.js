@@ -544,9 +544,9 @@ app.get('/w/:slugOrId', async (req, res) => {
         <div class="wall-grid">
           ${similar.map(sw => {
             const pageLink = '/w/' + (sw.slug || sw.filename.split('/').pop());
-            const thumbUrl = sw.directLink.includes('/upload/')
+            const thumbUrl = (sw.directLink && sw.directLink.includes('/upload/'))
               ? sw.directLink.replace('/upload/', '/upload/w_400,q_auto,f_auto/')
-              : sw.directLink;
+              : (sw.directLink || '');
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
               <img src="${esc(thumbUrl)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
@@ -658,7 +658,7 @@ app.get('/w/:slugOrId', async (req, res) => {
           <main class="main" style="padding: 0;">
             <div class="wp-container">
               <div class="wp-img-wrap">
-                <img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : w.directLink)}" 
+                <img src="${esc((w.directLink && w.directLink.includes('/upload/')) ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : (w.directLink || ''))}" 
                   style="${w.resolution && w.resolution.includes('x') && !isNaN(w.resolution.split('x')[0]) && !isNaN(w.resolution.split('x')[1]) ? 'aspect-ratio: ' + w.resolution.split('x')[0] + ' / ' + w.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;" 
                   fetchpriority="high" 
                   alt="${esc(w.title)} High Quality Wallpaper">
@@ -797,7 +797,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
         <main>
           <h1>${esc(w.title)}</h1>
           <div class="img-wrap">
-            <amp-img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') : w.directLink)}" layout="fill" alt="${esc(w.title)}"></amp-img>
+            <amp-img src="${esc((w.directLink && w.directLink.includes('/upload/')) ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') : (w.directLink || ''))}" layout="fill" alt="${esc(w.title)}"></amp-img>
           </div>
           <div>
             ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
