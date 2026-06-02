@@ -664,9 +664,13 @@ async function loadWallpapers() {
       tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No wallpapers found.</td></tr>';
       return;
     }
-    tbody.innerHTML = d.wallpapers.map(w => `
+    tbody.innerHTML = d.wallpapers.map(w => {
+      const thumbUrl = w.directLink.includes('/upload/') 
+        ? w.directLink.replace('/upload/', '/upload/w_150,q_auto,f_auto/') 
+        : w.directLink;
+      return `
       <tr>
-        <td><img src="${w.directLink}" class="thumb"></td>
+        <td><img src="${thumbUrl}" class="thumb"></td>
         <td>${esc(w.title)}</td>
         <td>${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="badge free" style="margin-right:2px;text-transform:capitalize;">${esc(c)}</span>`).join('')}</td>
         <td>

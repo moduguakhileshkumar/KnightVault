@@ -628,9 +628,12 @@ function renderGrid(walls) {
   let html = '';
   walls.forEach((w, i) => {
     const pageLink = window.location.origin + '/w/' + (w.slug || w.filename.split('/').pop());
+    const thumbUrl = w.directLink.includes('/upload/') 
+      ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
+      : w.directLink;
     html += `
     <div class="wall-card" onclick="window.location.href='${pageLink}'">
-      <img src="${esc(w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
+      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
         onerror="this.style.opacity='0.3'" class="loading"
         onload="this.classList.remove('loading')">
       <div class="card-overlay">

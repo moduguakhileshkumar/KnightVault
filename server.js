@@ -517,9 +517,12 @@ app.get('/w/:slugOrId', async (req, res) => {
         <div class="wall-grid">
           ${similar.map(sw => {
             const pageLink = '/w/' + (sw.slug || sw.filename.split('/').pop());
+            const thumbUrl = sw.directLink.includes('/upload/')
+              ? sw.directLink.replace('/upload/', '/upload/w_400,q_auto,f_auto/')
+              : sw.directLink;
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
-              <img src="${esc(sw.directLink)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
+              <img src="${esc(thumbUrl)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
                 onerror="this.style.opacity='0.3'" class="loading"
                 onload="this.classList.remove('loading')">
               <div class="card-overlay">
@@ -627,7 +630,7 @@ app.get('/w/:slugOrId', async (req, res) => {
           <main class="main" style="padding: 0;">
             <div class="wp-container">
               <div class="wp-img-wrap">
-                <img src="${esc(w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper">
+                <img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : w.directLink)}" alt="${esc(w.title)} High Quality Wallpaper">
               </div>
               <div class="wp-info">
                 <h1 class="wp-title">${esc(w.title)}</h1>
