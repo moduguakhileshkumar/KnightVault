@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express    = require('express');
+const compression = require('compression');
 const mongoose   = require('mongoose');
 const multer     = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -60,6 +61,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 
 // ─── MIDDLEWARE ───────────────────────────────────────────
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -795,7 +797,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
         <main>
           <h1>${esc(w.title)}</h1>
           <div class="img-wrap">
-            <amp-img src="${esc(w.directLink)}" layout="fill" alt="${esc(w.title)}"></amp-img>
+            <amp-img src="${esc(w.directLink.includes('/upload/') ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') : w.directLink)}" layout="fill" alt="${esc(w.title)}"></amp-img>
           </div>
           <div>
             ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
