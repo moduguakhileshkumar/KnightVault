@@ -847,13 +847,12 @@ async function postToPinterest(wall, settings) {
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
-      // co_rgb:000000 -> text color black
-      // b_rgb:f0d83a -> background color gold (#f0d83a matches site theme)
-      // l_text:Arial_40_bold -> Arial font, size 40, bold
-      // g_south -> aligned to bottom
-      // y_60 -> offset 60px from bottom edge
-      const overlayText = 'co_rgb:000000,l_text:Arial_40_bold:DOWNLOAD%204K%20AT%20WAYNELAB.STUDIO,g_south,y_60,b_rgb:f0d83a';
-      previewLink = previewLink.replace('/upload/', `/upload/${overlayText}/`);
+      // 1. Centered diagonal semi-transparent watermark to prevent direct downloading/screenshots from Pinterest
+      const centerWatermark = 'co_rgb:ffffff,l_text:Arial_70_bold:WAYNELAB.STUDIO,g_center,o_20,a_-30';
+      // 2. Gold call-to-action banner at the bottom
+      const bottomBanner = 'co_rgb:000000,l_text:Arial_40_bold:DOWNLOAD%204K%20AT%20WAYNELAB.STUDIO,g_south,y_60,b_rgb:f0d83a';
+      
+      previewLink = previewLink.replace('/upload/', `/upload/${centerWatermark}/${bottomBanner}/`);
     }
 
     const pinData = {
