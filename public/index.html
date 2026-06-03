@@ -566,7 +566,17 @@ async function loadStats() {
     
     document.getElementById('statTotal').innerHTML     = totalHtml;
     document.getElementById('statDownloads').innerHTML = downloadsHtml;
-    document.getElementById('statViews').innerHTML     = viewsHtml;
+    
+    const viewsSep = document.getElementById('statViewsSeparator');
+    const viewsEl = document.getElementById('statViews');
+    if (isAdmin) {
+      viewsEl.innerHTML = viewsHtml;
+      viewsEl.style.display = 'inline';
+      if (viewsSep) viewsSep.style.display = 'inline';
+    } else {
+      viewsEl.style.display = 'none';
+      if (viewsSep) viewsSep.style.display = 'none';
+    }
   } catch(e) {}
 }
 

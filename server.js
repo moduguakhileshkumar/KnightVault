@@ -698,7 +698,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                 <div class="wp-meta">
                   ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
                   <div><span>Downloads:</span> ${w.downloads}</div>
-                  <div><span>Views:</span> ${w.views}</div>
+                  ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                   <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
                 </div>
 
