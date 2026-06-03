@@ -237,7 +237,20 @@ app.get('/api/wallpapers', async (req, res) => {
     const skip  = (parseInt(page) - 1) * parseInt(limit);
     const total = await Wallpaper.countDocuments(filter);
     const walls = await Wallpaper.find(filter).sort(sortMap[sort] || sortMap.new).skip(skip).limit(parseInt(limit));
-    res.json({ wallpapers: walls, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+    
+    // Check if requester is admin. If not, strip views/adminViews from JSON response.
+    const isAdmin = await isRequestAdmin(req);
+    let processedWalls = walls;
+    if (!isAdmin) {
+      processedWalls = walls.map(w => {
+        const obj = w.toObject();
+        delete obj.views;
+        delete obj.adminViews;
+        return obj;
+      });
+    }
+    
+    res.json({ wallpapers: processedWalls, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -286,6 +299,16 @@ app.get('/api/wallpapers/:id', async (req, res) => {
       w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
     }
     if (!w) return res.status(404).json({ error: 'Not found' });
+    
+    // Check if requester is admin. If not, strip views/adminViews from JSON response.
+    const isAdmin = await isRequestAdmin(req);
+    if (!isAdmin) {
+      const obj = w.toObject();
+      delete obj.views;
+      delete obj.adminViews;
+      return res.json(obj);
+    }
+    
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -304,22 +327,38 @@ app.post('/api/wallpapers/:id/download', async (req, res) => {
 
 app.get('/api/stats', async (req, res) => {
   try {
-    const [total, dl, vw, adl, avw] = await Promise.all([
-      Wallpaper.countDocuments(),
-      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$downloads' } } }]),
-      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$views'     } } }]),
-      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminDownloads' } } }]),
-      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminViews'     } } }]),
-    ]);
     const isAdmin = await isRequestAdmin(req);
-    res.json({
+    const promises = [
+      Wallpaper.countDocuments(),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$downloads' } } }])
+    ];
+    if (isAdmin) {
+      promises.push(
+        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$views'     } } }]),
+        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminDownloads' } } }]),
+        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminViews'     } } }])
+      );
+    }
+    const results = await Promise.all(promises);
+    const total = results[0];
+    const dl = results[1];
+    
+    const responseData = {
       total,
       downloads: dl[0]?.sum || 0,
-      views: vw[0]?.sum || 0,
-      adminDownloads: adl[0]?.sum || 0,
-      adminViews: avw[0]?.sum || 0,
       isAdmin
-    });
+    };
+    
+    if (isAdmin) {
+      const vw = results[2];
+      const adl = results[3];
+      const avw = results[4];
+      responseData.views = vw[0]?.sum || 0;
+      responseData.adminDownloads = adl[0]?.sum || 0;
+      responseData.adminViews = avw[0]?.sum || 0;
+    }
+    
+    res.json(responseData);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

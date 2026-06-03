@@ -82,7 +82,8 @@
   <span id="statTotal">—</span>
   <span>·</span>
   <span id="statDownloads">—</span>
-  <span>·</span>
+  
+  <span id="statViewsSeparator">·</span>
   <span id="statViews">—</span>
 </div>
 
@@ -557,11 +558,9 @@ async function loadStats() {
     
     let totalHtml = `<strong>${d.total}</strong> wallpapers`;
     let downloadsHtml = `<strong>${d.downloads}</strong> downloads`;
-    let viewsHtml = `<strong>${d.views}</strong> views`;
     
     if (isAdmin) {
       downloadsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminDownloads || 0} by you)</span>`;
-      viewsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminViews || 0} by you)</span>`;
     }
     
     document.getElementById('statTotal').innerHTML     = totalHtml;
@@ -569,7 +568,9 @@ async function loadStats() {
     
     const viewsSep = document.getElementById('statViewsSeparator');
     const viewsEl = document.getElementById('statViews');
-    if (isAdmin) {
+    if (isAdmin && d.views !== undefined) {
+      let viewsHtml = `<strong>${d.views}</strong> views`;
+      viewsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminViews || 0} by you)</span>`;
       viewsEl.innerHTML = viewsHtml;
       viewsEl.style.display = 'inline';
       if (viewsSep) viewsSep.style.display = 'inline';
