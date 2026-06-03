@@ -112,6 +112,18 @@ async function isRequestAdmin(req) {
   return false;
 }
 
+function isRequestBot(req) {
+  const ua = (req.headers['user-agent'] || '').toLowerCase();
+  if (!ua) return true;
+  const botKeywords = [
+    'bot', 'spider', 'crawl', 'scraper', 'lighthouse', 'pagespeed',
+    'googlebot', 'bingbot', 'yandex', 'baidu', 'duckduck', 'yahoo',
+    'pinterest', 'facebookexternalhit', 'twitterbot', 'slackbot',
+    'discordbot', 'applebot', 'ia_archiver', 'archive.org'
+  ];
+  return botKeywords.some(keyword => ua.includes(keyword));
+}
+
 // ─── MONGODB ──────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
@@ -264,9 +276,15 @@ app.get('/api/tags', async (req, res) => {
 
 app.get('/api/wallpapers/:id', async (req, res) => {
   try {
-    const isAdmin = await isRequestAdmin(req);
-    const update = isAdmin ? { $inc: { adminViews: 1 } } : { $inc: { views: 1 } };
-    const w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
+    const isBot = isRequestBot(req);
+    let w;
+    if (isBot) {
+      w = await Wallpaper.findById(req.params.id);
+    } else {
+      const isAdmin = await isRequestAdmin(req);
+      const update = isAdmin ? { $inc: { adminViews: 1 } } : { $inc: { views: 1 } };
+      w = await Wallpaper.findByIdAndUpdate(req.params.id, update, { new: true });
+    }
     if (!w) return res.status(404).json({ error: 'Not found' });
     res.json(w);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -274,9 +292,12 @@ app.get('/api/wallpapers/:id', async (req, res) => {
 
 app.post('/api/wallpapers/:id/download', async (req, res) => {
   try {
-    const isAdmin = await isRequestAdmin(req);
-    const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
-    await Wallpaper.findByIdAndUpdate(req.params.id, update);
+    const isBot = isRequestBot(req);
+    if (!isBot) {
+      const isAdmin = await isRequestAdmin(req);
+      const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
+      await Wallpaper.findByIdAndUpdate(req.params.id, update);
+    }
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -523,12 +544,14 @@ app.get('/w/:slugOrId', async (req, res) => {
       </script>
     `;
 
-    // Increment view counter
-    const isAdminReq = await isRequestAdmin(req);
-    if (isAdminReq) {
-      await Wallpaper.findByIdAndUpdate(w._id, { $inc: { adminViews: 1 } });
-    } else {
-      await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+    // Increment view counter (only for non-bot users)
+    if (!isRequestBot(req)) {
+      const isAdminReq = await isRequestAdmin(req);
+      if (isAdminReq) {
+        await Wallpaper.findByIdAndUpdate(w._id, { $inc: { adminViews: 1 } });
+      } else {
+        await Wallpaper.findByIdAndUpdate(w._id, { $inc: { views: 1 } });
+      }
     }
 
     // Find similar wallpapers
@@ -1042,10 +1065,13 @@ app.get('/api/download-direct/:slugOrId', async (req, res) => {
     
     if (!w) return res.status(404).send('Wallpaper record not found.');
 
-    // 1. Increment the download count in MongoDB
-    const isAdmin = await isRequestAdmin(req);
-    const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
-    await Wallpaper.findByIdAndUpdate(w._id, update);
+    // 1. Increment the download count in MongoDB (only for non-bot users)
+    const isBot = isRequestBot(req);
+    if (!isBot) {
+      const isAdmin = await isRequestAdmin(req);
+      const update = isAdmin ? { $inc: { adminDownloads: 1 } } : { $inc: { downloads: 1 } };
+      await Wallpaper.findByIdAndUpdate(w._id, update);
+    }
 
     // 2. Format a clean filename for their device saving
     const safeName = w.title.trim().replace(/\s+/g, '_') + '.jpg';
