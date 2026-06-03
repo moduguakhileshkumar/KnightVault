@@ -705,6 +705,7 @@ app.get('/w/:slugOrId', async (req, res) => {
               <a href="/contact.html">Contact</a>
               <a href="/privacy.html">Privacy Policy</a>
               <a href="/terms.html">Terms of Service</a>
+              <a href="/blog.html">Blog</a>
             </div>
             <p class="main-footer-copy">© 2026 Waynelab. All rights reserved. High Quality Wallpapers.</p>
           </footer>
@@ -821,6 +822,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             <a href="${BASE_URL}/contact.html">Contact</a>
             <a href="${BASE_URL}/privacy.html">Privacy</a>
             <a href="${BASE_URL}/terms.html">Terms</a>
+            <a href="${BASE_URL}/blog.html">Blog</a>
           </div>
           <p>© 2026 Waynelab. All rights reserved.</p>
         </footer>
