@@ -848,7 +848,7 @@ async function postToPinterest(wall, settings) {
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
       // 1. Centered diagonal semi-transparent watermark to prevent direct downloading/screenshots from Pinterest
-      const centerWatermark = 'co_rgb:ffffff,l_text:Arial_70_bold:WAYNELAB.STUDIO,g_center,o_20,a_-30';
+      const centerWatermark = 'co_rgb:ffe81f,l_text:Arial_70_bold:WAYNELAB.STUDIO,g_center,o_40,a_-30';
       // 2. Gold call-to-action banner at the bottom
       const bottomBanner = 'co_rgb:000000,l_text:Arial_40_bold:DOWNLOAD%204K%20AT%20WAYNELAB.STUDIO,g_south,y_60,b_rgb:f0d83a';
       
