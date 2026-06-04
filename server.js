@@ -583,9 +583,9 @@ app.get('/w/:slugOrId', async (req, res) => {
       </script>
     `;
 
+    const isAdminReq = await isRequestAdmin(req);
     // Increment view counter (only for non-bot users)
     if (!isRequestBot(req)) {
-      const isAdminReq = await isRequestAdmin(req);
       if (isAdminReq) {
         await Wallpaper.findByIdAndUpdate(w._id, { $inc: { adminViews: 1 } });
       } else {
