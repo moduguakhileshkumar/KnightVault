@@ -520,6 +520,10 @@ app.post('/api/upload', adminOnly, upload.single('image'), async (req, res) => {
       const settings = await Settings.findOne();
       if (settings) postToPinterest(wall, settings);
     } catch(e) { console.error('Pinterest upload trigger error:', e.message); }
+    // IndexNow Auto-Submit hook
+    try {
+      submitToIndexNow(slug);
+    } catch(e) { console.error('IndexNow trigger error:', e.message); }
     res.status(201).json(wall);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -956,11 +960,51 @@ async function postToPinterest(wall, settings) {
       previewLink = previewLink.replace('/upload/', `/upload/${centerWatermark}/${bottomBanner}/`);
     }
 
+    // Pinterest SEO Optimization
+    let pinTitle = wall.title;
+    let suffix = ' - Free 4K Wallpaper | KnightVault';
+    if (wall.category && wall.category.length > 0) {
+      const firstCat = wall.category[0];
+      const capitalizedCat = firstCat.charAt(0).toUpperCase() + firstCat.slice(1);
+      suffix = ` - Free 4K ${capitalizedCat} Wallpaper | KnightVault`;
+    }
+    if (!pinTitle.toLowerCase().includes('wallpaper')) {
+      pinTitle += suffix;
+    } else {
+      pinTitle += ' | KnightVault';
+    }
+    if (pinTitle.length > 100) {
+      pinTitle = pinTitle.substring(0, 97) + '...';
+    }
+
+    const emojiDown = '\uD83D\uDC47';
+    const emojiPhone = '\uD83D\uDCF1';
+    let pinDescription = `${emojiDown} CLICK the link to download the clean, unwatermarked, and uncompressed 4K high-resolution version of this wallpaper on my website for free! ${emojiPhone} Beautiful custom backgrounds, homescreens, and lockscreens at waynelab.studio.\n\n`;
+    
+    let hashtags = ['#4kwallpaper', '#wallpaper', '#backgrounds', '#aesthetic'];
+    if (wall.category) {
+      wall.category.forEach(c => {
+        const clean = c.replace(/[^a-zA-Z0-9]/g, '');
+        if (clean) hashtags.push(`#${clean}`);
+      });
+    }
+    if (wall.tags) {
+      wall.tags.forEach(t => {
+        const clean = t.replace(/[^a-zA-Z0-9]/g, '');
+        if (clean && hashtags.length < 12) hashtags.push(`#${clean}`);
+      });
+    }
+    hashtags = [...new Set(hashtags)];
+    pinDescription += `Direct Link to Download: ${wall.url}\n\n` + hashtags.join(' ');
+    if (pinDescription.length > 500) {
+      pinDescription = pinDescription.substring(0, 497) + '...';
+    }
+
     const pinData = {
       board_id: settings.pinterestBoardId,
       link: wall.url,
-      title: wall.title,
-      description: `👇 CLICK the link to download the uncompressed 4K resolution version of this anime wallpaper on my website for free! 📲 Beautiful lockscreen and homescreen setups at waynelab.studio. Direct Page: ${wall.url}`,
+      title: pinTitle,
+      description: pinDescription,
       media_source: {
         source_type: 'image_url',
         url: previewLink
@@ -1204,12 +1248,13 @@ app.get('/robots.txt', (req, res) => {
 });
 
 // ─── SITEMAP.XML ──────────────────────────────────────────
+// 🛠 SITEMAP.XML (With Google Image Extensions) 🛠
 app.get('/sitemap.xml', async (req, res) => {
   try {
-    const walls = await Wallpaper.find({}, 'filename uploadedAt slug').sort({ uploadedAt: -1 });
+    const walls = await Wallpaper.find({}, 'filename uploadedAt slug directLink title').sort({ uploadedAt: -1 });
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
     
     // Static routes
     xml += '  <url>\n';
@@ -1227,17 +1272,29 @@ app.get('/sitemap.xml', async (req, res) => {
       xml += '  </url>\n';
     });
     
+    const xmlEsc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
     // Dynamic wallpaper routes
     walls.forEach(w => {
-      const publicId = w.filename.replace('waynelab/', '');
       xml += '  <url>\n';
       const slug = w.slug || w.filename.replace('waynelab/', '');
       xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(slug)}</loc>\n`;
       if (w.uploadedAt) {
-        xml += `    <lastmod>${w.uploadedAt.toISOString().split('T')[0]}</lastmod>\n`;
+        xml += `    <lastmod>${w.uploadedAt.toISOString().split('T')[0]}</lastmod>
+`;
       }
       xml += '    <changefreq>weekly</changefreq>\n';
       xml += '    <priority>0.8</priority>\n';
+      
+      if (w.directLink) {
+        const escTitle = xmlEsc(w.title || 'Wallpaper');
+        xml += '    <image:image>\n';
+        xml += `      <image:loc>${xmlEsc(w.directLink)}</image:loc>\n`;
+        xml += `      <image:title>${escTitle}</image:title>\n`;
+        xml += `      <image:caption>Download ${escTitle} high quality wallpaper on Waynelab KnightVault</image:caption>\n`;
+        xml += '    </image:image>\n';
+      }
+      
       xml += '  </url>\n';
     });
     
@@ -1250,7 +1307,92 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 });
 
-// ─── SECRET ADMIN ROUTE ───────────────────────────────────
+// 🛠 INDEXNOW VERIFICATION KEYS 🛠
+const INDEXNOW_KEY = '74bd3c02d8f94e91a0b5c7d8e9f2a3b4';
+app.get('/74bd3c02d8f94e91a0b5c7d8e9f2a3b4.txt', (req, res) => {
+  res.header('Content-Type', 'text/plain');
+  res.send(INDEXNOW_KEY);
+});
+app.get('/indexnow-key.txt', (req, res) => {
+  res.header('Content-Type', 'text/plain');
+  res.send(INDEXNOW_KEY);
+});
+
+// 🛠 INDEXNOW AUTO-NOTIFICATION HELPER 🛠
+async function submitToIndexNow(slug) {
+  try {
+    const pageUrl = `${BASE_URL}/w/${slug}`;
+    console.log(`[IndexNow] Submitting URL: ${pageUrl}`);
+    const hostname = new URL(BASE_URL).hostname;
+    
+    const response = await fetch('https://api.indexnow.org/IndexNow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      body: JSON.stringify({
+        host: hostname,
+        key: INDEXNOW_KEY,
+        keyLocation: `${BASE_URL}/${INDEXNOW_KEY}.txt`,
+        urlList: [pageUrl]
+      })
+    });
+    
+    if (response.ok) {
+      console.log(`[IndexNow] Successfully submitted URL for ${slug}`);
+    } else {
+      const txt = await response.text();
+      console.error(`[IndexNow] Submission failed (status ${response.status}): ${txt}`);
+    }
+  } catch (err) {
+    console.error('[IndexNow] Error submitting to IndexNow:', err.message);
+  }
+}
+
+// 🛠 RSS FEED (FEED.XML) 🛠
+app.get('/feed.xml', async (req, res) => {
+  try {
+    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(50);
+    
+    let rss = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    rss += '<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:dc="http://purl.org/dc/elements/1.1/">\n';
+    rss += '  <channel>\n';
+    rss += `    <title>Waynelab KnightVault - Premium 4K Wallpapers</title>\n`;
+    rss += `    <link>${BASE_URL}</link>\n`;
+    rss += `    <description>Download high-quality 4K &amp; HD wallpapers, dark themes, and custom backgrounds on Waynelab KnightVault.</description>\n`;
+    rss += '    <language>en-us</language>\n';
+    rss += `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>\n`;
+    
+    const xmlEsc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+    walls.forEach(w => {
+      const slug = w.slug || w.filename.replace('waynelab/', '');
+      const itemUrl = `${BASE_URL}/w/${encodeURIComponent(slug)}`;
+      rss += '    <item>\n';
+      rss += `      <title>${xmlEsc(w.title)}</title>\n`;
+      rss += `      <link>${itemUrl}</link>\n`;
+      rss += `      <guid isPermaLink="true">${itemUrl}</guid>\n`;
+      rss += `      <pubDate>${w.uploadedAt ? new Date(w.uploadedAt).toUTCString() : new Date().toUTCString()}</pubDate>\n`;
+      rss += `      <description><![CDATA[Download ${xmlEsc(w.title)} wallpaper in high-resolution original format on Waynelab KnightVault.]]></description>\n`;
+      
+      if (w.directLink) {
+        rss += `      <enclosure url="${xmlEsc(w.directLink)}" length="${w.size || 0}" type="${w.mimeType || 'image/jpeg'}" />\n`;
+        rss += `      <media:content url="${xmlEsc(w.directLink)}" medium="image" type="${w.mimeType || 'image/jpeg'}" />\n`;
+      }
+      
+      rss += '    </item>\n';
+    });
+    
+    rss += '  </channel>\n';
+    rss += '</rss>';
+    
+    res.header('Content-Type', 'application/xml');
+    res.send(rss);
+  } catch (err) {
+    res.status(500).send('Error generating RSS feed');
+  }
+});
+
 app.get(['/vault-access', '/vault-access/:secret'], async (req, res) => {
   const secret = req.params.secret;
   const isAlreadyAdmin = await isRequestAdmin(req);
