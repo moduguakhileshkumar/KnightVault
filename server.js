@@ -112,6 +112,30 @@ async function isRequestAdmin(req) {
   return false;
 }
 
+function syncAdsTxt(pubId) {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.join(__dirname, 'public', 'ads.txt');
+    if (!pubId) {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      return;
+    }
+    let cleanId = pubId.trim();
+    if (cleanId.startsWith('ca-')) {
+      cleanId = cleanId.substring(3);
+    }
+    if (!cleanId.startsWith('pub-')) {
+      cleanId = `pub-${cleanId}`;
+    }
+    const fileContent = `google.com, ${cleanId}, DIRECT, f08c47fec0942fa0`;
+    fs.writeFileSync(p, fileContent, 'utf8');
+    console.log('Successfully synchronized public/ads.txt with publisher ID: ' + cleanId);
+  } catch (e) {
+    console.error('Failed to sync ads.txt:', e.message);
+  }
+}
+
 function isRequestBot(req) {
   const ua = (req.headers['user-agent'] || '').toLowerCase();
   if (!ua) return true;
@@ -220,6 +244,16 @@ mongoose.connect(process.env.MONGO_URI)
         await s.save();
       }
     } catch(e) { console.error('One-time stats reset migration failed:', e); }
+    
+    // Synchronize ads.txt file on startup
+    try {
+      const s = await Settings.findOne();
+      if (s) {
+        syncAdsTxt(s.adsensePublisherId);
+      }
+    } catch (e) {
+      console.error('Failed to run startup ads.txt sync:', e.message);
+    }
   })
   .catch(err => console.error('✗ MongoDB:', err.message));
 
@@ -414,7 +448,10 @@ app.put('/api/settings', adminOnly, async (req, res) => {
   try {
     let s = await Settings.findOne();
     if (!s) s = new Settings();
-    if (req.body.adsensePublisherId !== undefined) s.adsensePublisherId = req.body.adsensePublisherId;
+    if (req.body.adsensePublisherId !== undefined) {
+      s.adsensePublisherId = req.body.adsensePublisherId;
+      syncAdsTxt(s.adsensePublisherId);
+    }
     if (req.body.googleAnalyticsId !== undefined) s.googleAnalyticsId = req.body.googleAnalyticsId;
     if (req.body.predefinedTags !== undefined) s.predefinedTags = req.body.predefinedTags;
     if (req.body.predefinedCategories !== undefined) s.predefinedCategories = req.body.predefinedCategories;
