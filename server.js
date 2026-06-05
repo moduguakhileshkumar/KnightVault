@@ -362,37 +362,33 @@ app.post('/api/wallpapers/:id/download', async (req, res) => {
 app.get('/api/stats', async (req, res) => {
   try {
     const isAdmin = await isRequestAdmin(req);
+    if (!isAdmin) {
+      return res.json({ isAdmin: false });
+    }
+    
     const promises = [
       Wallpaper.countDocuments(),
-      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$downloads' } } }])
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$downloads' } } }]),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$views'     } } }]),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminDownloads' } } }]),
+      Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminViews'     } } }])
     ];
-    if (isAdmin) {
-      promises.push(
-        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$views'     } } }]),
-        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminDownloads' } } }]),
-        Wallpaper.aggregate([{ $group: { _id: null, sum: { $sum: '$adminViews'     } } }])
-      );
-    }
+    
     const results = await Promise.all(promises);
     const total = results[0];
     const dl = results[1];
+    const vw = results[2];
+    const adl = results[3];
+    const avw = results[4];
     
-    const responseData = {
+    res.json({
       total,
       downloads: dl[0]?.sum || 0,
-      isAdmin
-    };
-    
-    if (isAdmin) {
-      const vw = results[2];
-      const adl = results[3];
-      const avw = results[4];
-      responseData.views = vw[0]?.sum || 0;
-      responseData.adminDownloads = adl[0]?.sum || 0;
-      responseData.adminViews = avw[0]?.sum || 0;
-    }
-    
-    res.json(responseData);
+      views: vw[0]?.sum || 0,
+      adminDownloads: adl[0]?.sum || 0,
+      adminViews: avw[0]?.sum || 0,
+      isAdmin: true
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -777,7 +773,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                 </div>
                 <div class="wp-meta">
                   ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
-                  <div><span>Downloads:</span> ${w.downloads}</div>
+                  ${isAdminReq ? `<div><span>Downloads:</span> ${w.downloads} (${w.adminDownloads || 0} by you)</div>` : ''}
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                   <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
                 </div>
@@ -854,6 +850,7 @@ app.get('/w/:slugOrId', async (req, res) => {
 // ─── AMP WALLPAPER PAGE ───────────────────────────────────
 app.get('/amp/w/:slugOrId', async (req, res) => {
   try {
+    const isAdminReq = await isRequestAdmin(req);
     const slugOrId = req.params.slugOrId;
     const w = await Wallpaper.findOne({
       $or: [
@@ -911,7 +908,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
           </div>
           <div class="meta">
-            <div><strong>Downloads:</strong> ${w.downloads}</div>
+            ${isAdminReq ? `<div><strong>Downloads:</strong> ${w.downloads} (${w.adminDownloads || 0} by you)</div>` : ''}
             <div><strong>Size:</strong> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
           </div>
           ${w.isPaid 

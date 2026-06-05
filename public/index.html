@@ -78,7 +78,7 @@
 </header>
 
 <!-- STATS BAR — visible to everyone -->
-<div class="stats-bar" id="statsBar" data-nosnippet>
+<div class="stats-bar hidden" id="statsBar" data-nosnippet>
   <span id="statTotal">—</span>
   <span>·</span>
   <span id="statDownloads">—</span>
@@ -556,19 +556,26 @@ async function loadStats() {
     const r = await fetch(`${API}/api/stats`);
     const d = await r.json();
     
+    if (!isAdmin) {
+      const statsBar = document.getElementById('statsBar');
+      if (statsBar) statsBar.classList.add('hidden');
+      return;
+    }
+    
+    const statsBar = document.getElementById('statsBar');
+    if (statsBar) statsBar.classList.remove('hidden');
+
     let totalHtml = `<strong>${d.total}</strong> wallpapers`;
     let downloadsHtml = `<strong>${d.downloads}</strong> downloads`;
     
-    if (isAdmin) {
-      downloadsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminDownloads || 0} by you)</span>`;
-    }
+    downloadsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminDownloads || 0} by you)</span>`;
     
     document.getElementById('statTotal').innerHTML     = totalHtml;
     document.getElementById('statDownloads').innerHTML = downloadsHtml;
     
     const viewsSep = document.getElementById('statViewsSeparator');
     const viewsEl = document.getElementById('statViews');
-    if (isAdmin && d.views !== undefined) {
+    if (d.views !== undefined) {
       let viewsHtml = `<strong>${d.views}</strong> views`;
       viewsHtml += ` <span style="font-size:0.8em;color:var(--dim);white-space:nowrap;">(${d.adminViews || 0} by you)</span>`;
       viewsEl.innerHTML = viewsHtml;
@@ -581,7 +588,6 @@ async function loadStats() {
   } catch(e) {}
 }
 
-/* ══════ CATEGORIES ══════ */
 async function loadCategories() {
   try {
     const r    = await fetch(`${API}/api/categories`);
@@ -804,6 +810,8 @@ function setAdminMode(on, pw) {
   document.getElementById('loginBtn').classList.toggle('hidden', on);
   document.getElementById('logoutBtn').classList.toggle('hidden', !on);
   document.getElementById('adminBar').classList.toggle('hidden', !on);
+  const statsBar = document.getElementById('statsBar');
+  if (statsBar) statsBar.classList.toggle('hidden', !on);
 }
 
 /* ══════ UPLOAD MODAL ══════ */
