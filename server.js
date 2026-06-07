@@ -722,22 +722,28 @@ app.get('/w/:slugOrId', async (req, res) => {
         }
         </script>
         <style>
-          .wp-container { max-width: 1000px; margin: 0 auto; padding: 2rem; display: flex; gap: 2rem; align-items: flex-start; }
-          .wp-img-wrap { flex: 1; text-align: center; }
-          .wp-img-wrap img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); border: 1px solid rgba(201,168,76,.15); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
-          .wp-info { width: 300px; flex-shrink: 0; background: var(--bg3); border: 1px solid rgba(255,255,255,.07); clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); padding: 1.5rem; }
-          .wp-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--gold); letter-spacing: .08em; margin-bottom: .5rem; }
-          .wp-meta { font-size: .75rem; color: var(--dim); margin-bottom: 1.5rem; line-height: 1.6; }
+          .wp-container { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 2.5rem; }
+          .wp-img-wrap { width: 100%; max-width: 900px; text-align: center; }
+          .wp-img-wrap img { width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius); border: 1px solid rgba(201,168,76,.2); box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+          .wp-card-details { width: 100%; max-width: 650px; background: linear-gradient(180deg, var(--bg3) 0%, rgba(17,17,22,0.95) 100%); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+          .wp-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--gold); letter-spacing: .08em; margin-bottom: .8rem; text-transform: uppercase; }
+          .wp-meta { font-size: .8rem; color: var(--dim); margin: 1.2rem 0; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
           .wp-meta span { color: var(--mid); }
-          .res-label { display: block; font-size: .7rem; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
-          .res-select { width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); color: var(--bright); font-size: .85rem; padding: .6rem; outline: none; margin-bottom: 1rem; cursor: pointer; }
-          .res-select:focus { border-color: rgba(201,168,76,.4); }
-          .wp-btn-dl { clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); width: 100%; font-family: 'Orbitron', sans-serif; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; padding: .85rem; background: linear-gradient(135deg, var(--gold-d), var(--gold)); color: var(--bg); border: none; cursor: pointer; font-weight: 600; border-radius: var(--radius); transition: filter .2s; }
-          .wp-btn-dl:hover { filter: brightness(1.1); }
-          .cat-tag { display: inline-block; font-size: .65rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: var(--gold); text-transform: capitalize; margin: 0 4px 4px 0; }
+          .wp-cta-section { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; width: 100%; }
+          .wp-btn-main { width: 100%; max-width: 450px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 1.1rem; background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 100%); color: var(--bg); border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(201, 168, 76, 0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+          .wp-btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(201, 168, 76, 0.45); filter: brightness(1.05); }
+          .wp-btn-main:active { transform: translateY(0); }
+          .wp-res-row { width: 100%; max-width: 450px; display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-top: 0.5rem; }
+          .wp-res-label { font-size: 0.75rem; color: var(--dim); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.08em; }
+          .wp-res-select { flex: 1; max-width: 280px; background: var(--bg2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: var(--bright); font-size: 0.85rem; padding: 0.5rem; outline: none; cursor: pointer; }
+          .wp-res-select:focus { border-color: rgba(201,168,76,.4); }
+          .cat-tag { display: inline-block; font-size: .7rem; padding: .3rem .8rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: var(--gold); text-transform: capitalize; margin: 0 4px 4px 0; }
           @media (max-width: 768px) {
-            .wp-container { flex-direction: column; padding: 1rem; }
-            .wp-info { width: 100%; }
+            .wp-container { padding: 1.5rem 0.5rem; gap: 1.5rem; }
+            .wp-card-details { padding: 1.5rem 1rem; }
+            .wp-btn-main { font-size: 0.8rem; padding: 0.95rem; }
+            .wp-res-row { flex-direction: column; gap: 0.5rem; }
+            .wp-res-select { max-width: 100%; width: 100%; }
           }
         </style>
       </head>
@@ -760,41 +766,51 @@ app.get('/w/:slugOrId', async (req, res) => {
 
           <main class="main" style="padding: 0;">
             <div class="wp-container">
+              <!-- Wallpaper Image occupies the main top space -->
               <div class="wp-img-wrap">
                 <img src="${esc((w.directLink && w.directLink.includes('/upload/')) ? w.directLink.replace('/upload/', '/upload/w_1200,q_auto,f_auto/') : (w.directLink || ''))}" 
                   style="${w.resolution && w.resolution.includes('x') && !isNaN(w.resolution.split('x')[0]) && !isNaN(w.resolution.split('x')[1]) ? 'aspect-ratio: ' + w.resolution.split('x')[0] + ' / ' + w.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;" 
                   fetchpriority="high" 
                   alt="${esc(w.title)} High Quality Wallpaper">
               </div>
-              <div class="wp-info">
+              
+              <!-- Centered Details Card directly underneath -->
+              <div class="wp-card-details">
                 <h1 class="wp-title">${esc(w.title)}</h1>
-                <div style="margin-bottom: 1rem;">
+                
+                <div style="margin-bottom: 1.2rem;">
                   ${categoryArr.map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
                 </div>
+                
                 <div class="wp-meta">
                   ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
+                  <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
                   ${isAdminReq ? `<div><span>Downloads:</span> ${w.downloads} (${w.adminDownloads || 0} by you)</div>` : ''}
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
-                  <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
                 </div>
 
-                <label class="res-label">Select Resolution</label>
-                <select id="resSelect" class="res-select">
-                  <option value="original">Original Size</option>
-                  <option value="tv">4K TV (3840x2160)</option>
-                  <option value="laptop">Laptop (1920x1080)</option>
-                  <option value="mobile">Mobile (1080x1920)</option>
-                </select>
-
-                ${w.isPaid 
-                  ? `<button class="wp-btn-dl" onclick="alert('Payment gateway not integrated yet!')">👑 Premium $${w.price}</button>` 
-                  : `<button class="wp-btn-dl" onclick="downloadImage()">⬇ Download</button>`
-                }
+                <div class="wp-cta-section">
+                  ${w.isPaid 
+                    ? `<button class="wp-btn-main" onclick="alert('Payment gateway not integrated yet!')">👑 Premium ${w.price}</button>` 
+                    : `<button class="wp-btn-main" onclick="downloadImage()">⬇ DOWNLOAD ORIGINAL (${w.resolution || '4K'})</button>`
+                  }
+                  
+                  <div class="wp-res-row">
+                    <label class="wp-res-label">Or select size:</label>
+                    <select id="resSelect" class="wp-res-select">
+                      <option value="original">Original resolution (${w.resolution || '4K'})</option>
+                      <option value="tv">4K TV (3840x2160)</option>
+                      <option value="laptop">Laptop (1920x1080)</option>
+                      <option value="mobile">Mobile (1080x1920)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div style="max-width: 1000px; margin: 0 auto; padding: 0 2rem 3rem;">
-              ${similarHtml}
+
+              <!-- Recommendation section moved directly below the card -->
+              <div style="width: 100%; padding: 0 1rem;">
+                ${similarHtml}
+              </div>
             </div>
           </main>
 
@@ -812,7 +828,8 @@ app.get('/w/:slugOrId', async (req, res) => {
 
         <script>
           async function downloadImage() {
-            const btn = document.querySelector('.wp-btn-dl');
+            const btn = document.querySelector('.wp-btn-main');
+            const originalText = btn.textContent;
             btn.textContent = 'Downloading...';
             
             // Record download stat via API
@@ -837,7 +854,7 @@ app.get('/w/:slugOrId', async (req, res) => {
             const dlUrl = '/api/download-proxy?url=' + encodeURIComponent(url) + '&filename=' + encodeURIComponent(proxyFilename);
             window.location.href = dlUrl;
             
-            setTimeout(() => { btn.textContent = '⬇ Download'; }, 2000);
+            setTimeout(() => { btn.textContent = originalText; }, 2000);
           }
         </script>
       </body>
