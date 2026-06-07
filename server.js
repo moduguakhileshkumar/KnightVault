@@ -949,34 +949,57 @@ async function postToPinterest(wall, settings) {
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
-      // 1. Centered diagonal semi-transparent watermark to prevent direct downloading/screenshots from Pinterest
-      const centerWatermark = 'co_rgb:ffe81f,l_text:Arial_70_bold:WAYNELAB.STUDIO,g_center,o_40,a_-30';
-      // 2. Gold call-to-action banner at the bottom
-      const bottomBanner = 'co_rgb:000000,l_text:Arial_40_bold:DOWNLOAD%204K%20AT%20WAYNELAB.STUDIO,g_south,y_60,b_rgb:f0d83a';
+      // 1. Mild blur to protect the uncompressed master and drive CTR
+      const blurEffect = 'e_blur:250';
+      // 2. Elegant small corner watermark
+      const cornerWatermark = 'co_rgb:ffffff,l_text:Arial_30:WAYNELAB.STUDIO,g_north_west,x_30,y_30,o_30';
+      // 3. Sleek CTA banner at the bottom
+      const bottomBanner = 'co_rgb:000000,l_text:Arial_40_bold:4K%20DOWNLOAD%20%E2%86%92,g_south,y_60,b_rgb:f0d83a,o_90';
       
-      previewLink = previewLink.replace('/upload/', `/upload/${centerWatermark}/${bottomBanner}/`);
+      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/${bottomBanner}/`);
     }
 
-    // Pinterest SEO Optimization
-    let pinTitle = wall.title;
-    let suffix = ' - Free 4K Wallpaper | KnightVault';
+    // Pinterest Search Keyword Booster
+    let keywordSuffix = ' | Aesthetic Background HD';
     if (wall.category && wall.category.length > 0) {
-      const firstCat = wall.category[0];
-      const capitalizedCat = firstCat.charAt(0).toUpperCase() + firstCat.slice(1);
-      suffix = ` - Free 4K ${capitalizedCat} Wallpaper | KnightVault`;
+      const mainCat = wall.category[0].toLowerCase();
+      if (mainCat === 'anime') {
+        keywordSuffix = ' | Anime Wallpaper HD & Lockscreen';
+      } else if (mainCat === 'gaming') {
+        keywordSuffix = ' | Gaming Wallpaper 4K & Background';
+      } else if (mainCat === 'minimalist') {
+        keywordSuffix = ' | Minimalist Wallpaper & Desktop Background';
+      } else if (mainCat === 'dark') {
+        keywordSuffix = ' | Dark Aesthetic Wallpaper & Lockscreen';
+      } else if (mainCat === 'car' || mainCat === 'cars') {
+        keywordSuffix = ' | Cool Car Wallpaper 4K & Background';
+      } else if (mainCat === 'nature' || mainCat === 'scenery') {
+        keywordSuffix = ' | Aesthetic Nature Wallpaper HD';
+      }
     }
-    if (!pinTitle.toLowerCase().includes('wallpaper')) {
-      pinTitle += suffix;
-    } else {
-      pinTitle += ' | KnightVault';
+    
+    let pinTitle = wall.title;
+    // Strip extensions and clean up title
+    pinTitle = pinTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                       .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                       .replace(/_/g, ' ')
+                       .trim();
+    
+    let categoryLabel = '';
+    if (wall.category && wall.category.length > 0) {
+      const cat = wall.category[0];
+      categoryLabel = ` ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
     }
+    
+    pinTitle = `${pinTitle} - Free 4K${categoryLabel} Wallpaper${keywordSuffix}`;
     if (pinTitle.length > 100) {
       pinTitle = pinTitle.substring(0, 97) + '...';
     }
 
+    // Pinterest Description Optimization
     const emojiDown = '\uD83D\uDC47';
-    const emojiPhone = '\uD83D\uDCF1';
-    let pinDescription = `${emojiDown} CLICK the link to download the clean, unwatermarked, and uncompressed 4K high-resolution version of this wallpaper on my website for free! ${emojiPhone} Beautiful custom backgrounds, homescreens, and lockscreens at waynelab.studio.\n\n`;
+    const cleanTitle = wall.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
+    let pinDescription = `Download clean, unblurred 4K ${cleanTitle} Wallpaper ${emojiDown} Tap Visit Site to get the uncompressed full resolution download for free!\n\n`;
     
     let hashtags = ['#4kwallpaper', '#wallpaper', '#backgrounds', '#aesthetic'];
     if (wall.category) {
