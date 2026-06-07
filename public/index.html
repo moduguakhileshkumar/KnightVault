@@ -25,29 +25,41 @@
   /* Hero Section */
   .hero-section {
     text-align: center;
-    padding: 3.5rem 1rem 2rem;
+    padding: 1.8rem 1rem 0.8rem;
     background: radial-gradient(circle at center, rgba(201, 168, 76, 0.05) 0%, transparent 70%);
   }
   .hero-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2.4rem;
+    font-size: 2.1rem;
     font-weight: 900;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin: 0 0 0.8rem 0;
+    margin: 0 0 0.4rem 0;
     background: linear-gradient(135deg, var(--gold) 30%, #fff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .hero-subtitle {
     font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--dim);
     letter-spacing: 0.05em;
     margin: 0;
   }
   
   /* Horizontal Scrollable Category Bar */
+  .cat-bar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.1rem 2rem;
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    backdrop-filter: blur(12px);
+    background: rgba(10, 10, 15, 0.75);
+  }
   .cat-bar {
     display: flex !important;
     justify-content: flex-start !important;
@@ -57,13 +69,25 @@
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
     gap: 1.8rem;
-    padding: .8rem 2rem;
+    padding: 0.5rem 0 !important;
+    flex: 1;
   }
   .cat-bar::-webkit-scrollbar {
     display: none !important;
   }
   .cat-pill {
     flex-shrink: 0 !important;
+  }
+  .sort-wrap {
+    margin-left: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .cat-bar-row {
+      padding: 0.1rem 1rem;
+    }
   }
   
   /* More Filters Panel */
@@ -191,7 +215,7 @@
 
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input type="text" class="search-input" id="searchInput" placeholder="Search wallpapers, categories, tags…" oninput="debounceSearch()">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search wallpapers (e.g. Luffy, Zoro, Asta...)" oninput="debounceSearch()">
   </div>
 
   <div class="topbar-actions" data-nosnippet>
@@ -222,34 +246,30 @@
 <!-- HERO SECTION -->
 <div class="hero-section" data-nosnippet>
   <h1 class="hero-title">4K Anime Wallpapers</h1>
-  <p class="hero-subtitle">Instant Download • Desktop &amp; Mobile • HD PNG &amp; WebP</p>
+  <p class="hero-subtitle">Free 4K Anime Wallpapers • Instant Download • Desktop &amp; Mobile</p>
 </div>
 
 <!-- CATEGORY PILLS -->
 <div class="cat-container">
-  <nav class="cat-bar" id="catBar">
-    <button class="cat-pill active" onclick="selectCat('all', this)">All</button>
-    <button class="cat-pill" onclick="selectCat('one piece', this)">One Piece</button>
-    <button class="cat-pill" onclick="selectCat('black clover', this)">Black Clover</button>
-    <button class="cat-pill" onclick="selectCat('demon slayer', this)">Demon Slayer</button>
-    <button class="cat-pill" onclick="selectCat('desktop', this)">Desktop</button>
-    <button class="cat-pill" onclick="selectCat('4k', this)">4K</button>
-    <button class="cat-pill more-filters-btn" id="moreFiltersBtn" style="display:none;" onclick="toggleMoreFilters()">More Filters ▼</button>
-  </nav>
-  <div class="more-cats-panel" id="moreCatsPanel"></div>
-</div>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="count hidden" id="countInfo">Loading...</div>
-  <div style="display:flex;align-items:center;gap:.5rem">
-    <span style="font-size:.72rem;color:var(--dim)">Sort:</span>
-    <select class="sort-select" id="sortSelect" onchange="loadWallpapers(1)">
-      <option value="new">Newest</option>
-      <option value="popular">Most Downloaded</option>
-      <option value="views">Most Viewed</option>
-    </select>
+  <div class="cat-bar-row">
+    <nav class="cat-bar" id="catBar">
+      <button class="cat-pill active" onclick="selectCat('all', this)">All</button>
+      <button class="cat-pill" onclick="selectCat('one piece', this)">One Piece</button>
+      <button class="cat-pill" onclick="selectCat('black clover', this)">Black Clover</button>
+      <button class="cat-pill" onclick="selectCat('demon slayer', this)">Demon Slayer</button>
+      <button class="cat-pill" onclick="selectCat('desktop', this)">Desktop</button>
+      <button class="cat-pill" onclick="selectCat('4k', this)">4K</button>
+      <button class="cat-pill more-filters-btn" id="moreFiltersBtn" style="display:none;" onclick="toggleMoreFilters()">More Filters ▼</button>
+    </nav>
+    <div class="sort-wrap">
+      <select class="sort-select" id="sortSelect" onchange="loadWallpapers(1)">
+        <option value="new">Newest</option>
+        <option value="popular">Popular</option>
+        <option value="views">Most Viewed</option>
+      </select>
+    </div>
   </div>
+  <div class="more-cats-panel" id="moreCatsPanel"></div>
 </div>
 
 <!-- MAIN GRID -->
@@ -789,7 +809,7 @@ async function loadWallpapers(page = 1) {
 
   grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="spinner"></div><p>Loading…</p></div></div>`;
   pag.innerHTML  = '';
-  count.textContent = 'Loading…';
+  if (count) count.textContent = 'Loading…';
 
   const params = new URLSearchParams({ page, limit: 24, sort });
   if (currentCat !== 'all') params.set('category', currentCat);
@@ -800,7 +820,7 @@ async function loadWallpapers(page = 1) {
     const d = await r.json();
     renderGrid(d.wallpapers);
     renderPagination(d.page, d.pages);
-    count.innerHTML = `<strong>${d.total}</strong> wallpaper${d.total !== 1 ? 's' : ''}`;
+    if (count) count.innerHTML = `<strong>${d.total}</strong> wallpaper${d.total !== 1 ? 's' : ''}`;
   } catch(e) {
     grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">⚠</div><p>Could not connect to server</p></div></div>`;
   }
@@ -833,16 +853,20 @@ function renderGrid(walls) {
     const loadAttr = isAboveFold ? 'fetchpriority="high"' : 'loading="lazy"';
 
     // Clean extensions, duplicates, and formatting from wallpaper titles for easier scanning
-    let coreTitle = w.title.split('|')[0].trim();
+    let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
     let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
                               .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
                               .replace(/_/g, ' ')
                               .replace(/Wallpaper/gi, '')
                               .replace(/4K/gi, '')
                               .trim();
-    cleanTitle = cleanTitle.split(/\s+/)
+    let words = cleanTitle.split(/\s+/)
                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                           .join(' ') + ' Wallpaper';
+                           .filter(Boolean);
+    if (words.length > 4) {
+      words = words.slice(0, 4);
+    }
+    cleanTitle = words.join(' ') + ' Wallpaper';
 
     // Generate dynamic click incentives/badges
     let badgesHtml = '';
@@ -876,12 +900,12 @@ function renderGrid(walls) {
         <div class="card-cats">
           ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
         </div>
-        <div class="card-actions" style="margin-top: 0.6rem;">
-          <button class="card-btn card-btn-dl" style="padding: 0.55rem; font-size: 0.65rem; border-radius: 20px; font-weight: 700; letter-spacing: 0.08em;">
+        <div class="card-actions">
+          <button class="card-btn card-btn-dl">
             ${w.isPaid ? `👑 PREMIUM ${w.price}` : 'Download 4K <span class="arrow">→</span>'}
           </button>
-          ${isAdmin ? `<button class="card-btn card-btn-link" style="max-width: 40px; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();copyText('${pageLink}','Page link copied!')">🔗</button>` : ''}
         </div>
+        ${isAdmin ? `<button class="card-copy-btn" onclick="event.stopPropagation();copyText('${pageLink}','Page link copied!')" title="Copy Page Link">🔗</button>` : ''}
       </div>
       ${w.tags && w.tags.length ? `<div class="card-badge">${esc(w.tags[0])}</div>` : ''}
       ${w.isPaid ? `<div class="card-badge" style="top:auto;bottom:8px;right:8px;background:rgba(201,168,76,0.9);color:#0A0A0F;border:none;">Premium ${w.price}</div>` : ''}

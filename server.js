@@ -652,16 +652,20 @@ app.get('/w/:slugOrId', async (req, res) => {
               : (sw.directLink || '');
             
             // Clean extensions, duplicates, and formatting from similar wallpaper titles
-            let coreTitle = sw.title.split('|')[0].trim();
+            let coreTitle = sw.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
             let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
                                       .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
                                       .replace(/_/g, ' ')
                                       .replace(/Wallpaper/gi, '')
                                       .replace(/4K/gi, '')
                                       .trim();
-            cleanTitle = cleanTitle.split(/\s+/)
+            let words = cleanTitle.split(/\s+/)
                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                                   .join(' ') + ' Wallpaper';
+                                   .filter(Boolean);
+            if (words.length > 4) {
+              words = words.slice(0, 4);
+            }
+            cleanTitle = words.join(' ') + ' Wallpaper';
 
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
@@ -674,8 +678,8 @@ app.get('/w/:slugOrId', async (req, res) => {
                 <div class="card-cats">
                   ${(Array.isArray(sw.category) ? sw.category : [sw.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
                 </div>
-                <div class="card-actions" style="margin-top: 0.6rem;">
-                  <button class="card-btn card-btn-dl" style="padding: 0.55rem; font-size: 0.65rem; border-radius: 20px; font-weight: 700; letter-spacing: 0.08em;"
+                <div class="card-actions">
+                  <button class="card-btn card-btn-dl"
                     onclick="event.stopPropagation();window.location.href='${pageLink}'">
                     Download 4K <span class="arrow">→</span>
                   </button>
