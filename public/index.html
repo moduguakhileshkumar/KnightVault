@@ -66,6 +66,42 @@
     flex-shrink: 0 !important;
   }
   
+  /* More Filters Panel */
+  .more-cats-panel {
+    display: none;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    padding: 1rem 2rem;
+    background: rgba(20, 20, 25, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+  }
+  .more-cats-panel.open {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .more-filters-btn {
+    color: var(--gold) !important;
+    border: 1px dashed rgba(201, 168, 76, 0.3) !important;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem !important;
+    font-size: 0.7rem !important;
+    margin-left: auto;
+  }
+  .more-filters-btn:hover {
+    border-color: var(--gold) !important;
+    background: rgba(201, 168, 76, 0.05) !important;
+  }
+  
+  /* Hide countInfo and downloads statistics */
+  #countInfo, #statDownloads, #statDownloadsSeparator {
+    display: none !important;
+  }
+  
   /* Card Badges and Formatting */
   .card-info-footer {
     flex-direction: column !important;
@@ -170,8 +206,8 @@
 <!-- STATS BAR — visible to everyone -->
 <div class="stats-bar hidden" id="statsBar" data-nosnippet>
   <span id="statTotal">—</span>
-  <span>·</span>
-  <span id="statDownloads">—</span>
+  <span id="statDownloadsSeparator" style="display:none !important;">·</span>
+  <span id="statDownloads" style="display:none !important;">—</span>
   
   <span id="statViewsSeparator">·</span>
   <span id="statViews">—</span>
@@ -190,9 +226,18 @@
 </div>
 
 <!-- CATEGORY PILLS -->
-<nav class="cat-bar" id="catBar">
-  <button class="cat-pill active" onclick="selectCat('all', this)">All</button>
-</nav>
+<div class="cat-container">
+  <nav class="cat-bar" id="catBar">
+    <button class="cat-pill active" onclick="selectCat('all', this)">All</button>
+    <button class="cat-pill" onclick="selectCat('one piece', this)">One Piece</button>
+    <button class="cat-pill" onclick="selectCat('black clover', this)">Black Clover</button>
+    <button class="cat-pill" onclick="selectCat('demon slayer', this)">Demon Slayer</button>
+    <button class="cat-pill" onclick="selectCat('desktop', this)">Desktop</button>
+    <button class="cat-pill" onclick="selectCat('4k', this)">4K</button>
+    <button class="cat-pill more-filters-btn" id="moreFiltersBtn" style="display:none;" onclick="toggleMoreFilters()">More Filters ▼</button>
+  </nav>
+  <div class="more-cats-panel" id="moreCatsPanel"></div>
+</div>
 
 <!-- TOOLBAR -->
 <div class="toolbar">
@@ -688,20 +733,43 @@ async function loadCategories() {
   try {
     const r    = await fetch(`${API}/api/categories`);
     const cats = await r.json();
-    const bar  = document.getElementById('catBar');
-
-    bar.querySelectorAll('.cat-pill:not(:first-child)').forEach(p => p.remove());
-
+    
     allCatsList = cats.map(c => c.name);
 
+    const TOP_CATS = ['all', 'one piece', 'black clover', 'demon slayer', 'desktop', '4k'];
+    const morePanel = document.getElementById('moreCatsPanel');
+    morePanel.innerHTML = '';
+
+    let hasOtherCats = false;
     cats.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'cat-pill';
-      btn.textContent = c.name;
-      btn.onclick = () => selectCat(c.name, btn);
-      bar.appendChild(btn);
+      const nameLower = c.name.toLowerCase();
+      if (!TOP_CATS.includes(nameLower)) {
+        hasOtherCats = true;
+        const btn = document.createElement('button');
+        btn.className = 'cat-pill';
+        btn.textContent = c.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        btn.onclick = () => selectCat(c.name, btn);
+        morePanel.appendChild(btn);
+      }
     });
+
+    const moreBtn = document.getElementById('moreFiltersBtn');
+    if (moreBtn) {
+      moreBtn.style.display = hasOtherCats ? 'inline-block' : 'none';
+    }
   } catch(e) {}
+}
+
+function toggleMoreFilters() {
+  const panel = document.getElementById('moreCatsPanel');
+  const btn = document.getElementById('moreFiltersBtn');
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.textContent = 'More Filters ▼';
+  } else {
+    panel.classList.add('open');
+    btn.textContent = 'More Filters ▲';
+  }
 }
 
 function selectCat(cat, el) {
@@ -765,13 +833,16 @@ function renderGrid(walls) {
     const loadAttr = isAboveFold ? 'fetchpriority="high"' : 'loading="lazy"';
 
     // Clean extensions, duplicates, and formatting from wallpaper titles for easier scanning
-    let cleanTitle = w.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
-                            .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
-                            .replace(/_/g, ' ')
-                            .replace(/Wallpaper/gi, '')
-                            .replace(/4K/gi, '')
-                            .trim();
-    cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1) + ' Wallpaper';
+    let coreTitle = w.title.split('|')[0].trim();
+    let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                              .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                              .replace(/_/g, ' ')
+                              .replace(/Wallpaper/gi, '')
+                              .replace(/4K/gi, '')
+                              .trim();
+    cleanTitle = cleanTitle.split(/\s+/)
+                           .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                           .join(' ') + ' Wallpaper';
 
     // Generate dynamic click incentives/badges
     let badgesHtml = '';
@@ -807,7 +878,7 @@ function renderGrid(walls) {
         </div>
         <div class="card-actions" style="margin-top: 0.6rem;">
           <button class="card-btn card-btn-dl" style="padding: 0.55rem; font-size: 0.65rem; border-radius: 20px; font-weight: 700; letter-spacing: 0.08em;">
-            ${w.isPaid ? `👑 PREMIUM ${w.price}` : 'VIEW & DOWNLOAD 4K →'}
+            ${w.isPaid ? `👑 PREMIUM ${w.price}` : 'Download 4K <span class="arrow">→</span>'}
           </button>
           ${isAdmin ? `<button class="card-btn card-btn-link" style="max-width: 40px; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();copyText('${pageLink}','Page link copied!')">🔗</button>` : ''}
         </div>

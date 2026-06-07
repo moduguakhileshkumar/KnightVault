@@ -650,6 +650,19 @@ app.get('/w/:slugOrId', async (req, res) => {
             const thumbUrl = (sw.directLink && sw.directLink.includes('/upload/'))
               ? sw.directLink.replace('/upload/', '/upload/w_400,q_auto,f_auto/')
               : (sw.directLink || '');
+            
+            // Clean extensions, duplicates, and formatting from similar wallpaper titles
+            let coreTitle = sw.title.split('|')[0].trim();
+            let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                                      .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                                      .replace(/_/g, ' ')
+                                      .replace(/Wallpaper/gi, '')
+                                      .replace(/4K/gi, '')
+                                      .trim();
+            cleanTitle = cleanTitle.split(/\s+/)
+                                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                   .join(' ') + ' Wallpaper';
+
             return `
             <div class="wall-card" onclick="window.location.href='${pageLink}'">
               <img src="${esc(thumbUrl)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
@@ -657,19 +670,19 @@ app.get('/w/:slugOrId', async (req, res) => {
                 onerror="this.style.opacity='0.3'" class="loading"
                 onload="this.classList.remove('loading')">
               <div class="card-overlay">
-                <h3 class="card-title">${esc(sw.title)}</h3>
+                <h3 class="card-title">${esc(cleanTitle)}</h3>
                 <div class="card-cats">
                   ${(Array.isArray(sw.category) ? sw.category : [sw.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
                 </div>
-                <div class="card-actions">
-                  <button class="card-btn card-btn-dl"
+                <div class="card-actions" style="margin-top: 0.6rem;">
+                  <button class="card-btn card-btn-dl" style="padding: 0.55rem; font-size: 0.65rem; border-radius: 20px; font-weight: 700; letter-spacing: 0.08em;"
                     onclick="event.stopPropagation();window.location.href='${pageLink}'">
-                    VIEW DETAILS
+                    Download 4K <span class="arrow">→</span>
                   </button>
                 </div>
               </div>
               <div class="card-info-footer">
-                <span class="card-info-title">${esc(sw.title)}</span>
+                <span class="card-info-title">${esc(cleanTitle)}</span>
               </div>
             </div>
             `;
@@ -785,7 +798,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                 <div class="wp-meta">
                   ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
                   <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
-                  ${isAdminReq ? `<div><span>Downloads:</span> ${w.downloads} (${w.adminDownloads || 0} by you)</div>` : ''}
+
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                 </div>
 
@@ -925,7 +938,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}
           </div>
           <div class="meta">
-            ${isAdminReq ? `<div><strong>Downloads:</strong> ${w.downloads} (${w.adminDownloads || 0} by you)</div>` : ''}
+
             <div><strong>Size:</strong> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
           </div>
           ${w.isPaid 
