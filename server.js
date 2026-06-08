@@ -805,11 +805,16 @@ app.get('/w/:slugOrId', async (req, res) => {
 
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                 </div>
+                
+                <!-- Unique Dynamic Editorial Description -->
+                <div class="wp-desc-section" style="margin-top: 1.8rem; text-align: left; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem; font-size: 0.88rem; line-height: 1.65; color: var(--mid);">
+                  ${generateWallpaperDescription(w)}
+                </div>
 
                 <div class="wp-cta-section">
                   ${w.isPaid 
                     ? `<button class="wp-btn-main" onclick="alert('Payment gateway not integrated yet!')">👑 Premium ${w.price}</button>` 
-                    : `<button class="wp-btn-main" onclick="downloadImage()">⬇ DOWNLOAD ORIGINAL (${w.resolution || '4K'})</button>`
+                    : `<button class="wp-btn-main" onclick="downloadImage()">⬇ Download Original (${w.resolution || '4K'})</button>`
                   }
                   
                   <div class="wp-res-row">
@@ -838,6 +843,7 @@ app.get('/w/:slugOrId', async (req, res) => {
               <a href="/privacy.html">Privacy Policy</a>
               <a href="/terms.html">Terms of Service</a>
               <a href="/blog.html">Blog</a>
+              <a href="/dmca.html">DMCA Policy</a>
             </div>
             <p class="main-footer-copy">© 2026 Waynelab. All rights reserved. High Quality Wallpapers.</p>
           </footer>
@@ -957,6 +963,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             <a href="${BASE_URL}/privacy.html">Privacy</a>
             <a href="${BASE_URL}/terms.html">Terms</a>
             <a href="${BASE_URL}/blog.html">Blog</a>
+            <a href="${BASE_URL}/dmca.html">DMCA Policy</a>
           </div>
           <p>© 2026 Waynelab. All rights reserved.</p>
         </footer>
@@ -1317,7 +1324,16 @@ app.get('/sitemap.xml', async (req, res) => {
     xml += '    <priority>1.0</priority>\n';
     xml += '  </url>\n';
 
-    const staticRoutes = ['/about.html', '/contact.html', '/privacy.html', '/terms.html'];
+    const staticRoutes = [
+      '/about.html', 
+      '/contact.html', 
+      '/privacy.html', 
+      '/terms.html',
+      '/dmca.html',
+      '/top-gear-5-wallpapers',
+      '/best-black-clover-wallpapers',
+      '/demon-slayer-4k-collection'
+    ];
     staticRoutes.forEach(route => {
       xml += '  <url>\n';
       xml += `    <loc>${BASE_URL}${route}</loc>\n`;
@@ -1530,6 +1546,252 @@ app.use((req, res) => {
     </body>
     </html>
   `);
+});
+
+
+// -------------------------------------------------------------
+// DYNAMIC DESCRIPTION GENERATOR (AdSense Thin Content Compliance)
+// -------------------------------------------------------------
+function generateWallpaperDescription(w) {
+  const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const title = w.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
+  const cleanTitle = esc(title.split('|')[0].trim());
+  const categories = (Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean);
+  const tags = (Array.isArray(w.tags) ? w.tags : [w.tags]).filter(Boolean);
+  
+  const mainCat = esc(categories[0] || 'artwork');
+  const tagList = tags.length > 0 ? tags.slice(0, 3).map(t => esc(t)).join(', ') : 'digital art';
+  
+  // Dynamic screen and orientation recommendation
+  let deviceRec = 'desktop monitors, widescreen displays, and home office setups';
+  let aspectText = 'landscape panoramic orientation';
+  if (w.resolution && w.resolution.includes('x')) {
+    const [width, height] = w.resolution.split('x').map(Number);
+    if (!isNaN(width) && !isNaN(height) && height > width) {
+      deviceRec = 'mobile devices, iPhones, Android home screens, and vertical lockscreens';
+      aspectText = 'portrait layout';
+    }
+  }
+
+  let contextSentence = `Featuring stunning design highlights, this digital background is curated specifically for fans looking to bring high-quality visual aesthetics to their setup.`;
+  if (mainCat.toLowerCase() === 'anime') {
+    contextSentence = `Designed for dedicated anime fans, this background showcases detailed anime character art and rich environmental effects, making it a perfect match for personalizing your lockscreens and desktop setups.`;
+  } else if (mainCat.toLowerCase() === 'gaming') {
+    contextSentence = `Featuring gaming-inspired concept themes and character illustrations, this background highlights the immersive art styles of modern gameplay graphics directly on your screens.`;
+  }
+
+  return `
+    <p style="margin: 0 0 1rem 0;">This high-quality <strong>${cleanTitle}</strong> wallpaper is a hand-curated digital background optimized for ${mainCat} enthusiasts. ${contextSentence}</p>
+    <p style="margin: 0 0 1rem 0;">Our creative post-processing involves sharpening image details, balancing lighting contrast, and refining the color palette. These visual enhancements ensure that digital lines and lighting effects remain crisp, vibrant, and clear on high-refresh-rate OLED and LCD displays.</p>
+    <p style="margin: 0;">Tailored specifically for ${deviceRec}, this background is available for download in ${aspectText} in its original ${esc(w.resolution || '4K')} resolution, helping you build a clean and premium screen setup.</p>
+  `;
+}
+
+// -------------------------------------------------------------
+// CURATED COLLECTIONS RENDERERS
+// -------------------------------------------------------------
+function renderServerGrid(walls, esc) {
+  if (!walls || !walls.length) {
+    return `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--dim);"><p>No wallpapers found in this collection.</p></div>`;
+  }
+  return walls.map(w => {
+    const pageLink = '/w/' + (w.slug || w.filename.split('/').pop());
+    const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
+      ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
+      : (w.directLink || '');
+    
+    let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
+    let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                              .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                              .replace(/_/g, ' ')
+                              .replace(/Wallpaper/gi, '')
+                              .replace(/4K/gi, '')
+                              .trim();
+    let words = cleanTitle.split(/\s+/)
+                           .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                           .filter(Boolean);
+    if (words.length > 4) {
+      words = words.slice(0, 4);
+    }
+    cleanTitle = words.join(' ') + ' Wallpaper';
+
+    let badgesHtml = '';
+    const resolution = w.resolution || '';
+    if (resolution.includes('x')) {
+      const [wVal, hVal] = resolution.split('x').map(Number);
+      if (!isNaN(wVal) && !isNaN(hVal)) {
+        if (wVal >= 3840) {
+          badgesHtml += `<span class="card-tag-badge gold">4K UHD</span>`;
+        } else if (wVal >= 1920) {
+          badgesHtml += `<span class="card-tag-badge">1080p HD</span>`;
+        }
+        if (wVal > hVal) {
+          badgesHtml += `<span class="card-tag-badge">Desktop</span>`;
+        } else {
+          badgesHtml += `<span class="card-tag-badge">Mobile</span>`;
+        }
+      }
+    }
+    if (w.mimeType === 'image/png' || (w.originalName && w.originalName.toLowerCase().endsWith('.png'))) {
+      badgesHtml += `<span class="card-tag-badge png">PNG</span>`;
+    }
+
+    return `
+    <div class="wall-card" onclick="window.location.href='${pageLink}'">
+      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
+        style="${w.resolution && w.resolution.includes('x') && !isNaN(w.resolution.split('x')[0]) && !isNaN(w.resolution.split('x')[1]) ? 'aspect-ratio: ' + w.resolution.split('x')[0] + ' / ' + w.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;"
+        onerror="this.style.opacity='0.3'" class="loading"
+        onload="this.classList.remove('loading')">
+      <div class="card-overlay">
+        <h3 class="card-title">${esc(cleanTitle)}</h3>
+        <div class="card-cats">
+          ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
+        </div>
+        <div class="card-actions">
+          <button class="card-btn card-btn-dl">
+            ${w.isPaid ? `👑 PREMIUM ${w.price}` : 'Download 4K <span class="arrow">→</span>'}
+          </button>
+        </div>
+      </div>
+      <div class="card-info-footer">
+        <span class="card-info-title">${esc(cleanTitle)}</span>
+        <div class="card-tag-row">${badgesHtml}</div>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc) {
+  const gridHtml = renderServerGrid(walls, esc);
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="robots" content="index, follow">
+      <meta name="description" content="${esc(metaDesc)}">
+      <title>${esc(title)} — Waynelab</title>
+      <link rel="canonical" href="${canonicalUrl}">
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+      <link rel="shortcut icon" href="/favicon.ico">
+      <link rel="manifest" href="/manifest.json">
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="/style.css">
+      <style>
+        .coll-hero {
+          text-align: center;
+          padding: 2.2rem 1rem 1.2rem;
+          background: radial-gradient(circle at center, rgba(201, 168, 76, 0.05) 0%, transparent 70%);
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .coll-title {
+          font-family: 'Orbitron', sans-serif;
+          font-size: 1.8rem;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin: 0 0 0.8rem 0;
+          background: linear-gradient(135deg, var(--gold) 30%, #fff 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .coll-desc {
+          font-family: 'Inter', sans-serif;
+          font-size: 0.86rem;
+          color: var(--mid);
+          line-height: 1.6;
+          margin: 0;
+        }
+        @media (max-width: 768px) {
+          .coll-hero { padding: 1.5rem 1rem 0.8rem; }
+          .coll-title { font-size: 1.4rem; }
+          .coll-desc { font-size: 0.8rem; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="app">
+        <header class="topbar">
+          <a class="logo" href="/">
+            <svg width="40" height="21" viewBox="0 0 128.7 68.138" fill="var(--gold)">
+              <path d="M 64.18,55.126 C 64.18,55.126 62.87,49.196 61.38,46.606 59.99,44.187 57.99,42.117 55.81,40.377 53.91,38.867 51.73,37.667 49.44,36.847 47.6,36.187 45.62,35.897 43.67,35.787 41.83,35.677 39.95,35.757 38.14,36.147 35.82,36.647 31.49,38.657 31.49,38.657 31.49,38.657 31.85,37.027 31.53,36.307 31.24,35.647 30.54,35.237 29.91,34.887 28.86,34.297 27.67,33.877 26.47,33.817 25.01,33.747 23.53,34.147 22.19,34.717 20.33,35.507 18.63,36.707 17.16,38.097 15.42,39.737 12.81,43.817 12.81,43.817 12.81,43.817 16.03,36.487 18.29,33.207 20.38,30.177 22.99,27.507 25.66,24.977 28.16,22.607 30.85,20.391 33.73,18.5 36.71,16.546 43.19,13.522 43.19,13.522 43.19,13.522 43.45,14.575 43.59,15.1 43.76,15.755 43.94,16.408 44.11,17.063 44.28,17.731 44.62,19.068 44.62,19.068 44.62,19.068 47.08,19.451 48.3,19.682 50.21,20.043 52.11,20.459 54.01,20.887 55.6,21.247 58.76,22.027 58.76,22.027 58.76,22.027 59.27,20.102 59.52,19.138 59.78,18.157 60.29,16.192 60.29,16.192 60.87,17.151 61.45,18.109 62.03,19.068 62.03,19.068 63.48,18.99 64.2,18.99 64.92,18.99 66.37,19.068 66.37,19.068 66.96,18.123 67.54,17.177 68.13,16.232 68.13,16.232 68.57,18.119 68.84,19.051 69.12,20.052 69.78,22.027 69.78,22.027 69.78,22.027 73.01,21.427 74.61,21.067 76.37,20.667 78.09,20.121 79.86,19.746 81.15,19.472 83.75,19.068 83.75,19.068 83.75,19.068 84.15,17.675 84.34,16.975 84.53,16.287 84.7,15.597 84.88,14.906 85,14.446 85.22,13.522 85.22,13.522 85.22,13.522 92.54,16.867 95.86,19.113 98.95,21.207 101.77,23.697 104.37,26.377 107,29.087 109.45,32.027 111.47,35.227 113.28,38.087 115.89,44.377 115.89,44.377 115.89,44.377 113.55,40.277 111.9,38.627 110.51,37.237 108.81,36.127 107.05,35.247 105.84,34.647 104.55,34.127 103.21,33.997 101.94,33.877 100.61,33.997 99.42,34.457 98.47,34.817 97.39,35.307 96.92,36.217 96.56,36.907 96.92,38.557 96.92,38.557 96.92,38.557 92.83,36.737 90.66,36.237 88.86,35.817 86.98,35.577 85.13,35.697 82.68,35.857 80.23,36.467 77.95,37.377 75.89,38.197 73.91,39.317 72.2,40.727 70.23,42.357 68.44,44.307 67.16,46.516 65.64,49.146 64.18,55.126 64.18,55.126 Z" />
+            </svg>
+            <div>
+              <span class="logo-name">Waynelab</span>
+              <span class="logo-tag">High Quality Wallpapers</span>
+            </div>
+          </a>
+          <div class="topbar-actions">
+            <button class="btn btn-gold" onclick="window.location.href='/'">← Back to Vault</button>
+          </div>
+        </header>
+
+        <main class="main" style="padding: 1.2rem 2rem 3rem;">
+          <div class="coll-hero">
+            <h1 class="coll-title">${esc(title)}</h1>
+            <p class="coll-desc">${esc(introText)}</p>
+          </div>
+          <div class="wall-grid" style="margin-top: 2.2rem;">
+            ${gridHtml}
+          </div>
+        </main>
+
+        <footer class="main-footer">
+          <div class="main-footer-links">
+            <a href="/about.html">About Us</a>
+            <a href="/contact.html">Contact</a>
+            <a href="/privacy.html">Privacy Policy</a>
+            <a href="/terms.html">Terms of Service</a>
+            <a href="/dmca.html">DMCA Policy</a>
+          </div>
+          <p class="main-footer-copy">© 2026 Waynelab. All rights reserved. High Quality Wallpapers.</p>
+        </footer>
+      </div>
+    </body>
+    </html>
+  `);
+}
+
+async function renderCollection(req, res, keyword, title, introText) {
+  try {
+    const walls = await Wallpaper.find({
+      $or: [
+        { tags: { $regex: new RegExp(keyword, 'i') } },
+        { title: { $regex: new RegExp(keyword, 'i') } },
+        { category: { $regex: new RegExp(keyword, 'i') } }
+      ]
+    }).limit(24).sort({ uploadedAt: -1 });
+
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const metaDesc = `Download the best high-quality ${title} in 4K UHD and HD resolutions. Browse our hand-curated collection of premium desktop and mobile backgrounds.`;
+    const canonicalUrl = `${BASE_URL}/${req.path.replace(/^\/+/, '')}`;
+    
+    renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc);
+  } catch (err) {
+    res.status(500).send('Error loading collection page.');
+  }
+}
+
+// Curated Collection Routes
+app.get('/top-gear-5-wallpapers', (req, res) => {
+  renderCollection(req, res, 'luffy|gear\\s*5', 'Top Gear 5 Luffy Wallpapers', 
+    'Monkey D. Luffy\'s Gear 5 awakening is one of the most iconic moments in anime history. Representing the peak of his power as the Sun God Nika, Gear 5 combines cartoonish freedom with godlike abilities. In this curated collection, we have gathered the ultimate high-definition and 4K Gear 5 Luffy wallpapers. Each wallpaper in this vault has been processed with visual enhancements, color correction, and contrast tuning to highlight Luffy\'s signature white hair and glowing energy waves. Whether you are looking for a dark minimalist design for your iPhone lockscreen or a high-detail cinematic scene for your desktop monitor, this collection has the perfect background for One Piece fans.');
+});
+
+app.get('/best-black-clover-wallpapers', (req, res) => {
+  renderCollection(req, res, 'asta|black\\s*clover', 'Best Black Clover Wallpapers', 
+    'Black Clover follows the journey of Asta, a magicless boy in a world where magic is everything, who gains the power of Anti-Magic through a five-leaf clover grimoire. This curated collection brings together the absolute best Black Clover and Asta wallpapers in 4K UHD and HD resolutions. From Asta\'s intense devil-union forms to dramatic battle sequences and grimoire designs, each image has been carefully color-graded and sharpened to bring out the grim, high-energy aesthetic of the Magic Knights. Enhance your mobile screens and desktop setups with these premium backgrounds showcasing the determination and raw power of the Black Bulls\' anti-magic hero.');
+});
+
+app.get('/demon-slayer-4k-collection', (req, res) => {
+  renderCollection(req, res, 'demon\\s*slayer|rengoku|tanjiro', 'Demon Slayer 4K Collection', 
+    'Demon Slayer (Kimetsu no Yaiba) is celebrated for its breathtaking animation, vibrant color palettes, and intense swordsmanship. This curated Demon Slayer 4K collection offers premium high-resolution wallpapers featuring Tanjiro Kamado, the Flame Hashira Kyojuro Rengoku, and other iconic characters. Every wallpaper in this collection has been optimized for deep contrast and color balance, highlighting the gorgeous breathing style effects—from Rengoku\'s roaring flames to Tanjiro\'s water and sun breathing flows. Perfect for mobile lockscreens and high-refresh-rate desktop displays, this collection brings the cinematic art of Ufotable directly to your devices for free.');
 });
 
 app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));
