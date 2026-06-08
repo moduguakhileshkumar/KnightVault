@@ -1523,32 +1523,6 @@ app.get(['/', '/index.html'], async (req, res) => {
   }
 });
 
-// 404 NOT FOUND FALLBACK (Prevents Soft 404s for invalid pages)
-app.use((req, res) => {
-  res.status(404).send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>404 Not Found - Waynelab</title>
-      <style>
-        body { background: #0A0A0F; color: #7A7A9A; font-family: sans-serif; text-align: center; padding-top: 100px; }
-        h1 { color: #C9A84C; font-family: sans-serif; }
-        a { color: #C9A84C; text-decoration: none; font-weight: bold; }
-        a:hover { text-decoration: underline; }
-      </style>
-    </head>
-    <body>
-      <h1>Page Not Found</h1>
-      <p>The requested page does not exist on our server.</p>
-      <p><a href="/">Return to Vault</a></p>
-    </body>
-    </html>
-  `);
-});
-
-
 // -------------------------------------------------------------
 // DYNAMIC DESCRIPTION GENERATOR (AdSense Thin Content Compliance)
 // -------------------------------------------------------------
@@ -1793,5 +1767,32 @@ app.get('/demon-slayer-4k-collection', (req, res) => {
   renderCollection(req, res, 'demon\\s*slayer|rengoku|tanjiro', 'Demon Slayer 4K Collection', 
     'Demon Slayer (Kimetsu no Yaiba) is celebrated for its breathtaking animation, vibrant color palettes, and intense swordsmanship. This curated Demon Slayer 4K collection offers premium high-resolution wallpapers featuring Tanjiro Kamado, the Flame Hashira Kyojuro Rengoku, and other iconic characters. Every wallpaper in this collection has been optimized for deep contrast and color balance, highlighting the gorgeous breathing style effects—from Rengoku\'s roaring flames to Tanjiro\'s water and sun breathing flows. Perfect for mobile lockscreens and high-refresh-rate desktop displays, this collection brings the cinematic art of Ufotable directly to your devices for free.');
 });
+
+
+// 404 NOT FOUND FALLBACK (Prevents Soft 404s for invalid pages)
+app.use((req, res) => {
+  res.status(404).send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>404 Not Found - Waynelab</title>
+      <style>
+        body { background: #0A0A0F; color: #7A7A9A; font-family: sans-serif; text-align: center; padding-top: 100px; }
+        h1 { color: #C9A84C; font-family: sans-serif; }
+        a { color: #C9A84C; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+      </style>
+    </head>
+    <body>
+      <h1>Page Not Found</h1>
+      <p>The requested page does not exist on our server.</p>
+      <p><a href="/">Return to Vault</a></p>
+    </body>
+    </html>
+  `);
+});
+
 
 app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));
