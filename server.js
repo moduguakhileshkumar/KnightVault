@@ -1332,7 +1332,11 @@ app.get('/sitemap.xml', async (req, res) => {
       '/dmca.html',
       '/top-gear-5-wallpapers',
       '/best-black-clover-wallpapers',
-      '/demon-slayer-4k-collection'
+      '/demon-slayer-4k-collection',
+      '/blog.html',
+      '/blog/customize-homescreen-guide.html',
+      '/blog/4k-resolution-mobile-wallpapers.html',
+      '/blog/anime-wallpaper-trends-2026.html'
     ];
     staticRoutes.forEach(route => {
       xml += '  <url>\n';
@@ -1534,9 +1538,10 @@ function generateWallpaperDescription(w) {
   const tags = (Array.isArray(w.tags) ? w.tags : [w.tags]).filter(Boolean);
   
   const mainCat = esc(categories[0] || 'artwork');
-  const tagList = tags.length > 0 ? tags.slice(0, 3).map(t => esc(t)).join(', ') : 'digital art';
-  
-  // Dynamic screen and orientation recommendation
+  const allTagsLower = tags.map(t => t.toLowerCase());
+  const titleLower = title.toLowerCase();
+
+  // Determine aspect ratio and device recommendation
   let deviceRec = 'desktop monitors, widescreen displays, and home office setups';
   let aspectText = 'landscape panoramic orientation';
   if (w.resolution && w.resolution.includes('x')) {
@@ -1547,19 +1552,136 @@ function generateWallpaperDescription(w) {
     }
   }
 
-  let contextSentence = `Featuring stunning design highlights, this digital background is curated specifically for fans looking to bring high-quality visual aesthetics to their setup.`;
-  if (mainCat.toLowerCase() === 'anime') {
-    contextSentence = `Designed for dedicated anime fans, this background showcases detailed anime character art and rich environmental effects, making it a perfect match for personalizing your lockscreens and desktop setups.`;
-  } else if (mainCat.toLowerCase() === 'gaming') {
-    contextSentence = `Featuring gaming-inspired concept themes and character illustrations, this background highlights the immersive art styles of modern gameplay graphics directly on your screens.`;
+  // Generate a hash based on the title to select variations
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  // Franchise-specific or theme-specific paragraph generation
+  let customIntro = '';
+  let customDetails = '';
+  let customAesthetic = '';
+
+  const isOnePiece = allTagsLower.includes('one piece') || allTagsLower.includes('luffy') || allTagsLower.includes('gear 5') || titleLower.includes('one piece') || titleLower.includes('luffy') || titleLower.includes('gear 5') || titleLower.includes('zoro') || titleLower.includes('shanks');
+  const isBlackClover = allTagsLower.includes('black clover') || allTagsLower.includes('asta') || titleLower.includes('black clover') || titleLower.includes('asta') || titleLower.includes('grimoire');
+  const isDemonSlayer = allTagsLower.includes('demon slayer') || allTagsLower.includes('rengoku') || allTagsLower.includes('tanjiro') || titleLower.includes('demon slayer') || titleLower.includes('rengoku') || titleLower.includes('tanjiro') || titleLower.includes('nezuko');
+  const isBatman = allTagsLower.includes('batman') || allTagsLower.includes('joker') || titleLower.includes('batman') || titleLower.includes('joker') || titleLower.includes('gotham');
+
+  if (isOnePiece) {
+    const intros = [
+      `Embark on an epic visual journey into the Grand Line with this stunning digital backdrop of <strong>${cleanTitle}</strong>. Curated especially for One Piece fans, this artwork captures the indomitable spirit of Eiichiro Oda's legendary universe.`,
+      `Bring the vibrant energy of the Straw Hat pirates directly to your setup with this custom <strong>${cleanTitle}</strong> display background. Designed to capture key thematic elements of One Piece, this digital artwork serves as a premium tribute to the beloved anime series.`,
+      `Featuring iconic design highlights from the world of One Piece, this high-fidelity <strong>${cleanTitle}</strong> wallpaper showcases the unique artistic style and visual power of the series' main characters.`
+    ];
+    const details = [
+      `The visual profile features rich color grading, highlighting Luffy's Gear 5 awakening energy, Nika's cartoonish freedom, or the legendary slash effects of the series' greatest swordsmen. Our post-processing focuses on enhancing shadow depths and visual highlights.`,
+      `We adjusted the brightness contrast to make the primary action elements stand out. This ensures that signature details—from Luffy's white hair to haki aura waves—appear with exceptional clarity on both dark and bright settings.`,
+      `Special attention has been paid to the color balance of character strokes, bringing out the depth of the glowing energy effects and the cinematic contrast of the battle scenes.`
+    ];
+    const aesthetics = [
+      `Perfect for personalizing your ${deviceRec}, this high-resolution background preserves every clean line and gradient flow in its original ${esc(w.resolution || '4K')} ${aspectText}.`,
+      `Available in high-quality ${aspectText}, this layout is optimized for ${deviceRec}, providing a clean, distraction-free backdrop that enhances your screen aesthetics.`,
+      `Tailored specifically for ${deviceRec}, the graphic features crisp rendering that brings out the dramatic visual style of the Straw Hat adventures in its full ${esc(w.resolution || '4K')} glory.`
+    ];
+
+    customIntro = intros[hash % intros.length];
+    customDetails = details[(hash + 1) % details.length];
+    customAesthetic = aesthetics[(hash + 2) % aesthetics.length];
+
+  } else if (isBlackClover) {
+    const intros = [
+      `Enter the magical kingdom of Clover with this dark, high-energy <strong>${cleanTitle}</strong> grimoire art. Inspired by Yuki Tabata's gritty, high-contrast illustration style, this background brings the intense magical battles to life.`,
+      `Channel the raw power of Anti-Magic with this premium digital background of <strong>${cleanTitle}</strong>. Curated specifically for Black Clover fans, it highlights the heavy-ink shading and dark cyberpunk-esque aura of Asta's devil union forms.`,
+      `Unleash the power of the Black Bulls on your screen with this high-detail <strong>${cleanTitle}</strong> wallpaper. The design highlights the determined struggle and power spikes of the Magic Knights.`
+    ];
+    const details = [
+      `Our editing workflow emphasizes the deep charcoal blacks, anti-magic energy trails, and signature red glow effects. Sharp lines have been enhanced to prevent pixelation on modern high-refresh-rate displays.`,
+      `This version features optimized dark balance and high-contrast styling. By refining the dark pixels, we ensured that the glowing red accents and gritty grimoire textures remain distinct without muddying the background.`,
+      `We fine-tuned the highlights and dark levels, accentuating the dramatic battle aura and character contours. These adjustments bring out the textured visual depth of the spells and anti-magic swords.`
+    ];
+    const aesthetics = [
+      `Perfect for high-contrast OLED or LED screens, this wallpaper fits seamlessly on your ${deviceRec} in its original ${esc(w.resolution || '4K')} ${aspectText}.`,
+      `Designed to offer a premium display experience, this ${aspectText} background is tailored for ${deviceRec}, ensuring the anti-magic glow stands out beautifully.`,
+      `Whether for mobile lockscreens or desktop setups, this layout supports clean app icons and provides a stunning, high-definition display in ${esc(w.resolution || '4K')} resolution.`
+    ];
+
+    customIntro = intros[hash % intros.length];
+    customDetails = details[(hash + 1) % details.length];
+    customAesthetic = aesthetics[(hash + 2) % aesthetics.length];
+
+  } else if (isDemonSlayer) {
+    const intros = [
+      `Experience the breathtaking animation aesthetic of Ufotable on your personal screen with this gorgeous <strong>${cleanTitle}</strong> background. Inspired by Demon Slayer (Kimetsu no Yaiba), this piece captures the visual grace of character breathing techniques.`,
+      `Immerse yourself in the colorful, flame-lit world of the Demon Slayer Corps with this custom <strong>${cleanTitle}</strong> digital wallpaper. It showcases Tanjiro's Hinokami Kagura or the roaring flame breathing of the Flame Hashira Kyojuro Rengoku.`,
+      `Highlighting the cinematic color palettes of Demon Slayer, this high-fidelity <strong>${cleanTitle}</strong> wallpaper captures the beautiful contrast between dark nights and radiant, glowing elemental swordsmanship.`
+    ];
+    const details = [
+      `We enhanced the elemental effect lines—from flowing blue water waves to fierce orange fire sparks—sharpening the borders to preserve detail on high-density displays. Color saturation was balanced to make colors pop without causing screen glare.`,
+      `This edit features enhanced visual clarity, boosting the bright flame and water strokes against the dark night environments. By fine-tuning local contrast, the breathing styles appear sharp and dynamic on your screens.`,
+      `Our creative team optimized the highlights to draw attention to the signature haori patterns and Nichirin blade effects, ensuring a premium digital art display.`
+    ];
+    const aesthetics = [
+      `Optimized specifically for ${deviceRec}, this background displays every animated trail in crisp ${esc(w.resolution || '4K')} ${aspectText}.`,
+      `Ideal for clean mobile lockscreens or wide gaming setups, this ${aspectText} background highlights the iconic anime art style across all your ${deviceRec}.`,
+      `Bring the cinematic swordsmanship to life on your setup with this layout, available in its original ${esc(w.resolution || '4K')} resolution.`
+    ];
+
+    customIntro = intros[hash % intros.length];
+    customDetails = details[(hash + 1) % details.length];
+    customAesthetic = aesthetics[(hash + 2) % aesthetics.length];
+
+  } else if (isBatman) {
+    const intros = [
+      `Step into the dark, gritty streets of Gotham with this sleek <strong>${cleanTitle}</strong> background. Curated for fans of DC Comics and the Dark Knight, this artwork captures the nocturnal guardian at his finest.`,
+      `Embrace the shadows with this premium <strong>${cleanTitle}</strong> digital wallpaper. It highlights the iconic silhouette and dark cyberpunk cityscapes of Gotham's protector.`,
+      `Featuring high-detail artwork of Gotham's legend, this <strong>${cleanTitle}</strong> wallpaper showcases the cinematic, noir-inspired visual storytelling of the comic book universe.`
+    ];
+    const details = [
+      `The editing details focus on high-dynamic-range (HDR) black levels, casting dramatic yellow or blue highlights against dark concrete textures to create a premium, atmospheric visual effect.`,
+      `We enhanced the shadow mapping and city lighting to emphasize Batman's cowl details or the Joker's chaotic colors, giving your screen a Gotham feel.`,
+      `This piece has been post-processed to maximize contrast on dark-mode setups, ensuring bat-symbol outlines and textures are razor-sharp.`
+    ];
+    const aesthetics = [
+      `Tailored to complement dark-themed layouts on ${deviceRec}, this wallpaper delivers a clean look in its original ${esc(w.resolution || '4K')} ${aspectText}.`,
+      `Perfect for DC fans, this ${aspectText} layout is optimized to look stunning on your ${deviceRec} without cluttering your desktop folders.`,
+      `Enjoy the atmospheric Gotham design on your screen in full ${esc(w.resolution || '4K')} high-definition resolution.`
+    ];
+
+    customIntro = intros[hash % intros.length];
+    customDetails = details[(hash + 1) % details.length];
+    customAesthetic = aesthetics[(hash + 2) % aesthetics.length];
+
+  } else {
+    // General high-quality wallpapers (Anime, Gaming, Art, etc.)
+    const intros = [
+      `Enhance your digital setup with this curated <strong>${cleanTitle}</strong> wallpaper. This beautiful background is selected specifically for ${mainCat} enthusiasts looking to add unique visual style to their screens.`,
+      `Personalize your background displays with the premium aesthetics of <strong>${cleanTitle}</strong>. Optimized for clean lines and vibrant color gradients, this digital artwork elevates any theme.`,
+      `Bring artistic inspiration to your everyday display with this high-detail <strong>${cleanTitle}</strong> wallpaper, presenting a beautiful balance of tone, composition, and visual energy.`
+    ];
+    const details = [
+      `Our digital tuning involves increasing image sharpness, balancing midtones, and smoothing gradient transitions. This prevents color banding on modern high-definition monitors and mobile screens.`,
+      `We adjusted the lighting contrast to highlight the main artistic elements, ensuring that digital lines and ambient lighting remain vivid and clear under different brightness settings.`,
+      `This version features color-grading updates that bring out the true depth of the artwork, making the primary subject elements crisp and memorable.`
+    ];
+    const aesthetics = [
+      `Available in ${aspectText}, this high-resolution background is designed to fit your ${deviceRec} in its original ${esc(w.resolution || '4K')} resolution.`,
+      `Tailored specifically for ${deviceRec}, the layout supports both portrait and landscape viewing zones while maintaining a clean, premium visual aesthetic.`,
+      `Download this stunning background to complete your customized configuration, optimized for modern displays in its original ${esc(w.resolution || '4K')} format.`
+    ];
+
+    customIntro = intros[hash % intros.length];
+    customDetails = details[(hash + 1) % details.length];
+    customAesthetic = aesthetics[(hash + 2) % aesthetics.length];
   }
 
   return `
-    <p style="margin: 0 0 1rem 0;">This high-quality <strong>${cleanTitle}</strong> wallpaper is a hand-curated digital background optimized for ${mainCat} enthusiasts. ${contextSentence}</p>
-    <p style="margin: 0 0 1rem 0;">Our creative post-processing involves sharpening image details, balancing lighting contrast, and refining the color palette. These visual enhancements ensure that digital lines and lighting effects remain crisp, vibrant, and clear on high-refresh-rate OLED and LCD displays.</p>
-    <p style="margin: 0;">Tailored specifically for ${deviceRec}, this background is available for download in ${aspectText} in its original ${esc(w.resolution || '4K')} resolution, helping you build a clean and premium screen setup.</p>
+    <p style="margin: 0 0 1rem 0;">${customIntro} ${customDetails}</p>
+    <p style="margin: 0;">${customAesthetic}</p>
   `;
 }
+
 
 // -------------------------------------------------------------
 // CURATED COLLECTIONS RENDERERS
