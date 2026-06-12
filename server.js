@@ -1917,4 +1917,22 @@ app.use((req, res) => {
 });
 
 
+// Global error handling middleware to catch and print detailed errors (e.g. from Multer / Cloudinary)
+app.use((err, req, res, next) => {
+  console.error('--- GLOBAL ERROR HANDLER ---');
+  if (err && typeof err === 'object') {
+    console.error('Error properties:', Object.getOwnPropertyNames(err));
+    console.error('Error details (JSON):', JSON.stringify(err));
+    if (err.stack) console.error('Stack trace:', err.stack);
+    if (err.message) console.error('Error message:', err.message);
+  } else {
+    console.error('Error value:', err);
+  }
+  
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({ error: err.message || err || 'Server error during upload or execution' });
+});
+
 app.listen(PORT, () => console.log(`⚔  Waynelab → ${BASE_URL}`));
