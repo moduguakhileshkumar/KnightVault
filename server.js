@@ -1564,10 +1564,15 @@ function generateWallpaperDescription(w) {
   let customDetails = '';
   let customAesthetic = '';
 
-  const isOnePiece = allTagsLower.includes('one piece') || allTagsLower.includes('luffy') || allTagsLower.includes('gear 5') || titleLower.includes('one piece') || titleLower.includes('luffy') || titleLower.includes('gear 5') || titleLower.includes('zoro') || titleLower.includes('shanks');
-  const isBlackClover = allTagsLower.includes('black clover') || allTagsLower.includes('asta') || titleLower.includes('black clover') || titleLower.includes('asta') || titleLower.includes('grimoire');
-  const isDemonSlayer = allTagsLower.includes('demon slayer') || allTagsLower.includes('rengoku') || allTagsLower.includes('tanjiro') || titleLower.includes('demon slayer') || titleLower.includes('rengoku') || titleLower.includes('tanjiro') || titleLower.includes('nezuko');
-  const isBatman = allTagsLower.includes('batman') || allTagsLower.includes('joker') || titleLower.includes('batman') || titleLower.includes('joker') || titleLower.includes('gotham');
+  const onePieceWords = ['one piece', 'luffy', 'zoro', 'shanks', 'ace', 'garp', 'kuma', 'bonney', 'sanji', 'nami', 'robin', 'usopp', 'chopper', 'brook', 'franky', 'law', 'trafalgar', 'kaido', 'yamato'];
+  const blackCloverWords = ['black clover', 'asta', 'yuno', 'yami', 'noelle', 'julius', 'mereoleona', 'grimoire'];
+  const demonSlayerWords = ['demon slayer', 'tanjiro', 'nezuko', 'rengoku', 'zenitsu', 'inosuke', 'giyu', 'shinobu', 'akaza', 'muzan', 'kokushibo', 'tomioka', 'hashira'];
+  const batmanWords = ['batman', 'joker', 'gotham', 'arkham', 'catwoman', 'batmobile', 'dark knight'];
+
+  const isOnePiece = onePieceWords.some(w => titleLower.includes(w) || allTagsLower.includes(w));
+  const isBlackClover = blackCloverWords.some(w => titleLower.includes(w) || allTagsLower.includes(w));
+  const isDemonSlayer = demonSlayerWords.some(w => titleLower.includes(w) || allTagsLower.includes(w));
+  const isBatman = batmanWords.some(w => titleLower.includes(w) || allTagsLower.includes(w));
 
   if (isOnePiece) {
     const intros = [
@@ -1655,20 +1660,23 @@ function generateWallpaperDescription(w) {
 
   } else {
     // General high-quality wallpapers (Anime, Gaming, Art, etc.)
+    const tagsText = tags.length > 0 ? tags.slice(0, 4).map(t => esc(t)).join(', ') : '';
+    const tagsPhrase = tagsText ? `featuring themes of ${tagsText}` : 'showcasing stunning design details';
+
     const intros = [
-      `Enhance your digital setup with this curated <strong>${cleanTitle}</strong> wallpaper. This beautiful background is selected to add a touch of unique visual style to your daily routine.`,
-      `Personalize your display with the premium aesthetics of <strong>${cleanTitle}</strong>. Optimized for clean lines and vibrant color gradients, this artwork elevates any setup.`,
-      `Bring artistic inspiration to your everyday screen with this high-detail <strong>${cleanTitle}</strong> wallpaper, presenting a beautiful balance of color, composition, and visual energy.`
+      `Enhance your digital setup with this curated <strong>${cleanTitle}</strong> wallpaper, ${tagsPhrase}. This beautiful background is selected specifically for ${mainCat} fans looking to add unique visual style to their screens.`,
+      `Personalize your display with the premium aesthetics of <strong>${cleanTitle}</strong>, ${tagsPhrase}. Optimized for vibrant color gradients, this digital artwork elevates any theme.`,
+      `Bring artistic inspiration to your everyday screen with this high-detail <strong>${cleanTitle}</strong> wallpaper, presenting a beautiful balance of color and composition ${tagsText ? `focusing on ${tagsText}` : ''}.`
     ];
     const details = [
-      `The artwork features clean illustration styles and smooth gradient transitions, preventing color banding on modern high-definition screens.`,
-      `The composition balances midtones and shadows to ensure that the primary subject elements remain clear and distinct under different screen brightness levels.`,
-      `With its sharp borders and balanced color saturation, this image provides a high-quality backdrop that complements app icons and widgets.`
+      `The illustration showcases detailed ${mainCat} elements and rich environmental effects, making it a perfect match for personalizing your device's theme.`,
+      `With its high-quality composition, the graphic highlights the immersive art style of ${mainCat} illustrations, presenting sharp details and clean outlines.`,
+      `The design captures the unique visual style and character presence of the artwork, ensuring a premium backdrop that looks great behind your app icons.`
     ];
     const aesthetics = [
-      `Available in ${aspectText}, this high-resolution background is designed to fit your ${deviceRec} in its original ${esc(w.resolution || '4K')} resolution.`,
-      `Tailored specifically for ${deviceRec}, the layout supports both portrait and mobile viewing zones while maintaining a clean, premium visual aesthetic.`,
-      `Download this stunning background to complete your customized configuration, optimized for modern displays in its original ${esc(w.resolution || '4K')} format.`
+      `Designed to fit seamlessly on your ${deviceRec}, this high-resolution background is available in its original ${esc(w.resolution || '4K')} ${aspectText}.`,
+      `Whether you are configuring a mobile lockscreen or a wide desktop monitor, this ${aspectText} layout provides a clean, premium visual aesthetic.`,
+      `Complete your custom setup with this high-quality background, optimized for modern displays in its original ${esc(w.resolution || '4K')} format.`
     ];
 
     customIntro = intros[hash % intros.length];
