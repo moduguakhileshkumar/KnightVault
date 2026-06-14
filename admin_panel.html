@@ -713,6 +713,7 @@ async function loadWallpapers() {
         <td style="color:var(--dim);font-size:.75rem;">DL: ${w.downloads} (${w.adminDownloads || 0}) | V: ${w.views} (${w.adminViews || 0})</td>
         <td>
           <button class="action-btn" onclick='openEdit(${JSON.stringify(w).replace(/'/g, "&apos;")})'>✎</button>
+          <button class="action-btn" onclick="pinToPinterest('${w._id}', this)" style="background:rgba(230,0,35,0.08);color:#e60023;border-color:rgba(230,0,35,0.2);" title="Pin to Pinterest">📌</button>
           <button class="action-btn del" onclick="deleteWall('${w._id}')">✕</button>
         </td>
       </tr>
@@ -850,6 +851,31 @@ function deleteWall(id) {
   if(!confirm("Delete this wallpaper permanently?")) return;
   fetch(`/api/wallpapers/${id}`, { method: 'DELETE', headers: { 'x-admin-password': adminPw }})
     .then(() => { showToast('Deleted successfully'); loadWallpapers(); });
+}
+
+async function pinToPinterest(id, btn) {
+  const originalText = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/api/wallpapers/${id}/pin`, {
+      method: 'POST',
+      headers: {
+        'x-admin-password': adminPw
+      }
+    });
+    const data = await r.json();
+    if (r.ok) {
+      showToast('Successfully pinned to Pinterest!');
+    } else {
+      showToast('Pinterest error: ' + (data.error || 'Failed'));
+    }
+  } catch (err) {
+    showToast('Network error: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 function openEdit(w) {

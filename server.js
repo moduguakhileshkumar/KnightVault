@@ -551,6 +551,25 @@ app.patch('/api/wallpapers/:id', adminOnly, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.post('/api/wallpapers/:id/pin', adminOnly, async (req, res) => {
+  try {
+    const w = await Wallpaper.findById(req.params.id);
+    if (!w) return res.status(404).json({ error: 'Wallpaper not found' });
+    
+    const settings = await Settings.findOne();
+    if (!settings) return res.status(400).json({ error: 'Settings not configured' });
+    
+    const result = await postToPinterest(w, settings);
+    if (result && result.success) {
+      res.json({ success: true, message: 'Successfully pinned to Pinterest' });
+    } else {
+      res.status(500).json({ error: result ? result.error : 'Pinterest integration failed' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── SERVE INDIVIDUAL WALLPAPER PAGE ──────────────────────
 app.get('/w/:slugOrId', async (req, res) => {
   try {
@@ -975,7 +994,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
 
 // Pinterest Auto-Post Helper
 async function postToPinterest(wall, settings) {
-  if (!settings.pinterestAccessToken || !settings.pinterestBoardId) return;
+  if (!settings.pinterestAccessToken || !settings.pinterestBoardId) return { success: false, error: 'Credentials not configured' };
   try {
     // If token has expired or is expiring soon, attempt auto-refresh
     if (settings.pinterestTokenExpiresAt && new Date() >= new Date(settings.pinterestTokenExpiresAt)) {
@@ -983,7 +1002,7 @@ async function postToPinterest(wall, settings) {
       const refreshed = await refreshPinterestToken(settings);
       if (!refreshed) {
         console.error('Skipping Pinterest upload: Failed to refresh token.');
-        return;
+        return { success: false, error: 'Failed to refresh Pinterest token' };
       }
     }
 
@@ -1073,7 +1092,7 @@ async function postToPinterest(wall, settings) {
     };
     
     const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
-    const response = await fetch(baseUrl + '/v5/pins', {
+    let response = await fetch(baseUrl + '/v5/pins', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + settings.pinterestAccessToken,
@@ -1081,14 +1100,33 @@ async function postToPinterest(wall, settings) {
       },
       body: JSON.stringify(pinData)
     });
+
+    if (response.status === 401) {
+      console.log('Pinterest API returned 401 Unauthorized. Attempting to refresh token...');
+      const refreshed = await refreshPinterestToken(settings);
+      if (refreshed) {
+        response = await fetch(baseUrl + '/v5/pins', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + settings.pinterestAccessToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(pinData)
+        });
+      }
+    }
+
     if (!response.ok) {
       const errText = await response.text();
       console.error(`Pinterest API failed with status ${response.status}:`, errText);
+      return { success: false, error: `Pinterest API error (${response.status}): ${errText}` };
     } else {
       console.log(`Successfully posted pin to Pinterest for wallpaper: ${wall.title} (Sandbox: ${!!settings.pinterestSandbox})`);
+      return { success: true };
     }
   } catch (err) {
     console.error('Failed to post to Pinterest:', err.message);
+    return { success: false, error: err.message };
   }
 }
 
