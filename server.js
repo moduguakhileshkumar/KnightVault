@@ -882,13 +882,13 @@ app.get('/w/:slugOrId', async (req, res) => {
             let proxyFilename = "${esc(cleanTitle)}";
 
             if (res === 'tv') {
-              url = url.replace('/upload/', '/upload/w_3840,h_2160,c_limit/');
+              url = url.replace('/upload/', '/upload/w_3840,h_2160,c_pad,b_gen_fill/');
               proxyFilename += "_4K";
             } else if (res === 'laptop') {
-              url = url.replace('/upload/', '/upload/w_1920,h_1080,c_limit/');
+              url = url.replace('/upload/', '/upload/w_1920,h_1080,c_pad,b_gen_fill/');
               proxyFilename += "_FHD";
             } else if (res === 'mobile') {
-              url = url.replace('/upload/', '/upload/w_1080,h_1920,c_limit/');
+              url = url.replace('/upload/', '/upload/w_1080,h_1920,c_pad,b_gen_fill/');
               proxyFilename += "_Mobile";
             }
 
