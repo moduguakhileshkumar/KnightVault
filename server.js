@@ -1013,10 +1013,8 @@ async function postToPinterest(wall, settings) {
       const blurEffect = 'e_blur:250';
       // 2. Elegant small corner watermark
       const cornerWatermark = 'co_rgb:ffffff,l_text:Arial_30:WAYNELAB.STUDIO,g_north_west,x_30,y_30,o_30';
-      // 3. Sleek CTA banner at the bottom
-      const bottomBanner = 'co_rgb:000000,l_text:Arial_40_bold:4K%20DOWNLOAD%20%E2%86%92,g_south,y_60,b_rgb:f0d83a,o_90';
       
-      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/${bottomBanner}/`);
+      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/`);
     }
 
     // Pinterest Search Keyword Booster
