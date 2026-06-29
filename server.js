@@ -1846,13 +1846,12 @@ function generateWallpaperDescription(w) {
 // -------------------------------------------------------------
 function renderServerGrid(walls, esc) {
   if (!walls || !walls.length) {
-    return `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--dim);"><p>No wallpapers found in this collection.</p></div>`;
+    return `<div style="text-align:center; padding:3rem; color:var(--dim);"><p>No wallpapers found in this collection.</p></div>`;
   }
   return walls.map(w => {
     const pageLink = '/w/' + (w.slug || w.filename.split('/').pop());
-    const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
-      ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
-      : (w.directLink || '');
+    const pageUrl = `${BASE_URL}${pageLink}`;
+    const imgUrl = w.directLink || '';
     
     let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
     let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
@@ -1869,47 +1868,33 @@ function renderServerGrid(walls, esc) {
     }
     cleanTitle = words.join(' ') + ' Wallpaper';
 
-    let badgesHtml = '';
-    const resolution = w.resolution || '';
-    if (resolution.includes('x')) {
-      const [wVal, hVal] = resolution.split('x').map(Number);
-      if (!isNaN(wVal) && !isNaN(hVal)) {
-        if (wVal >= 3840) {
-          badgesHtml += `<span class="card-tag-badge gold">4K UHD</span>`;
-        } else if (wVal >= 1920) {
-          badgesHtml += `<span class="card-tag-badge">1080p HD</span>`;
-        }
-        if (wVal > hVal) {
-          badgesHtml += `<span class="card-tag-badge">Desktop</span>`;
-        } else {
-          badgesHtml += `<span class="card-tag-badge">Mobile</span>`;
-        }
-      }
-    }
-    if (w.mimeType === 'image/png' || (w.originalName && w.originalName.toLowerCase().endsWith('.png'))) {
-      badgesHtml += `<span class="card-tag-badge png">PNG</span>`;
-    }
+    const resolutionText = w.resolution || '4K UHD';
 
     return `
-    <div class="wall-card" onclick="window.location.href='${pageLink}'">
-      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy"
-        style="${w.resolution && w.resolution.includes('x') && !isNaN(w.resolution.split('x')[0]) && !isNaN(w.resolution.split('x')[1]) ? 'aspect-ratio: ' + w.resolution.split('x')[0] + ' / ' + w.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;"
-        onerror="this.style.opacity='0.3'" class="loading"
-        onload="this.classList.remove('loading')">
-      <div class="card-overlay">
-        <h3 class="card-title">${esc(cleanTitle)}</h3>
-        <div class="card-cats">
-          ${(Array.isArray(w.category) ? w.category : [w.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
-        </div>
-        <div class="card-actions">
-          <button class="card-btn card-btn-dl">
-            ${w.isPaid ? `👑 PREMIUM ${w.price}` : 'Download 4K <span class="arrow">→</span>'}
-          </button>
-        </div>
+    <div class="coll-feed-item">
+      <h3 class="coll-item-title">${esc(cleanTitle)}</h3>
+      <div class="coll-item-img-wrap" onclick="window.location.href='${pageLink}'">
+        <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'">
       </div>
-      <div class="card-info-footer">
-        <span class="card-info-title">${esc(cleanTitle)}</span>
-        <div class="card-tag-row">${badgesHtml}</div>
+      <div class="coll-item-footer">
+        <div class="coll-item-left">
+          <span class="coll-item-res-badge">${esc(resolutionText)} Wallpaper</span>
+          <div class="coll-item-share-buttons">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}" target="_blank" title="Share on Facebook">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+            </a>
+            <a href="https://pinterest.com/pin/create/button/?url=${encodeURIComponent(pageUrl)}&media=${encodeURIComponent(imgUrl)}&description=${encodeURIComponent(w.title)}" target="_blank" title="Pin on Pinterest">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.627 0-12 5.373-12 12 0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.993 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.204 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+            <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(w.title)}" target="_blank" title="Share on Twitter">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+            </a>
+          </div>
+        </div>
+        <a href="${pageLink}" class="coll-item-dl-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;"><path d="M12 21l-8-9h6v-12h4v12h6l-8 9z"/></svg>
+          Get Wallpaper
+        </a>
       </div>
     </div>
     `;
@@ -2039,7 +2024,7 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
             <h1 class="coll-title">${esc(title)}</h1>
             <p class="coll-desc">${esc(introText)}</p>
           </div>
-          <div class="wall-grid" style="margin-top: 2.2rem;">
+          <div class="coll-feed-container" style="margin-top: 2.2rem;">
             ${gridHtml}
           </div>
         </main>

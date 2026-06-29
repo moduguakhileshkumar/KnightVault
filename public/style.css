@@ -483,3 +483,115 @@ body::before{content:'';position:fixed;inset:0;
   color: var(--gold);
   font-weight: 600;
 }
+
+/* COLLECTION STREAM LAYOUT */
+.coll-feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.coll-feed-item {
+  background: var(--bg3);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.coll-item-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  color: var(--bright);
+  letter-spacing: 0.05em;
+  padding: 1rem 1.2rem;
+  margin: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.coll-item-img-wrap {
+  width: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  background: #050508;
+}
+.coll-item-img-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: opacity 0.2s;
+}
+.coll-item-img-wrap img:hover {
+  opacity: 0.92;
+}
+.coll-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  background: var(--bg4);
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.coll-item-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+.coll-item-res-badge {
+  font-size: 0.72rem;
+  color: var(--mid);
+  background: rgba(255,255,255,0.05);
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.coll-item-share-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+.coll-item-share-buttons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  color: var(--mid);
+  transition: all 0.2s;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.coll-item-share-buttons a:hover {
+  background: var(--gold);
+  color: var(--bg);
+}
+.coll-item-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #c82333;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.coll-item-dl-btn:hover {
+  background: #bd2130;
+}
+@media (max-width: 600px) {
+  .coll-item-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .coll-item-left {
+    justify-content: space-between;
+  }
+  .coll-item-dl-btn {
+    justify-content: center;
+  }
+}
