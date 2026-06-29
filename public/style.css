@@ -445,28 +445,29 @@ body::before{content:'';position:fixed;inset:0;
 .collection-showcase-card {
   position: relative;
   aspect-ratio: 2.2 / 1;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   background: var(--bg3);
 }
 .collection-showcase-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(240,216,58,0.4);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  transform: translateY(-4px);
+  border-color: var(--gold);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 .collection-showcase-bg {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
-  transition: transform 0.3s ease;
-  filter: brightness(0.4) contrast(0.9);
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: brightness(0.8) contrast(1.02);
 }
 .collection-showcase-card:hover .collection-showcase-bg {
-  transform: scale(1.05);
+  transform: scale(1.04);
+  filter: brightness(0.92) contrast(1.02);
 }
 .collection-showcase-content {
   position: absolute;
@@ -479,19 +480,23 @@ body::before{content:'';position:fixed;inset:0;
 }
 .collection-showcase-title {
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   color: #FFFFFF !important;
   text-transform: uppercase;
   margin: 0 0 0.2rem 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
 }
 .collection-showcase-meta {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--gold-l) !important;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap 0.2s;
 }
 
 /* COLLECTION STREAM LAYOUT */
@@ -622,7 +627,7 @@ body::before{content:'';position:fixed;inset:0;
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.15) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.2) 55%, transparent 100%);
   z-index: 1;
   pointer-events: none;
 }
