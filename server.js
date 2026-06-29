@@ -543,6 +543,9 @@ app.post('/api/collections', adminOnly, async (req, res) => {
       metaTitle: (metaTitle || '').trim(),
       coverImage: (req.body.coverImage || '').trim()
     });
+    try {
+      submitToIndexNow(`/collection/${cleanSlug}`);
+    } catch(e) { console.error('IndexNow collection trigger error:', e.message); }
     res.status(201).json(c);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -561,6 +564,9 @@ app.patch('/api/collections/:id', adminOnly, async (req, res) => {
 
     const c = await Collection.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!c) return res.status(404).json({ error: 'Collection not found' });
+    try {
+      submitToIndexNow(`/collection/${c.slug}`);
+    } catch(e) { console.error('IndexNow collection trigger error:', e.message); }
     res.json(c);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1542,9 +1548,10 @@ app.get('/indexnow-key.txt', (req, res) => {
 });
 
 // 🛠 INDEXNOW AUTO-NOTIFICATION HELPER 🛠
-async function submitToIndexNow(slug) {
+async function submitToIndexNow(pathOrSlug) {
   try {
-    const pageUrl = `${BASE_URL}/w/${slug}`;
+    const path = pathOrSlug.startsWith('/') ? pathOrSlug : `/w/${pathOrSlug}`;
+    const pageUrl = `${BASE_URL}${path}`;
     console.log(`[IndexNow] Submitting URL: ${pageUrl}`);
     const hostname = new URL(BASE_URL).hostname;
     

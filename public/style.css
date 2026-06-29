@@ -93,23 +93,20 @@ body::before{content:'';position:fixed;inset:0;
 /* ── GRID ── */
 .main{flex:1;padding:1.2rem 2rem 3rem}
 .wall-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;width:100%}
-.wall-card{position:relative;border-radius:var(--radius);overflow:hidden;cursor:pointer;background:var(--bg4);border:1px solid var(--border);transition:transform .22s,border-color .22s,box-shadow .22s;width:100%;aspect-ratio:1.5 / 1}
+.wall-card{position:relative;border-radius:var(--radius);overflow:hidden;cursor:pointer;background:var(--bg4);border:1px solid var(--border);transition:transform .22s,border-color .22s,box-shadow .22s;width:100%;display:flex;flex-direction:column}
 .wall-card:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 12px 32px rgba(0,0,0,0.12), 0 0 15px rgba(37,99,235,0.06)}
-.wall-card img{position:absolute;inset:0;width:100% !important;height:100% !important;object-fit:cover !important;object-position:center !important;display:block;transition:transform .3s;z-index:1}
+.wall-card img{position:relative !important;width:100% !important;aspect-ratio:1.5 / 1 !important;object-fit:cover !important;object-position:center !important;display:block;transition:transform .3s;z-index:1}
 .wall-card:hover img{transform:scale(1.03)}
 
 .card-info-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--footer-bg);
-  backdrop-filter: blur(8px);
+  position: relative !important;
+  background: var(--bg2);
   padding: 0.7rem 0.9rem;
   border-top: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   z-index: 2;
+  width: 100%;
 }
 .card-info-title {
   font-family: 'Orbitron', sans-serif;
