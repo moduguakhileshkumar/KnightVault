@@ -517,12 +517,18 @@ body::before{content:'';position:fixed;inset:0;
   cursor: pointer;
   overflow: hidden;
   background: #050508;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .coll-item-img-wrap img {
-  width: 100%;
+  max-width: 100%;
+  width: auto;
   height: auto;
+  max-height: 75vh;
   display: block;
   transition: opacity 0.2s;
+  object-fit: contain;
 }
 .coll-item-img-wrap img:hover {
   opacity: 0.92;

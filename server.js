@@ -1851,7 +1851,9 @@ function renderServerGrid(walls, esc) {
   return walls.map(w => {
     const pageLink = '/w/' + (w.slug || w.filename.split('/').pop());
     const pageUrl = `${BASE_URL}${pageLink}`;
-    const imgUrl = w.directLink || '';
+    const imgUrl = (w.directLink && w.directLink.includes('/upload/')) 
+      ? w.directLink.replace('/upload/', '/upload/q_auto,f_auto/') 
+      : (w.directLink || '');
     
     let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
     let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
