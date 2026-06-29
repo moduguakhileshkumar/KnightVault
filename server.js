@@ -65,6 +65,123 @@ const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 app.use(compression());
 app.use(cors());
 app.use(express.json());
+// Homepage Server-Side Rendering (SSR) for Google rich image search snippets
+app.get('/', async (req, res) => {
+  try {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    // Query first 24 wallpapers
+    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(24);
+
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    
+    let gridHtml = '';
+    walls.forEach((w, i) => {
+      const pageLink = `/w/` + (w.slug || w.filename.split('/').pop());
+      const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
+        ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
+        : (w.directLink || '');
+
+      let aspectStyle = '';
+      if (w.resolution && w.resolution.includes('x')) {
+        const [width, height] = w.resolution.split('x');
+        if (width && height && !isNaN(width) && !isNaN(height)) {
+          aspectStyle = `style="aspect-ratio: ${width} / ${height}; width: 100%; height: auto;"`;
+        }
+      }
+
+      const isAboveFold = i < 4;
+      const loadAttr = isAboveFold ? 'fetchpriority="high"' : 'loading="lazy"';
+
+      let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
+      let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                                .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                                .replace(/_/g, ' ')
+                                .replace(/Wallpaper/gi, '')
+                                .replace(/4K/gi, '')
+                                .trim();
+      let words = cleanTitle.split(/\s+/)
+                             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                             .filter(Boolean);
+      if (words.length > 4) {
+        words = words.slice(0, 4);
+      }
+      cleanTitle = words.join(' ') + ' Wallpaper';
+
+      let badgesHtml = '';
+      const resolution = w.resolution || '';
+      if (resolution.includes('x')) {
+        const [wVal, hVal] = resolution.split('x').map(Number);
+        if (!isNaN(wVal) && !isNaN(hVal)) {
+          if (wVal >= 3840) {
+            badgesHtml += `<span class="card-tag-badge gold">4K UHD</span>`;
+          } else if (wVal >= 1920) {
+            badgesHtml += `<span class="card-tag-badge">1080p HD</span>`;
+          }
+          if (wVal > hVal) {
+            badgesHtml += `<span class="card-tag-badge">Desktop</span>`;
+          } else {
+            badgesHtml += `<span class="card-tag-badge">Mobile</span>`;
+          }
+        }
+      }
+      if (w.mimeType === 'image/png' || (w.originalName && w.originalName.toLowerCase().endsWith('.png'))) {
+        badgesHtml += `<span class="card-tag-badge png">PNG</span>`;
+      }
+
+      gridHtml += `
+      <div class="wall-card" onclick="window.location.href='${pageLink}'">
+        <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
+          onerror="this.style.opacity='0.3'" class="loading"
+          onload="this.classList.remove('loading')">
+        ${w.tags && w.tags.length ? `<div class="card-badge">${esc(w.tags[0])}</div>` : ''}
+        ${w.isPaid ? `<div class="card-badge" style="top:auto;bottom:8px;right:8px;background:rgba(201,168,76,0.9);color:#0A0A0F;border:none;">Premium ${w.price}</div>` : ''}
+        <div class="card-info-footer">
+          <span class="card-info-title">${esc(cleanTitle)}</span>
+          <div class="card-tag-row">${badgesHtml}</div>
+        </div>
+      </div>
+      `;
+    });
+
+    html = html.replace('<div class="wall-grid" id="wallGrid"></div>', `<div class="wall-grid" id="wallGrid">${gridHtml}</div>`);
+
+    const itemListElement = walls.map((w, index) => {
+      const pageUrl = `${BASE_URL}/w/` + (w.slug || w.filename.split('/').pop());
+      const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
+        ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
+        : (w.directLink || '');
+      return {
+        "@type": "ListItem",
+        "position": index + 1,
+        "url": pageUrl,
+        "name": w.title,
+        "image": thumbUrl
+      };
+    });
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "numberOfItems": walls.length,
+      "itemListElement": itemListElement
+    };
+
+    const schemaScript = `
+      <script type="application/ld+json">
+      ${JSON.stringify(structuredData, null, 2)}
+      </script>
+    `;
+
+    html = html.replace('</head>', `${schemaScript}\n</head>`);
+    res.send(html);
+  } catch (err) {
+    console.error('Error rendering homepage SSR:', err);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
