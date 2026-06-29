@@ -998,7 +998,8 @@ app.get('/w/:slugOrId', async (req, res) => {
       </html>
     `);
   } catch (err) { 
-    res.status(500).send('Error loading wallpaper page.'); 
+    console.error('Error loading wallpaper page:', err);
+    res.status(500).send('Error loading wallpaper page: ' + err.message + '\n' + err.stack); 
   }
 });
 // ─── AMP WALLPAPER PAGE ───────────────────────────────────
@@ -1839,13 +1840,15 @@ function renderServerGrid(walls, esc) {
     return `<div style="text-align:center; padding:3rem; color:var(--dim);"><p>No wallpapers found in this collection.</p></div>`;
   }
   return walls.map(w => {
-    const pageLink = '/w/' + (w.slug || w.filename.split('/').pop());
+    const safeTitle = w.title || '';
+    const safeFilename = w.filename || '';
+    const pageLink = '/w/' + (w.slug || safeFilename.split('/').pop());
     const pageUrl = `${BASE_URL}${pageLink}`;
     const imgUrl = (w.directLink && w.directLink.includes('/upload/')) 
       ? w.directLink.replace('/upload/', '/upload/q_auto,f_auto/') 
       : (w.directLink || '');
     
-    let coreTitle = w.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
+    let coreTitle = safeTitle.split('|')[0].split(' - ')[0].split(':')[0].trim();
     let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
                               .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
                               .replace(/_/g, ' ')
