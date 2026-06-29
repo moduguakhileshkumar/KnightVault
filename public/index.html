@@ -272,6 +272,14 @@
   <div class="more-cats-panel" id="moreCatsPanel"></div>
 </div>
 
+<!-- COLLECTIONS SHOWCASE -->
+<div class="collections-showcase-section" id="collectionsShowcaseSection" style="display:none; padding: 0 2rem 1.5rem;">
+  <h2 style="font-family:'Orbitron',sans-serif; font-size:1.1rem; letter-spacing:0.05em; color:var(--gold); margin-bottom:1rem; text-transform:uppercase;">Featured Anime Collections</h2>
+  <div class="collections-showcase-grid" id="collectionsShowcaseGrid">
+    <!-- Populated dynamically -->
+  </div>
+</div>
+
 <!-- MAIN GRID -->
 <main class="main">
   <div class="wall-grid" id="wallGrid"></div>
@@ -708,7 +716,7 @@ async function init() {
     } catch (e) {}
   }
 
-  await Promise.all([loadStats(), loadCategories(), loadAllTags()]);
+  await Promise.all([loadStats(), loadCategories(), loadAllTags(), loadFeaturedCollections()]);
   await loadWallpapers(1);
 }
 
@@ -1197,6 +1205,34 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══════ BOOT ══════ */
+async function loadFeaturedCollections() {
+  try {
+    const r = await fetch('/api/collections');
+    const collections = await r.json();
+    const section = document.getElementById('collectionsShowcaseSection');
+    const grid = document.getElementById('collectionsShowcaseGrid');
+    
+    if (!collections || !collections.length) {
+      section.style.display = 'none';
+      return;
+    }
+    
+    grid.innerHTML = collections.map(c => `
+      <div class="collection-showcase-card" onclick="window.location.href='/collection/${c.slug}'">
+        <div class="collection-showcase-bg" style="background-image: url('${c.previewImage}')"></div>
+        <div class="collection-showcase-content">
+          <h3 class="collection-showcase-title">${esc(c.name)}</h3>
+          <span class="collection-showcase-meta">Explore Collection →</span>
+        </div>
+      </div>
+    `).join('');
+    
+    section.style.display = 'block';
+  } catch (e) {
+    console.error('Failed to load featured collections', e);
+  }
+}
+
 init();
 </script>
 </body>

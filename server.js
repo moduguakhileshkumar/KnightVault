@@ -497,7 +497,24 @@ app.put('/api/settings', adminOnly, async (req, res) => {
 // ─── COLLECTIONS API ──────────────────────
 app.get('/api/collections', async (req, res) => {
   try {
-    const colls = await Collection.find({}).sort({ createdAt: -1 });
+    const colls = await Collection.find({}).sort({ createdAt: -1 }).lean();
+    for (let c of colls) {
+      const regex = new RegExp(c.keyword, 'i');
+      const wall = await Wallpaper.findOne({
+        $or: [
+          { title: regex },
+          { category: regex },
+          { tags: regex }
+        ]
+      }, 'directLink filename');
+      if (wall) {
+        c.previewImage = (wall.directLink && wall.directLink.includes('/upload/')) 
+          ? wall.directLink.replace('/upload/', '/upload/w_500,q_auto,f_auto/') 
+          : (wall.directLink || '');
+      } else {
+        c.previewImage = '/favicon.svg';
+      }
+    }
     res.json(colls);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
