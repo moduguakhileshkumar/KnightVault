@@ -754,67 +754,60 @@ app.get('/w/:slugOrId', async (req, res) => {
       }
     }
 
-    // Find similar wallpapers
-    let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
-    categoryArr = categoryArr.filter(Boolean);
-    const similar = await Wallpaper.find({
-      _id: { $ne: w._id },
-      category: { $in: categoryArr }
-    }).limit(8).sort({ uploadedAt: -1 });
+    // Find similar wallpapers (collection-aware suggestions)
+    let suggestionWalls = [];
+    let suggestionTitle = 'Similar Wallpapers';
+    
+    try {
+      const collections = await Collection.find({});
+      let matchedCollection = null;
+      
+      for (const col of collections) {
+        const regex = new RegExp(col.keyword, 'i');
+        const matches = regex.test(w.title) || 
+                        (Array.isArray(w.category) ? w.category.some(c => regex.test(c)) : regex.test(w.category)) ||
+                        (Array.isArray(w.tags) && w.tags.some(t => regex.test(t)));
+        if (matches) {
+          matchedCollection = col;
+          break;
+        }
+      }
+      
+      if (matchedCollection) {
+        suggestionTitle = `${matchedCollection.name} Wallpapers`;
+        const regex = new RegExp(matchedCollection.keyword, 'i');
+        suggestionWalls = await Wallpaper.find({
+          _id: { $ne: w._id },
+          $or: [
+            { title: regex },
+            { category: regex },
+            { tags: regex }
+          ]
+        }).limit(8).sort({ uploadedAt: -1 });
+      }
+    } catch (err) {
+      console.error('Failed to find matching collection for suggestions', err);
+    }
+    
+    if (!suggestionWalls.length) {
+      let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
+      categoryArr = categoryArr.filter(Boolean);
+      suggestionWalls = await Wallpaper.find({
+        _id: { $ne: w._id },
+        category: { $in: categoryArr }
+      }).limit(8).sort({ uploadedAt: -1 });
+      suggestionTitle = 'Similar Wallpapers';
+    }
 
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
     let similarHtml = '';
-    if (similar.length > 0) {
+    if (suggestionWalls.length > 0) {
+      const feedHtml = renderServerGrid(suggestionWalls, esc);
       similarHtml = `
-        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--gold);margin:3rem 0 1.5rem;letter-spacing:.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:.8rem;">Similar Wallpapers</h2>
-        <div class="wall-grid">
-          ${similar.map(sw => {
-            const pageLink = '/w/' + (sw.slug || sw.filename.split('/').pop());
-            const thumbUrl = (sw.directLink && sw.directLink.includes('/upload/'))
-              ? sw.directLink.replace('/upload/', '/upload/w_400,q_auto,f_auto/')
-              : (sw.directLink || '');
-            
-            // Clean extensions, duplicates, and formatting from similar wallpaper titles
-            let coreTitle = sw.title.split('|')[0].split(' - ')[0].split(':')[0].trim();
-            let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
-                                      .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
-                                      .replace(/_/g, ' ')
-                                      .replace(/Wallpaper/gi, '')
-                                      .replace(/4K/gi, '')
-                                      .trim();
-            let words = cleanTitle.split(/\s+/)
-                                   .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                                   .filter(Boolean);
-            if (words.length > 4) {
-              words = words.slice(0, 4);
-            }
-            cleanTitle = words.join(' ') + ' Wallpaper';
-
-            return `
-            <div class="wall-card" onclick="window.location.href='${pageLink}'">
-              <img src="${esc(thumbUrl)}" alt="${esc(sw.title)} High Quality Wallpaper" loading="lazy"
-                style="${sw.resolution && sw.resolution.includes('x') && !isNaN(sw.resolution.split('x')[0]) && !isNaN(sw.resolution.split('x')[1]) ? 'aspect-ratio: ' + sw.resolution.split('x')[0] + ' / ' + sw.resolution.split('x')[1] + ';' : ''} width: 100%; height: auto;"
-                onerror="this.style.opacity='0.3'" class="loading"
-                onload="this.classList.remove('loading')">
-              <div class="card-overlay">
-                <h3 class="card-title">${esc(cleanTitle)}</h3>
-                <div class="card-cats">
-                  ${(Array.isArray(sw.category) ? sw.category : [sw.category]).filter(Boolean).map(c=>`<span class="card-cat-chip">${esc(c)}</span>`).join('')}
-                </div>
-                <div class="card-actions">
-                  <button class="card-btn card-btn-dl"
-                    onclick="event.stopPropagation();window.location.href='${pageLink}'">
-                    Download 4K <span class="arrow">→</span>
-                  </button>
-                </div>
-              </div>
-              <div class="card-info-footer">
-                <span class="card-info-title">${esc(cleanTitle)}</span>
-              </div>
-            </div>
-            `;
-          }).join('')}
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--gold);margin:3rem 0 1.5rem;letter-spacing:.1em;border-bottom:1px solid var(--border);padding-bottom:.8rem;">${esc(suggestionTitle)}</h2>
+        <div class="coll-feed-container">
+          ${feedHtml}
         </div>
       `;
     }
@@ -865,20 +858,20 @@ app.get('/w/:slugOrId', async (req, res) => {
         <style>
           .wp-container { max-width: 1200px; margin: 0 auto; padding: 2.5rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 2.5rem; }
           .wp-img-wrap { width: 100%; max-width: 900px; text-align: center; }
-          .wp-img-wrap img { width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius); border: 1px solid rgba(201,168,76,.2); box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
-          .wp-card-details { width: 100%; max-width: 650px; background: linear-gradient(180deg, var(--bg3) 0%, rgba(17,17,22,0.95) 100%); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+          .wp-img-wrap img { width: 100%; max-height: 85vh; object-fit: contain; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+          .wp-card-details { width: 100%; max-width: 650px; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
           .wp-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--gold); letter-spacing: .08em; margin-bottom: .8rem; text-transform: uppercase; }
           .wp-meta { font-size: .8rem; color: var(--dim); margin: 1.2rem 0; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
           .wp-meta span { color: var(--mid); }
           .wp-cta-section { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; width: 100%; }
-          .wp-btn-main { width: 100%; max-width: 450px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 1.1rem; background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 100%); color: var(--bg); border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(201, 168, 76, 0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+          .wp-btn-main { width: 100%; max-width: 450px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 1.1rem; background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 100%); color: var(--bg); border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(37, 99, 235, 0.2); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
           .wp-btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(201, 168, 76, 0.45); filter: brightness(1.05); }
           .wp-btn-main:active { transform: translateY(0); }
           .wp-res-row { width: 100%; max-width: 450px; display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-top: 0.5rem; }
           .wp-res-label { font-size: 0.75rem; color: var(--dim); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.08em; }
-          .wp-res-select { flex: 1; max-width: 280px; background: var(--bg2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: var(--bright); font-size: 0.85rem; padding: 0.5rem; outline: none; cursor: pointer; }
-          .wp-res-select:focus { border-color: rgba(201,168,76,.4); }
-          .cat-tag { display: inline-block; font-size: .7rem; padding: .3rem .8rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: var(--gold); text-transform: capitalize; margin: 0 4px 4px 0; }
+          .wp-res-select { flex: 1; max-width: 280px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--bright); font-size: 0.85rem; padding: 0.5rem; outline: none; cursor: pointer; }
+          .wp-res-select:focus { border-color: var(--gold); }
+          .cat-tag { display: inline-block; font-size: .7rem; padding: .3rem .8rem; background: rgba(37,99,235,0.06); border: 1px solid var(--border); border-radius: 20px; color: var(--gold); text-transform: capitalize; margin: 0 4px 4px 0; }
           @media (max-width: 768px) {
             .wp-container { padding: 1.5rem 0.5rem; gap: 1.5rem; }
             .wp-card-details { padding: 1.5rem 1rem; }
@@ -930,10 +923,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                 </div>
                 
-                <!-- Unique Dynamic Editorial Description -->
-                <div class="wp-desc-section" style="margin-top: 1.8rem; text-align: left; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem; font-size: 0.88rem; line-height: 1.65; color: var(--mid);">
-                  ${generateWallpaperDescription(w)}
-                </div>
+<!-- Description section removed -->
 
                 <div class="wp-cta-section">
                   ${w.isPaid 
@@ -1053,7 +1043,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
           .img-wrap amp-img img { object-fit: contain; }
           .btn { display: block; background: linear-gradient(135deg, #A8862F, #C9A84C); color: #0A0A0F; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; letter-spacing: 0.1em; }
           .meta { font-size: 0.85rem; color: #7A7A9A; margin: 1rem 0; line-height: 1.6; display: flex; flex-direction: column; gap: 0.3rem; }
-          .cat-tag { display: inline-block; font-size: .75rem; padding: .2rem .6rem; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 20px; color: #C9A84C; text-transform: capitalize; margin: 0.2rem; }
+          .cat-tag { display: inline-block; font-size: .75rem; padding: .2rem .6rem; background: rgba(37,99,235,0.06); border: 1px solid var(--border); border-radius: 20px; color: #C9A84C; text-transform: capitalize; margin: 0.2rem; }
           .main-footer { margin-top: 2rem; padding: 2rem 1rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.75rem; color: #7A7A9A; }
           .main-footer-links { display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.8rem; }
           .main-footer-links a { color: #C9A84C; text-decoration: none; font-weight: 700; }

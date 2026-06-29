@@ -603,3 +603,18 @@ body::before{content:'';position:fixed;inset:0;
     justify-content: center;
   }
 }
+
+/* DISABLE CARD HOVER OVERLAY */
+.card-overlay {
+  display: none !important;
+}
+
+/* COLLECTION SHOWCASE CARD GRADIENT OVERLAY */
+.collection-showcase-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.15) 60%, transparent 100%);
+  z-index: 1;
+  pointer-events: none;
+}
