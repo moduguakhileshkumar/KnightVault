@@ -9,6 +9,7 @@ const cors       = require('cors');
 const path       = require('path');
 const Wallpaper  = require('./model');
 const Settings   = require('./settingsModel');
+const Collection = require('./collectionModel');
 const fs         = require('fs');
 
 async function getUniqueSlug(title, WallpaperModel, excludeId = null) {
@@ -244,6 +245,38 @@ mongoose.connect(process.env.MONGO_URI)
         await s.save();
       }
     } catch(e) { console.error('One-time stats reset migration failed:', e); }
+
+    // MIGRATION: Seed initial default collections if empty
+    try {
+      const collCount = await Collection.countDocuments();
+      if (collCount === 0) {
+        console.log('Seeding initial collections into database...');
+        await Collection.create([
+          {
+            name: 'One Piece Gear 5 Collection',
+            slug: 'top-gear-5-wallpapers',
+            keyword: 'gear\\s*5|luffy',
+            description: 'Gear 5 is the peak form of Luffy\'s abilities, representing the pinnacle of anti-hero power and legendary rubber freedom. This curated Gear 5 4K collection offers premium high-resolution wallpapers showing Luffy in his divine sun god Nika state, bathed in white-heat flames and signature laughter. Each image has been color-graded and sharpened for stunning high-contrast desktop and mobile setups.',
+            metaTitle: 'One Piece Gear 5 4K Wallpapers Collection'
+          },
+          {
+            name: 'Best Black Clover Wallpapers',
+            slug: 'best-black-clover-wallpapers',
+            keyword: 'black\\s*clover|asta|yami',
+            description: 'Black Clover follows the journey of Asta, a magicless boy in a world where magic is everything, who gains the power of Anti-Magic through a five-leaf clover grimoire. This curated collection brings together the absolute best Black Clover and Asta wallpapers in 4K UHD and HD resolutions. From Asta\'s intense devil-union forms to dramatic battle sequences and grimoire designs, each image has been carefully color-graded and sharpened to bring out the grim, high-energy aesthetic of the Magic Knights. Enhance your mobile screens and desktop setups with these premium backgrounds showcasing the determination and raw power of the Black Bulls\' anti-magic hero.',
+            metaTitle: 'Best Black Clover & Asta 4K Wallpapers Collection'
+          },
+          {
+            name: 'Demon Slayer 4K Collection',
+            slug: 'demon-slayer-4k-collection',
+            keyword: 'demon\\s*slayer|rengoku|tanjiro|kokushibo|zenitsu|akaza',
+            description: 'Demon Slayer (Kimetsu no Yaiba) is celebrated for its breathtaking animation, vibrant color palettes, and intense swordsmanship. This curated Demon Slayer 4K collection offers premium high-resolution wallpapers featuring Tanjiro Kamado, the Flame Hashira Kyojuro Rengoku, and other iconic characters. Every wallpaper in this collection has been optimized for deep contrast and color balance, highlighting the gorgeous breathing style effects—from Rengoku\'s roaring flames to Tanjiro\'s water and sun breathing flows. Perfect for mobile lockscreens and high-refresh-rate desktop displays, this collection brings the cinematic art of Ufotable directly to your devices for free.',
+            metaTitle: 'Demon Slayer 4K Wallpapers Collection'
+          }
+        ]);
+        console.log('Seeded collections successfully.');
+      }
+    } catch(e) { console.error('Collections seeding migration failed:', e); }
     
     // Synchronize ads.txt file on startup
     try {
@@ -458,6 +491,61 @@ app.put('/api/settings', adminOnly, async (req, res) => {
     if (req.body.pinterestSandbox !== undefined) s.pinterestSandbox = req.body.pinterestSandbox;
     await s.save();
     res.json(s);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── COLLECTIONS API ──────────────────────
+app.get('/api/collections', async (req, res) => {
+  try {
+    const colls = await Collection.find({}).sort({ createdAt: -1 });
+    res.json(colls);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/collections', adminOnly, async (req, res) => {
+  try {
+    const { name, slug, keyword, description, metaTitle } = req.body;
+    if (!name || !slug || !keyword) {
+      return res.status(400).json({ error: 'name, slug, and keyword are required' });
+    }
+    const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-');
+    const existing = await Collection.findOne({ slug: cleanSlug });
+    if (existing) return res.status(400).json({ error: 'Collection with this slug already exists' });
+
+    const c = await Collection.create({
+      name: name.trim(),
+      slug: cleanSlug,
+      keyword: keyword.trim(),
+      description: (description || '').trim(),
+      metaTitle: (metaTitle || '').trim()
+    });
+    res.status(201).json(c);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.patch('/api/collections/:id', adminOnly, async (req, res) => {
+  try {
+    const allowed = ['name', 'slug', 'keyword', 'description', 'metaTitle'];
+    const update = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
+    
+    if (update.slug) {
+      update.slug = update.slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-');
+      const existing = await Collection.findOne({ slug: update.slug, _id: { $ne: req.params.id } });
+      if (existing) return res.status(400).json({ error: 'Collection with this slug already exists' });
+    }
+
+    const c = await Collection.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!c) return res.status(404).json({ error: 'Collection not found' });
+    res.json(c);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/collections/:id', adminOnly, async (req, res) => {
+  try {
+    const c = await Collection.findByIdAndDelete(req.params.id);
+    if (!c) return res.status(404).json({ error: 'Collection not found' });
+    res.json({ deleted: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1366,9 +1454,6 @@ app.get('/sitemap.xml', async (req, res) => {
       '/privacy.html', 
       '/terms.html',
       '/dmca.html',
-      '/top-gear-5-wallpapers',
-      '/best-black-clover-wallpapers',
-      '/demon-slayer-4k-collection',
       '/blog.html',
       '/blog/customize-homescreen-guide.html',
       '/blog/4k-resolution-mobile-wallpapers.html',
@@ -1381,6 +1466,18 @@ app.get('/sitemap.xml', async (req, res) => {
       xml += '    <priority>0.5</priority>\n';
       xml += '  </url>\n';
     });
+    
+    // Dynamic collections sitemap
+    try {
+      const dbColls = await Collection.find({}, 'slug');
+      dbColls.forEach(c => {
+        xml += '  <url>\n';
+        xml += `    <loc>${BASE_URL}/collection/${c.slug}</loc>\n`;
+        xml += '    <changefreq>weekly</changefreq>\n';
+        xml += '    <priority>0.7</priority>\n';
+        xml += '  </url>\n';
+      });
+    } catch(e) { console.error('Failed to append collections to sitemap', e); }
     
     const xmlEsc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
@@ -1804,6 +1901,35 @@ function renderServerGrid(walls, esc) {
 
 function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc) {
   const gridHtml = renderServerGrid(walls, esc);
+  
+  // Generate schema structured data for indexing
+  const itemListElement = walls.map((w, index) => {
+    const pageUrl = `${BASE_URL}/w/${w.slug || w.filename.split('/').pop()}`;
+    const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
+      ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
+      : (w.directLink || '');
+    return {
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": pageUrl,
+      "name": w.title,
+      "image": thumbUrl
+    };
+  });
+  
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": metaDesc,
+    "url": canonicalUrl,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": walls.length,
+      "itemListElement": itemListElement
+    }
+  };
+
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
@@ -1812,6 +1938,25 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="robots" content="index, follow">
       <meta name="description" content="${esc(metaDesc)}">
+      
+      <!-- OpenGraph Metadata -->
+      <meta property="og:title" content="${esc(title)}">
+      <meta property="og:description" content="${esc(metaDesc)}">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="${canonicalUrl}">
+      ${walls.length > 0 ? `<meta property="og:image" content="${esc(walls[0].directLink)}">` : ''}
+      
+      <!-- Twitter Card Metadata -->
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="${esc(title)}">
+      <meta name="twitter:description" content="${esc(metaDesc)}">
+      ${walls.length > 0 ? `<meta name="twitter:image" content="${esc(walls[0].directLink)}">` : ''}
+
+      <!-- JSON-LD Structured Data -->
+      <script type="application/ld+json">
+        ${JSON.stringify(structuredData)}
+      </script>
+
       <title>${esc(title)} — Waynelab</title>
       <link rel="canonical" href="${canonicalUrl}">
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -1918,20 +2063,43 @@ async function renderCollection(req, res, keyword, title, introText) {
   }
 }
 
-// Curated Collection Routes
-app.get('/top-gear-5-wallpapers', (req, res) => {
-  renderCollection(req, res, 'luffy|gear\\s*5', 'Top Gear 5 Luffy Wallpapers', 
-    'Monkey D. Luffy\'s Gear 5 awakening is one of the most iconic moments in anime history. Representing the peak of his power as the Sun God Nika, Gear 5 combines cartoonish freedom with godlike abilities. In this curated collection, we have gathered the ultimate high-definition and 4K Gear 5 Luffy wallpapers. Each wallpaper in this vault has been processed with visual enhancements, color correction, and contrast tuning to highlight Luffy\'s signature white hair and glowing energy waves. Whether you are looking for a dark minimalist design for your iPhone lockscreen or a high-detail cinematic scene for your desktop monitor, this collection has the perfect background for One Piece fans.');
-});
+// Legacy collection redirects
+app.get('/top-gear-5-wallpapers', (req, res) => res.redirect(301, '/collection/top-gear-5-wallpapers'));
+app.get('/best-black-clover-wallpapers', (req, res) => res.redirect(301, '/collection/best-black-clover-wallpapers'));
+app.get('/demon-slayer-4k-collection', (req, res) => res.redirect(301, '/collection/demon-slayer-4k-collection'));
 
-app.get('/best-black-clover-wallpapers', (req, res) => {
-  renderCollection(req, res, 'asta|black\\s*clover', 'Best Black Clover Wallpapers', 
-    'Black Clover follows the journey of Asta, a magicless boy in a world where magic is everything, who gains the power of Anti-Magic through a five-leaf clover grimoire. This curated collection brings together the absolute best Black Clover and Asta wallpapers in 4K UHD and HD resolutions. From Asta\'s intense devil-union forms to dramatic battle sequences and grimoire designs, each image has been carefully color-graded and sharpened to bring out the grim, high-energy aesthetic of the Magic Knights. Enhance your mobile screens and desktop setups with these premium backgrounds showcasing the determination and raw power of the Black Bulls\' anti-magic hero.');
-});
+// Dynamic Collection Page
+app.get('/collection/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const c = await Collection.findOne({ slug });
+    if (!c) {
+      return res.status(404).send(`
+        <body style="background:#0A0A0F;color:#7A7A9A;font-family:sans-serif;text-align:center;padding-top:100px;">
+          <h1 style="color:#C9A84C;">Collection Not Found</h1>
+          <p>The requested collection could not be found in our records.</p>
+          <a href="/" style="color:#C9A84C;text-decoration:none;">← Return to Vault</a>
+        </body>
+      `);
+    }
 
-app.get('/demon-slayer-4k-collection', (req, res) => {
-  renderCollection(req, res, 'demon\\s*slayer|rengoku|tanjiro', 'Demon Slayer 4K Collection', 
-    'Demon Slayer (Kimetsu no Yaiba) is celebrated for its breathtaking animation, vibrant color palettes, and intense swordsmanship. This curated Demon Slayer 4K collection offers premium high-resolution wallpapers featuring Tanjiro Kamado, the Flame Hashira Kyojuro Rengoku, and other iconic characters. Every wallpaper in this collection has been optimized for deep contrast and color balance, highlighting the gorgeous breathing style effects—from Rengoku\'s roaring flames to Tanjiro\'s water and sun breathing flows. Perfect for mobile lockscreens and high-refresh-rate desktop displays, this collection brings the cinematic art of Ufotable directly to your devices for free.');
+    // Query matching wallpapers using collection keyword
+    const regex = new RegExp(c.keyword, 'i');
+    const walls = await Wallpaper.find({
+      $or: [
+        { title: regex },
+        { category: regex },
+        { tags: regex }
+      ]
+    }).sort({ uploadedAt: -1 });
+
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    
+    const canonicalUrl = `${BASE_URL}/collection/${c.slug}`;
+    renderCollectionPage(res, walls, c.metaTitle || c.name, c.description, c.description, canonicalUrl, esc);
+  } catch (err) {
+    res.status(500).send('Error loading collection.');
+  }
 });
 
 
