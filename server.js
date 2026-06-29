@@ -755,6 +755,9 @@ app.get('/w/:slugOrId', async (req, res) => {
     }
 
     // Find similar wallpapers (collection-aware suggestions)
+    let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
+    categoryArr = categoryArr.filter(Boolean);
+
     let suggestionWalls = [];
     let suggestionTitle = 'Similar Wallpapers';
     
@@ -790,8 +793,6 @@ app.get('/w/:slugOrId', async (req, res) => {
     }
     
     if (!suggestionWalls.length) {
-      let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
-      categoryArr = categoryArr.filter(Boolean);
       suggestionWalls = await Wallpaper.find({
         _id: { $ne: w._id },
         category: { $in: categoryArr }
@@ -999,7 +1000,7 @@ app.get('/w/:slugOrId', async (req, res) => {
     `);
   } catch (err) { 
     console.error('Error loading wallpaper page:', err);
-    res.status(500).send('Error loading wallpaper page: ' + err.message + '\n' + err.stack); 
+    res.status(500).send('Error loading wallpaper page. Please try again later.'); 
   }
 });
 // ─── AMP WALLPAPER PAGE ───────────────────────────────────
