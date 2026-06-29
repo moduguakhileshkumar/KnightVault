@@ -1164,7 +1164,10 @@ async function saveCollection(event) {
   try {
     const r = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-password': adminPw
+      },
       body: JSON.stringify(payload)
     });
     const d = await r.json();
@@ -1183,7 +1186,10 @@ async function saveCollection(event) {
 async function deleteCollection(id) {
   if (!confirm('Are you sure you want to delete this collection?')) return;
   try {
-    const r = await fetch(`/api/collections/${id}`, { method: 'DELETE' });
+    const r = await fetch(`/api/collections/${id}`, { 
+      method: 'DELETE',
+      headers: { 'x-admin-password': adminPw }
+    });
     const d = await r.json();
     if (!r.ok) {
       alert('Failed to delete collection: ' + (d.error || 'Unknown error'));
