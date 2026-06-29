@@ -499,20 +499,26 @@ app.get('/api/collections', async (req, res) => {
   try {
     const colls = await Collection.find({}).sort({ createdAt: -1 }).lean();
     for (let c of colls) {
-      const regex = new RegExp(c.keyword, 'i');
-      const wall = await Wallpaper.findOne({
-        $or: [
-          { title: regex },
-          { category: regex },
-          { tags: regex }
-        ]
-      }, 'directLink filename');
-      if (wall) {
-        c.previewImage = (wall.directLink && wall.directLink.includes('/upload/')) 
-          ? wall.directLink.replace('/upload/', '/upload/w_500,q_auto,f_auto/') 
-          : (wall.directLink || '');
+      if (c.coverImage && c.coverImage.trim()) {
+        c.previewImage = (c.coverImage.includes('/upload/'))
+          ? c.coverImage.replace('/upload/', '/upload/w_500,q_auto,f_auto/')
+          : c.coverImage.trim();
       } else {
-        c.previewImage = '/favicon.svg';
+        const regex = new RegExp(c.keyword, 'i');
+        const wall = await Wallpaper.findOne({
+          $or: [
+            { title: regex },
+            { category: regex },
+            { tags: regex }
+          ]
+        }, 'directLink filename');
+        if (wall) {
+          c.previewImage = (wall.directLink && wall.directLink.includes('/upload/')) 
+            ? wall.directLink.replace('/upload/', '/upload/w_500,q_auto,f_auto/') 
+            : (wall.directLink || '');
+        } else {
+          c.previewImage = '/favicon.svg';
+        }
       }
     }
     res.json(colls);
@@ -534,7 +540,8 @@ app.post('/api/collections', adminOnly, async (req, res) => {
       slug: cleanSlug,
       keyword: keyword.trim(),
       description: (description || '').trim(),
-      metaTitle: (metaTitle || '').trim()
+      metaTitle: (metaTitle || '').trim(),
+      coverImage: (req.body.coverImage || '').trim()
     });
     res.status(201).json(c);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -542,7 +549,7 @@ app.post('/api/collections', adminOnly, async (req, res) => {
 
 app.patch('/api/collections/:id', adminOnly, async (req, res) => {
   try {
-    const allowed = ['name', 'slug', 'keyword', 'description', 'metaTitle'];
+    const allowed = ['name', 'slug', 'keyword', 'description', 'metaTitle', 'coverImage'];
     const update = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) update[k] = req.body[k]; });
     

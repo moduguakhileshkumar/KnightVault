@@ -292,7 +292,7 @@ tr:hover td { background: var(--bg4); }
             <input type="text" id="collSlug" required placeholder="e.g. top-one-piece-wallpapers">
           </div>
         </div>
-        <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
+        <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-top:1rem;">
           <div class="field">
             <label>Matching Keyword / Tag (Regex supported)</label>
             <input type="text" id="collKeyword" required placeholder="e.g. one piece|luffy">
@@ -300,6 +300,10 @@ tr:hover td { background: var(--bg4); }
           <div class="field">
             <label>Custom Meta Title (SEO Browser Title)</label>
             <input type="text" id="collMetaTitle" placeholder="e.g. Best One Piece 4K Wallpapers">
+          </div>
+          <div class="field">
+            <label>Cover Image URL (Decide Cover Override)</label>
+            <input type="text" id="collCoverImage" placeholder="e.g. paste direct image URL...">
           </div>
         </div>
         <div class="field" style="margin-top:1rem;">
@@ -1110,6 +1114,7 @@ async function loadCollections() {
     }
     collections.forEach(c => {
       const cleanDesc = (c.description || '').replace(/\n/g, '\\n').replace(/'/g, "\\'");
+      const cleanCover = (c.coverImage || '').replace(/'/g, "\\'");
       tbody.innerHTML += `
         <tr>
           <td><strong>${esc(c.name)}</strong></td>
@@ -1117,7 +1122,7 @@ async function loadCollections() {
           <td><code>${esc(c.keyword)}</code></td>
           <td>
             <div style="display:flex; gap:0.5rem;">
-              <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.7rem;" onclick="editCollection('${c._id}', '${esc(c.name)}', '${esc(c.slug)}', '${esc(c.keyword)}', '${esc(c.metaTitle)}', '${esc(cleanDesc)}')">✏️ Edit</button>
+              <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.7rem;" onclick="editCollection('${c._id}', '${esc(c.name)}', '${esc(c.slug)}', '${esc(c.keyword)}', '${esc(c.metaTitle)}', '${esc(cleanDesc)}', '${esc(cleanCover)}')">✏️ Edit</button>
               <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.7rem; background:#8b1a2c;" onclick="deleteCollection('${c._id}')">🗑️ Delete</button>
             </div>
           </td>
@@ -1129,13 +1134,14 @@ async function loadCollections() {
   }
 }
 
-function editCollection(id, name, slug, keyword, metaTitle, desc) {
+function editCollection(id, name, slug, keyword, metaTitle, desc, coverImage) {
   document.getElementById('collId').value = id;
   document.getElementById('collName').value = name;
   document.getElementById('collSlug').value = slug;
   document.getElementById('collKeyword').value = keyword;
   document.getElementById('collMetaTitle').value = metaTitle || '';
   document.getElementById('collDesc').value = desc || '';
+  document.getElementById('collCoverImage').value = coverImage || '';
   document.getElementById('collFormTitle').textContent = 'Edit Collection: ' + name;
   document.getElementById('collectionForm').scrollIntoView({ behavior: 'smooth' });
 }
@@ -1147,6 +1153,7 @@ function resetCollectionForm() {
   document.getElementById('collKeyword').value = '';
   document.getElementById('collMetaTitle').value = '';
   document.getElementById('collDesc').value = '';
+  document.getElementById('collCoverImage').value = '';
   document.getElementById('collFormTitle').textContent = 'Create New Collection';
 }
 
@@ -1158,8 +1165,9 @@ async function saveCollection(event) {
   const keyword = document.getElementById('collKeyword').value;
   const metaTitle = document.getElementById('collMetaTitle').value;
   const description = document.getElementById('collDesc').value;
+  const coverImage = document.getElementById('collCoverImage').value;
 
-  const payload = { name, slug, keyword, metaTitle, description };
+  const payload = { name, slug, keyword, metaTitle, description, coverImage };
   const url = id ? `/api/collections/${id}` : '/api/collections';
   const method = id ? 'PATCH' : 'POST';
 
