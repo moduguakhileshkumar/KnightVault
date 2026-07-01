@@ -106,7 +106,7 @@ app.get('/', async (req, res) => {
       
       if (colls.length > 0) {
         collectionsHtml = colls.map((c, index) => {
-          const loadAttr = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
+          const loadAttr = index < 4 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
           return `
           <div class="collection-showcase-card" onclick="window.location.href='/collection/${c.slug}'">
             <img class="collection-showcase-bg" src="${c.previewImage}" alt="${esc(c.name)} Cover" ${loadAttr}>
@@ -191,8 +191,8 @@ app.get('/', async (req, res) => {
       `;
     });
 
-    html = html.replace('<div class="wall-grid" id="wallGrid"></div>', `<div class="wall-grid" id="wallGrid">${gridHtml}</div>`);
-    html = html.replace('<div class="collections-showcase-grid" id="collectionsShowcaseGrid"></div>', `<div class="collections-showcase-grid" id="collectionsShowcaseGrid">${collectionsHtml}</div>`);
+    html = html.replace(/<div class="wall-grid" id="wallGrid">[\s\S]*?<\/div>/, `<div class="wall-grid" id="wallGrid">${gridHtml}</div>`);
+    html = html.replace(/<div class="collections-showcase-grid" id="collectionsShowcaseGrid">[\s\S]*?<\/div>/, `<div class="collections-showcase-grid" id="collectionsShowcaseGrid">${collectionsHtml}</div>`);
     html = html.replace('id="collectionsShowcaseSection" style="display:none;', `id="collectionsShowcaseSection" style="${collectionsHtml ? 'display:block;' : 'display:none;'}`);
 
     const itemListElement = walls.map((w, index) => {
