@@ -73,9 +73,55 @@ app.get('/', async (req, res) => {
 
     // Query first 24 wallpapers
     const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(24);
-
+    
+    // Query featured collections for SSR
+    let collectionsHtml = '';
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     
+    try {
+      const colls = await Collection.find({}).sort({ createdAt: -1 }).lean();
+      for (let c of colls) {
+        if (c.coverImage && c.coverImage.trim()) {
+          c.previewImage = (c.coverImage.includes('/upload/'))
+            ? c.coverImage.replace('/upload/', '/upload/w_500,q_auto,f_auto/')
+            : c.coverImage.trim();
+        } else {
+          const regex = new RegExp(c.keyword, 'i');
+          const wall = await Wallpaper.findOne({
+            $or: [
+              { title: regex },
+              { category: regex },
+              { tags: regex }
+            ]
+          }, 'directLink filename');
+          if (wall) {
+            c.previewImage = (wall.directLink && wall.directLink.includes('/upload/')) 
+              ? wall.directLink.replace('/upload/', '/upload/w_500,q_auto,f_auto/') 
+              : (wall.directLink || '');
+          } else {
+            c.previewImage = '/favicon.svg';
+          }
+        }
+      }
+      
+      if (colls.length > 0) {
+        collectionsHtml = colls.map((c, index) => {
+          const loadAttr = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
+          return `
+          <div class="collection-showcase-card" onclick="window.location.href='/collection/${c.slug}'">
+            <img class="collection-showcase-bg" src="${c.previewImage}" alt="${esc(c.name)} Cover" ${loadAttr}>
+            <div class="collection-showcase-content">
+              <h3 class="collection-showcase-title">${esc(c.name)}</h3>
+              <span class="collection-showcase-meta">Explore Collection →</span>
+            </div>
+          </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      console.error('Failed to pre-render collections showcase', err);
+    }
+
     let gridHtml = '';
     walls.forEach((w, i) => {
       const pageLink = `/w/` + (w.slug || w.filename.split('/').pop());
@@ -146,6 +192,8 @@ app.get('/', async (req, res) => {
     });
 
     html = html.replace('<div class="wall-grid" id="wallGrid"></div>', `<div class="wall-grid" id="wallGrid">${gridHtml}</div>`);
+    html = html.replace('<div class="collections-showcase-grid" id="collectionsShowcaseGrid"></div>', `<div class="collections-showcase-grid" id="collectionsShowcaseGrid">${collectionsHtml}</div>`);
+    html = html.replace('id="collectionsShowcaseSection" style="display:none;', `id="collectionsShowcaseSection" style="${collectionsHtml ? 'display:block;' : 'display:none;'}`);
 
     const itemListElement = walls.map((w, index) => {
       const pageUrl = `${BASE_URL}/w/` + (w.slug || w.filename.split('/').pop());

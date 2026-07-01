@@ -262,6 +262,7 @@
       <button class="cat-pill more-filters-btn" id="moreFiltersBtn" style="display:none;" onclick="toggleMoreFilters()">More Filters ▼</button>
     </nav>
     <div class="sort-wrap">
+      <label for="sortSelect" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;">Sort Wallpapers</label>
       <select class="sort-select" id="sortSelect" onchange="loadWallpapers(1)">
         <option value="new">Newest</option>
         <option value="popular">Popular</option>
@@ -809,6 +810,7 @@ function selectCat(cat, el) {
 }
 
 /* ══════ WALLPAPERS ══════ */
+let initialLoad = true;
 async function loadWallpapers(page = 1) {
   currentPage = page;
   const sort  = document.getElementById('sortSelect').value;
@@ -816,9 +818,16 @@ async function loadWallpapers(page = 1) {
   const pag   = document.getElementById('pagination');
   const count = document.getElementById('countInfo');
 
-  grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="spinner"></div><p>Loading…</p></div></div>`;
+  let isInitialBackground = false;
+  if (initialLoad && page === 1 && grid.children.length > 0 && sort === 'new' && currentCat === 'all' && !searchQ.trim()) {
+    initialLoad = false;
+    isInitialBackground = true;
+  } else {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="spinner"></div><p>Loading...</p></div></div>`;
+  }
+  
   pag.innerHTML  = '';
-  if (count) count.textContent = 'Loading…';
+  if (count) count.textContent = 'Loading...';
 
   const params = new URLSearchParams({ page, limit: 24, sort });
   if (currentCat !== 'all') params.set('category', currentCat);
@@ -827,11 +836,15 @@ async function loadWallpapers(page = 1) {
   try {
     const r = await fetch(`${API}/api/wallpapers?${params}`);
     const d = await r.json();
-    renderGrid(d.wallpapers);
+    if (!isInitialBackground) {
+      renderGrid(d.wallpapers);
+    }
     renderPagination(d.page, d.pages);
     if (count) count.innerHTML = `<strong>${d.total}</strong> wallpaper${d.total !== 1 ? 's' : ''}`;
   } catch(e) {
-    grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">⚠</div><p>Could not connect to server</p></div></div>`;
+    if (!isInitialBackground) {
+      grid.innerHTML = `<div style="grid-column:1/-1"><div class="state-msg"><div class="icon">❌</div><p>Could not connect to server</p></div></div>`;
+    }
   }
 }
 
@@ -1205,27 +1218,37 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══════ BOOT ══════ */
+let initialCollectionsLoad = true;
 async function loadFeaturedCollections() {
   try {
+    const grid = document.getElementById('collectionsShowcaseGrid');
+    const section = document.getElementById('collectionsShowcaseSection');
+    
+    if (initialCollectionsLoad && grid.children.length > 0) {
+      initialCollectionsLoad = false;
+      return;
+    }
+    
     const r = await fetch('/api/collections');
     const collections = await r.json();
-    const section = document.getElementById('collectionsShowcaseSection');
-    const grid = document.getElementById('collectionsShowcaseGrid');
     
     if (!collections || !collections.length) {
       section.style.display = 'none';
       return;
     }
     
-    grid.innerHTML = collections.map(c => `
+    grid.innerHTML = collections.map((c, index) => {
+      const loadAttr = index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
+      return `
       <div class="collection-showcase-card" onclick="window.location.href='/collection/${c.slug}'">
-        <div class="collection-showcase-bg" style="background-image: url('${c.previewImage}')"></div>
+        <img class="collection-showcase-bg" src="${c.previewImage}" alt="${esc(c.name)} Cover" ${loadAttr}>
         <div class="collection-showcase-content">
           <h3 class="collection-showcase-title">${esc(c.name)}</h3>
           <span class="collection-showcase-meta">Explore Collection →</span>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
     
     section.style.display = 'block';
   } catch (e) {

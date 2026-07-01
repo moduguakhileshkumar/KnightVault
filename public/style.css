@@ -45,7 +45,7 @@ body::before{content:'';position:fixed;inset:0;
   position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);gap:1rem}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .logo-name{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:.1em}
-.logo-tag{font-family:'Orbitron',sans-serif;font-size:.48rem;color:var(--dim);letter-spacing:.3em;text-transform:uppercase;margin-top:3px;display:block}
+.logo-tag{font-family:'Orbitron',sans-serif;font-size:.48rem;color:var(--mid);letter-spacing:.3em;text-transform:uppercase;margin-top:3px;display:block}
 .search-wrap{flex:1;max-width:480px;position:relative}
 .search-input{width:100%;background:var(--bg3);border:1px solid rgba(201,168,76,.25);border-radius:0;clip-path:polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
   color:var(--bright);font-size:.85rem;padding:.65rem 1rem .65rem 2.7rem;outline:none;transition:all .2s}
@@ -457,8 +457,9 @@ body::before{content:'';position:fixed;inset:0;
 .collection-showcase-bg {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.3s ease, filter 0.3s ease;
   filter: brightness(0.8) contrast(1.02);
 }
@@ -627,4 +628,30 @@ body::before{content:'';position:fixed;inset:0;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.2) 55%, transparent 100%);
   z-index: 1;
   pointer-events: none;
+}
+
+/* CARD TAG BADGES CONTRAST & ACCESSIBILITY */
+.card-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+.card-tag-badge {
+  font-size: 0.62rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: var(--bg4);
+  color: var(--mid);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.card-tag-badge.gold {
+  background: rgba(37, 99, 235, 0.07);
+  color: var(--gold) !important;
+}
+.card-tag-badge.png {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--bright) !important;
 }
