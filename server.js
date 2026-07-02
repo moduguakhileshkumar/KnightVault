@@ -65,6 +65,21 @@ const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 app.use(compression());
 app.use(cors());
 app.use(express.json());
+// Canonical Domain Redirect (Render .onrender.com to custom domain)
+app.use((req, res, next) => {
+  const host = req.get('host');
+  if (host && host.includes('onrender.com')) {
+    const targetDomain = process.env.BASE_URL || 'https://waynelab.studio';
+    try {
+      const targetHost = new URL(targetDomain).host;
+      if (host !== targetHost) {
+        return res.redirect(301, `${targetDomain.replace(/\/+$/, '')}${req.originalUrl}`);
+      }
+    } catch(e) {}
+  }
+  next();
+});
+
 // Homepage Server-Side Rendering (SSR) for Google rich image search snippets
 app.get('/', async (req, res) => {
   try {
@@ -108,13 +123,13 @@ app.get('/', async (req, res) => {
         collectionsHtml = colls.map((c, index) => {
           const loadAttr = index < 4 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"';
           return `
-          <div class="collection-showcase-card" onclick="window.location.href='/collection/${c.slug}'">
+          <a class="collection-showcase-card" href="/collection/${c.slug}">
             <img class="collection-showcase-bg" src="${c.previewImage}" alt="${esc(c.name)} Cover" ${loadAttr}>
             <div class="collection-showcase-content">
               <h3 class="collection-showcase-title">${esc(c.name)}</h3>
               <span class="collection-showcase-meta">Explore Collection →</span>
             </div>
-          </div>
+          </a>
           `;
         }).join('');
       }
@@ -177,7 +192,7 @@ app.get('/', async (req, res) => {
       }
 
       gridHtml += `
-      <div class="wall-card" onclick="window.location.href='${pageLink}'">
+      <a class="wall-card" href="${pageLink}">
         <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
           onerror="this.style.opacity='0.3'" class="loading"
           onload="this.classList.remove('loading')">
@@ -187,7 +202,7 @@ app.get('/', async (req, res) => {
           <span class="card-info-title">${esc(cleanTitle)}</span>
           <div class="card-tag-row">${badgesHtml}</div>
         </div>
-      </div>
+      </a>
       `;
     });
 
@@ -222,7 +237,8 @@ app.get('/', async (req, res) => {
       </script>
     `;
 
-    html = html.replace('</head>', `${schemaScript}\n</head>`);
+    const verificationTag = process.env.GOOGLE_SITE_VERIFICATION ? `<meta name="google-site-verification" content="${process.env.GOOGLE_SITE_VERIFICATION}" />\n` : '';
+    html = html.replace('</head>', `${verificationTag}${schemaScript}\n</head>`);
     res.send(html);
   } catch (err) {
     console.error('Error rendering homepage SSR:', err);
@@ -996,6 +1012,7 @@ app.get('/w/:slugOrId', async (req, res) => {
       <!DOCTYPE html>
       <html lang="en">
       <head>
+        ${process.env.GOOGLE_SITE_VERIFICATION ? `<meta name="google-site-verification" content="${process.env.GOOGLE_SITE_VERIFICATION}" />` : ''}
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${esc(w.title)} — Waynelab</title>
@@ -2111,6 +2128,7 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
     <!DOCTYPE html>
     <html lang="en">
     <head>
+      ${process.env.GOOGLE_SITE_VERIFICATION ? `<meta name="google-site-verification" content="${process.env.GOOGLE_SITE_VERIFICATION}" />` : ''}
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="robots" content="index, follow">

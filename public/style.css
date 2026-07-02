@@ -728,3 +728,8 @@ body::before{content:'';position:fixed;inset:0;
     min-height: 1.2em;
   }
 }
+
+/* PREVENT UNDERLINE FORMATTING ON GRID LINKS */
+a.wall-card, a.collection-showcase-card {
+  text-decoration: none !important;
+}
