@@ -139,7 +139,7 @@ app.get('/', async (req, res) => {
 
     let gridHtml = '';
     walls.forEach((w, i) => {
-      const pageLink = `/w/` + (w.slug || w.filename.split('/').pop());
+      const pageLink = `/w/` + getWallpaperSlug(w);
       const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
         ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
         : (w.directLink || '');
@@ -211,7 +211,7 @@ app.get('/', async (req, res) => {
     html = html.replace('id="collectionsShowcaseSection" style="display:none;', `id="collectionsShowcaseSection" style="${collectionsHtml ? 'display:block;' : 'display:none;'}`);
 
     const itemListElement = walls.map((w, index) => {
-      const pageUrl = `${BASE_URL}/w/` + (w.slug || w.filename.split('/').pop());
+      const pageUrl = `${BASE_URL}/w/` + getWallpaperSlug(w);
       const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
         ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
         : (w.directLink || '');
@@ -298,6 +298,17 @@ function syncAdsTxt(pubId) {
   try {
     const fs = require('fs');
     const path = require('path');
+
+// Helper to get a guaranteed non-empty slug for wallpaper links to prevent broken '/w/' URLs
+function getWallpaperSlug(w) {
+  if (!w) return '';
+  if (w.slug && w.slug.trim()) return w.slug.trim();
+  if (w.filename) {
+    const base = w.filename.replace('waynelab/', '').split('/').pop();
+    if (base && base.trim()) return base.trim();
+  }
+  return w._id ? w._id.toString() : '';
+}
     const p = path.join(__dirname, 'public', 'ads.txt');
     if (!pubId) {
       if (fs.existsSync(p)) fs.unlinkSync(p);
@@ -1688,7 +1699,7 @@ app.get('/sitemap.xml', async (req, res) => {
     // Dynamic wallpaper routes
     walls.forEach(w => {
       xml += '  <url>\n';
-      const slug = w.slug || w.filename.replace('waynelab/', '');
+      const slug = getWallpaperSlug(w);
       xml += `    <loc>${BASE_URL}/w/${encodeURIComponent(slug)}</loc>\n`;
       if (w.uploadedAt) {
         xml += `    <lastmod>${w.uploadedAt.toISOString().split('T')[0]}</lastmod>
@@ -2039,7 +2050,7 @@ function renderServerGrid(walls, esc) {
   return walls.map(w => {
     const safeTitle = w.title || '';
     const safeFilename = w.filename || '';
-    const pageLink = '/w/' + (w.slug || safeFilename.split('/').pop());
+    const pageLink = '/w/' + getWallpaperSlug(w);
     const pageUrl = `${BASE_URL}${pageLink}`;
     const imgUrl = (w.directLink && w.directLink.includes('/upload/')) 
       ? w.directLink.replace('/upload/', '/upload/q_auto,f_auto/') 
@@ -2098,7 +2109,7 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
   
   // Generate schema structured data for indexing
   const itemListElement = walls.map((w, index) => {
-    const pageUrl = `${BASE_URL}/w/${w.slug || w.filename.split('/').pop()}`;
+    const pageUrl = `${BASE_URL}/w/${getWallpaperSlug(w)}`;
     const thumbUrl = (w.directLink && w.directLink.includes('/upload/')) 
       ? w.directLink.replace('/upload/', '/upload/w_600,q_auto,f_auto/') 
       : (w.directLink || '');
