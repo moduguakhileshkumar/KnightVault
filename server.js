@@ -238,7 +238,21 @@ app.get('/', async (req, res) => {
     `;
 
     const verificationTag = process.env.GOOGLE_SITE_VERIFICATION ? `<meta name="google-site-verification" content="${process.env.GOOGLE_SITE_VERIFICATION}" />\n` : '';
-    html = html.replace('</head>', `${verificationTag}${schemaScript}\n</head>`);
+    
+    // Dynamically inject optimized og:image for search engine snippet preview
+    const ogImageUrl = walls.length > 0 ? (walls[0].directLink || '') : '';
+    let ogImageTags = '';
+    if (ogImageUrl) {
+      const previewOg = ogImageUrl.includes('/upload/') 
+        ? ogImageUrl.replace('/upload/', '/upload/w_1200,h_630,c_fill,q_auto,f_auto/') 
+        : ogImageUrl;
+      ogImageTags = `
+      <meta property="og:image" content="${esc(previewOg)}">
+      <meta name="twitter:image" content="${esc(previewOg)}">
+      <link rel="image_src" href="${esc(previewOg)}">\n`;
+    }
+    
+    html = html.replace('</head>', `s${verificationTag}${ogImageTags}${schemaScript}\n</head>`);
     res.send(html);
   } catch (err) {
     console.error('Error rendering homepage SSR:', err);
