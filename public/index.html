@@ -921,14 +921,33 @@ function renderGrid(walls) {
       badgesHtml += `<span class="card-tag-badge png">PNG</span>`;
     }
 
-        html += `
-    <a class="wall-card" href="${pageLink}">
+        // Determine aspect ratio class dynamically
+    let isPortrait = false;
+    if (w.resolution && w.resolution.includes('x')) {
+      const [width, height] = w.resolution.split('x').map(Number);
+      if (!isNaN(width) && !isNaN(height) && height > width) {
+        isPortrait = true;
+      }
+    }
+    const tagsStr = (Array.isArray(w.tags) ? w.tags : [w.tags]).join(' ').toLowerCase();
+    if (tagsStr.includes('mobile') || tagsStr.includes('phone') || tagsStr.includes('portrait')) {
+      isPortrait = true;
+    }
+    if (w.resolution && w.resolution.includes('x')) {
+      const [width, height] = w.resolution.split('x').map(Number);
+      if (!isNaN(width) && !isNaN(height) && width >= height) {
+        isPortrait = false;
+      }
+    }
+
+    html += `
+    <a class="wall-card ${isPortrait ? 'portrait-card' : 'landscape-card'}" href="${pageLink}">
       <div class="wall-card-media-wrap">
         <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
         <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
           onerror="this.style.opacity='0.3'" class="loading"
           onload="this.classList.remove('loading')">
-      </div>
+      </div>`;
       <div class="card-overlay">
         <h3 class="card-title">${esc(cleanTitle)}</h3>
         <div class="card-cats">

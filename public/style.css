@@ -130,19 +130,15 @@ body::before{content:'';position:fixed;inset:0;
   overflow: hidden;
   background: var(--bg3);
 }
-.blurred-bg {
-  position: absolute;
-  inset: -15px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(12px) brightness(0.6);
-  z-index: 1;
+.wall-card .blurred-bg {
+  display: none;
 }
 .wall-card img {
-  position: relative !important;
+  position: absolute !important;
+  inset: 0;
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain !important;
+  object-fit: cover !important; /* Default Cover for Landscape */
   object-position: center !important;
   display: block;
   transition: transform .3s;
@@ -166,6 +162,24 @@ body::before{content:'';position:fixed;inset:0;
   width: 100%;
 }
 
+/* PORTRAIT WALLPAPER CONTAINER GLOWS */
+.wall-card.portrait-card img {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important; /* Contain for Portrait */
+  z-index: 2;
+}
+.wall-card.portrait-card .blurred-bg {
+  display: block;
+  position: absolute;
+  inset: -15px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px) brightness(0.6);
+  z-index: 1;
+}
+
 /* Mobile Stacked Layout (Responsive Override) */
 @media (max-width: 768px) {
   .wall-card {
@@ -183,6 +197,10 @@ body::before{content:'';position:fixed;inset:0;
     inset: 0;
     width: 100% !important;
     height: 100% !important;
+    object-fit: cover !important;
+  }
+  .wall-card.portrait-card img {
+    object-fit: contain !important;
   }
   .card-info-footer {
     position: relative !important;
@@ -818,4 +836,19 @@ a.wall-card, a.collection-showcase-card {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--dim);
+}
+
+/* SUPPORT BLURMED BACKDROPS FOR COLLECTIONS GRID ITEMS */
+.coll-item-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.coll-feed-item.portrait-card img {
+  object-fit: contain !important;
+}
+.coll-feed-item.portrait-card .blurred-bg {
+  display: block;
+}
+.coll-feed-item.landscape-card .blurred-bg {
+  display: none;
 }

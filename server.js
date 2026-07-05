@@ -191,8 +191,27 @@ app.get('/', async (req, res) => {
         badgesHtml += `<span class="card-tag-badge png">PNG</span>`;
       }
 
+      // Determine aspect ratio class dynamically
+      let isPortrait = false;
+      if (w.resolution && w.resolution.includes('x')) {
+        const [width, height] = w.resolution.split('x').map(Number);
+        if (!isNaN(width) && !isNaN(height) && height > width) {
+          isPortrait = true;
+        }
+      }
+      const tagsStr = (Array.isArray(w.tags) ? w.tags : [w.tags]).join(' ').toLowerCase();
+      if (tagsStr.includes('mobile') || tagsStr.includes('phone') || tagsStr.includes('portrait')) {
+        isPortrait = true;
+      }
+      if (w.resolution && w.resolution.includes('x')) {
+        const [width, height] = w.resolution.split('x').map(Number);
+        if (!isNaN(width) && !isNaN(height) && width >= height) {
+          isPortrait = false;
+        }
+      }
+      
       gridHtml += `
-      <a class="wall-card" href="${pageLink}">
+      <a class="wall-card ${isPortrait ? 'portrait-card' : 'landscape-card'}" href="${pageLink}">
         <div class="wall-card-media-wrap">
           <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
           <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
@@ -319,9 +338,11 @@ function syncAdsTxt(pubId) {
 // Helper to get a guaranteed non-empty slug for wallpaper links to prevent broken '/w/' URLs
 function getWallpaperSlug(w) {
   if (!w) return '';
-  if (w.slug && w.slug.trim()) return w.slug.trim();
-  if (w.filename) {
-    const base = w.filename.replace('waynelab/', '').split('/').pop();
+  const slugStr = String(w.slug || '').trim();
+  if (slugStr) return slugStr;
+  const filenameStr = String(w.filename || '').trim();
+  if (filenameStr) {
+    const base = filenameStr.replace('waynelab/', '').split('/').pop();
     if (base && base.trim()) return base.trim();
   }
   return w._id ? w._id.toString() : '';
@@ -2090,11 +2111,33 @@ function renderServerGrid(walls, esc) {
 
     const resolutionText = w.resolution || '4K UHD';
 
+    // Determine aspect ratio class dynamically
+    let isPortrait = false;
+    if (w.resolution && w.resolution.includes('x')) {
+      const [width, height] = w.resolution.split('x').map(Number);
+      if (!isNaN(width) && !isNaN(height) && height > width) {
+        isPortrait = true;
+      }
+    }
+    const tagsStr = (Array.isArray(w.tags) ? w.tags : [w.tags]).join(' ').toLowerCase();
+    if (tagsStr.includes('mobile') || tagsStr.includes('phone') || tagsStr.includes('portrait')) {
+      isPortrait = true;
+    }
+    if (w.resolution && w.resolution.includes('x')) {
+      const [width, height] = w.resolution.split('x').map(Number);
+      if (!isNaN(width) && !isNaN(height) && width >= height) {
+        isPortrait = false;
+      }
+    }
+
     return `
-    <div class="coll-feed-item">
+    <div class="coll-feed-item ${isPortrait ? 'portrait-card' : 'landscape-card'}">
       <h3 class="coll-item-title">${esc(cleanTitle)}</h3>
-      <div class="coll-item-img-wrap" onclick="window.location.href='${pageLink}'">
-        <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'">
+      <div class="coll-item-img-wrap">
+        <div class="wall-card-media-wrap">
+          <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}')"></div>
+          <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'">
+        </div>
       </div>
       <div class="coll-item-footer">
         <div class="coll-item-left">
@@ -2301,13 +2344,16 @@ app.get('/collection/:slug', async (req, res) => {
         <body style="background:#0A0A0F;color:#7A7A9A;font-family:sans-serif;text-align:center;padding-top:100px;">
           <h1 style="color:#C9A84C;">Collection Not Found</h1>
           <p>The requested collection could not be found in our records.</p>
-          <a href="/" style="color:#C9A84C;text-decoration:none;">← Return to Vault</a>
+          <a href="/" style="color:#C9A84C;text-decoration:none;">Return to Vault</a>
         </body>
       `);
     }
 
-    // Query matching wallpapers using collection keyword
-    const regex = new RegExp(c.keyword, 'i');
+    // Helper to safely escape keywords for regular expressions
+    const escapeRegex = (string) => String(string || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    
+    // Query matching wallpapers using collection keyword safely
+    const regex = new RegExp(escapeRegex(c.keyword), 'i');
     const walls = await Wallpaper.find({
       $or: [
         { title: regex },
@@ -2321,10 +2367,10 @@ app.get('/collection/:slug', async (req, res) => {
     const canonicalUrl = `${BASE_URL}/collection/${c.slug}`;
     renderCollectionPage(res, walls, c.metaTitle || c.name, c.description, c.description, canonicalUrl, esc);
   } catch (err) {
+    console.error('Error loading collection page:', err);
     res.status(500).send('Error loading collection.');
   }
 });
-
 
 // 404 NOT FOUND FALLBACK (Prevents Soft 404s for invalid pages)
 app.use((req, res) => {
