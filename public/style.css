@@ -1,19 +1,12 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root {
-  --gold: #C9A84C;
-  --gold-l: #E5C158;
-  --gold-d: #A38436;
-  --bg: #030303;
-  --bg2: #0D0D12;
-  --bg3: #12121A;
-  --bg4: #1A1A24;
-  --dim: #7A7A9A;
-  --mid: #A0A0C5;
-  --bright: #F5F5FA;
-  --radius: 8px;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-light: rgba(255, 255, 255, 0.03);
-  --footer-bg: rgba(13, 13, 18, 0.85);
+:root{
+  --gold:#2563EB;--gold-l:#60A5FA;--gold-d:#1D4ED8;
+  --bg:#F3F4F6;--bg2:#FFFFFF;--bg3:#F9FAFB;--bg4:#E5E7EB;
+  --dim:#6B7280;--mid:#374151;--bright:#111827;
+  --radius:8px;
+  --border:rgba(0, 0, 0, 0.08);
+  --border-light:rgba(0, 0, 0, 0.04);
+  --footer-bg:rgba(255, 255, 255, 0.85);
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--bright);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -48,7 +41,7 @@ body::before{content:'';position:fixed;inset:0;
 
 /* ── TOPBAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;
-  background:var(--footer-bg);border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);gap:1rem}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .logo-name{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:.1em}
@@ -246,7 +239,7 @@ body::before{content:'';position:fixed;inset:0;
 .wall-card:hover .card-overlay{opacity:1}
 .card-title{font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;color:var(--bright);margin:0 0 .2rem 0;font-weight:600;line-height:1.3}
 .card-cats{display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.5rem}
-.card-cat-chip{font-size:.6rem;padding:.15rem .4rem;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:20px;color:var(--gold);text-transform:capitalize;}
+.card-cat-chip{font-size:.6rem;padding:.15rem .4rem;background:rgba(96, 165, 250, 0.15);border:1px solid rgba(201,168,76,0.3);border-radius:20px;color:var(--gold);text-transform:capitalize;}
 .card-actions{display:flex;justify-content:center;width:100%;margin-top:0.8rem;transform:translateY(10px);opacity:0;transition:transform .25s ease,opacity .25s ease}
 .wall-card:hover .card-actions{transform:translateY(0);opacity:1}
 .card-btn{clip-path:polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
@@ -798,10 +791,10 @@ a.wall-card, a.collection-showcase-card {
 .wall-card:hover {
   transform: translateY(-8px) scale(1.01) !important;
   border-color: var(--gold-l) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 0 20px rgba(201, 168, 76, 0.15) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 0 20px rgba(96, 165, 250, 0.15) !important;
 }
 .wall-card:hover .card-info-footer {
-  background: rgba(18, 18, 26, 0.85) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
 }
 .wall-card-media-wrap img {
   transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
