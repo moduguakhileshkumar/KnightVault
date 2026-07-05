@@ -79,9 +79,23 @@ body::before{content:'';position:fixed;inset:0;
 .cat-bar::-webkit-scrollbar{display:none}
 .cat-pill{font-family:'Orbitron',sans-serif;font-size:.76rem;letter-spacing:.15em;text-transform:uppercase;
   padding:.3rem 0;border:none;color:var(--dim);
-  background:transparent;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+  background:transparent;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;position:relative}
 .cat-pill:hover{color:var(--bright)}
-.cat-pill.active{color:var(--gold);background:transparent;border-bottom:2px solid var(--gold);font-weight:700;border-radius:0}
+.cat-pill::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--gold);
+  transition: width 0.3s ease, left 0.3s ease;
+}
+.cat-pill:hover::after, .cat-pill.active::after {
+  width: 100%;
+  left: 0;
+}
+.cat-pill.active{color:var(--gold);background:transparent;font-weight:700;border-radius:0}
 
 /* ── TOOLBAR ── */
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 2rem;gap:1rem}
@@ -750,4 +764,58 @@ body::before{content:'';position:fixed;inset:0;
 /* PREVENT UNDERLINE FORMATTING ON GRID LINKS */
 a.wall-card, a.collection-showcase-card {
   text-decoration: none !important;
+}
+
+/* CRAZY UI CARD TRANSITIONS & NEON SHADOW GLOWS */
+.wall-card {
+  transition: transform .3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color .3s, box-shadow .3s !important;
+}
+.wall-card:hover {
+  transform: translateY(-8px) scale(1.01) !important;
+  border-color: var(--gold-l) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 0 20px rgba(96, 165, 250, 0.15) !important;
+}
+.wall-card:hover .card-info-footer {
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+.wall-card-media-wrap img {
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+.wall-card:hover .wall-card-media-wrap img {
+  transform: scale(1.04) !important;
+}
+
+/* PREMIUM GLOWING BADGES */
+.card-badge {
+  background: rgba(17, 24, 39, 0.75) !important;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-radius: 4px;
+  font-size: 0.6rem !important;
+  padding: 3px 8px !important;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  transition: all 0.3s;
+}
+.wall-card:hover .card-badge {
+  border-color: var(--gold-l) !important;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.4);
+}
+
+/* FUTURISTIC SLIM SCROLLBARS */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg4);
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dim);
 }
