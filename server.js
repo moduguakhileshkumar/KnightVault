@@ -330,11 +330,6 @@ async function isRequestAdmin(req) {
   return false;
 }
 
-function syncAdsTxt(pubId) {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-
 // Helper to get a guaranteed non-empty slug for wallpaper links to prevent broken '/w/' URLs
 function getWallpaperSlug(w) {
   if (!w) return '';
@@ -347,6 +342,11 @@ function getWallpaperSlug(w) {
   }
   return w._id ? w._id.toString() : '';
 }
+
+function syncAdsTxt(pubId) {
+  try {
+    const fs = require('fs');
+    const path = require('path');
     const p = path.join(__dirname, 'public', 'ads.txt');
     if (!pubId) {
       if (fs.existsSync(p)) fs.unlinkSync(p);
