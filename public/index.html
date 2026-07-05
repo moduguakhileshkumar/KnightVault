@@ -923,9 +923,12 @@ function renderGrid(walls) {
 
         html += `
     <a class="wall-card" href="${pageLink}">
-      <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
-        onerror="this.style.opacity='0.3'" class="loading"
-        onload="this.classList.remove('loading')">
+      <div class="wall-card-media-wrap">
+        <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
+        <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
+          onerror="this.style.opacity='0.3'" class="loading"
+          onload="this.classList.remove('loading')">
+      </div>
       <div class="card-overlay">
         <h3 class="card-title">${esc(cleanTitle)}</h3>
         <div class="card-cats">
