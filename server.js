@@ -2368,7 +2368,7 @@ app.get('/collection/:slug', async (req, res) => {
     renderCollectionPage(res, walls, c.metaTitle || c.name, c.description, c.description, canonicalUrl, esc);
   } catch (err) {
     console.error('Error loading collection page:', err);
-    res.status(500).send('Error loading collection.');
+    res.status(500).send('Error loading collection: ' + err.message + '\n' + err.stack);
   }
 });
 
