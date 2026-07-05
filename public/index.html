@@ -946,7 +946,7 @@ function renderGrid(walls) {
         <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
         <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
           onerror="this.style.opacity='0.3'" class="loading"
-          onload="this.classList.remove('loading')">
+          onload="this.classList.remove('loading'); if(this.naturalHeight > this.naturalWidth) { this.closest('.wall-card').classList.add('portrait-card'); this.closest('.wall-card').classList.remove('landscape-card'); }">
       </div>
       <div class="card-overlay">
         <h3 class="card-title">${esc(cleanTitle)}</h3>

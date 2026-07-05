@@ -216,7 +216,7 @@ app.get('/', async (req, res) => {
           <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
           <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
             onerror="this.style.opacity='0.3'" class="loading"
-            onload="this.classList.remove('loading')">
+            onload="this.classList.remove('loading'); if(this.naturalHeight > this.naturalWidth) { this.closest('.wall-card').classList.add('portrait-card'); this.closest('.wall-card').classList.remove('landscape-card'); }">
         </div>
         ${w.tags && w.tags.length ? `<div class="card-badge">${esc(w.tags[0])}</div>` : ''}
         ${w.isPaid ? `<div class="card-badge" style="top:auto;bottom:8px;right:8px;background:rgba(201,168,76,0.9);color:#0A0A0F;border:none;">Premium ${w.price}</div>` : ''}
@@ -2136,7 +2136,8 @@ function renderServerGrid(walls, esc) {
       <div class="coll-item-img-wrap">
         <div class="wall-card-media-wrap">
           <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}')"></div>
-          <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'">
+          <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'"
+            onload="if(this.naturalHeight > this.naturalWidth) { this.closest('.coll-feed-item').classList.add('portrait-card'); this.closest('.coll-feed-item').classList.remove('landscape-card'); }">
         </div>
       </div>
       <div class="coll-item-footer">

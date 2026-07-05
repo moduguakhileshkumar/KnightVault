@@ -1,12 +1,19 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --gold:#2563EB;--gold-l:#60A5FA;--gold-d:#1D4ED8;
-  --bg:#F3F4F6;--bg2:#FFFFFF;--bg3:#F9FAFB;--bg4:#E5E7EB;
-  --dim:#6B7280;--mid:#374151;--bright:#111827;
-  --radius:8px;
-  --border:rgba(0, 0, 0, 0.08);
-  --border-light:rgba(0, 0, 0, 0.04);
-  --footer-bg:rgba(255, 255, 255, 0.85);
+:root {
+  --gold: #FFE81F;
+  --gold-l: #FFFF55;
+  --gold-d: #D4C000;
+  --bg: #000000;
+  --bg2: #080808;
+  --bg3: #111111;
+  --bg4: #1A1A1A;
+  --dim: #555555;
+  --mid: #888888;
+  --bright: #EAEAEA;
+  --radius: 0px;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --footer-bg: rgba(8, 8, 8, 0.85);
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--bright);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -41,7 +48,7 @@ body::before{content:'';position:fixed;inset:0;
 
 /* ── TOPBAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;
-  background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);
+  background:var(--footer-bg);border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);gap:1rem}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .logo-name{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--gold);letter-spacing:.1em}
@@ -108,7 +115,7 @@ body::before{content:'';position:fixed;inset:0;
 .main{flex:1;padding:1.2rem 2rem 3rem}
 .wall-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;width:100%}
 
-.wall-card:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 12px 32px rgba(0,0,0,0.12), 0 0 15px rgba(37,99,235,0.06)}
+.wall-card:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 12px 32px rgba(0,0,0,0.12), 0 0 15px rgba(255, 232, 31, 0.12)}
 
 .wall-card:hover img{transform:scale(1.03)}
 
@@ -794,7 +801,7 @@ a.wall-card, a.collection-showcase-card {
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 0 20px rgba(96, 165, 250, 0.15) !important;
 }
 .wall-card:hover .card-info-footer {
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgba(17, 17, 17, 0.85) !important;
 }
 .wall-card-media-wrap img {
   transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
