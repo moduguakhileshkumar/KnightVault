@@ -303,6 +303,142 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.post('/api/pinterest/selective-repin', async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    if (!settings || !settings.pinterestAccessToken || !settings.pinterestBoardId) {
+      return res.status(400).json({ error: 'Pinterest credentials not configured' });
+    }
+    
+    res.json({ success: true, message: 'Selective purge and repin process started in the background.' });
+    
+    // Background execution
+    (async () => {
+      console.log('[Pinterest Selective] Starting background selective purge...');
+      const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
+      let bookmark = null;
+      let checkedCount = 0;
+      let deletedCount = 0;
+      let keptCount = 0;
+      const toRepinSlugs = [];
+      
+      const endDateStr = new Date().toISOString().split('T')[0];
+      const startDateStr = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      try {
+        do {
+          let url = `${baseUrl}/v5/boards/${settings.pinterestBoardId}/pins?page_size=100`;
+          if (bookmark) url += `&bookmark=${bookmark}`;
+          
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${settings.pinterestAccessToken}` }
+          });
+          
+          if (!response.ok) {
+            const txt = await response.text();
+            console.error(`[Pinterest Selective] Failed to fetch pins: ${txt}`);
+            break;
+          }
+          
+          const data = await response.json();
+          const pins = data.items || [];
+          bookmark = data.bookmark || null;
+          
+          for (const pin of pins) {
+            const link = pin.link || '';
+            if (link.includes('waynelab.studio') || link.includes('onrender.com')) {
+              checkedCount++;
+              
+              // Fetch stats/analytics for this pin
+              const analyticsUrl = `${baseUrl}/v5/pins/${pin.id}/analytics?start_date=${startDateStr}&end_date=${endDateStr}&metric_types=IMPRESSION,OUTBOUND_CLICK`;
+              const analyticsResponse = await fetch(analyticsUrl, {
+                headers: { 'Authorization': `Bearer ${settings.pinterestAccessToken}` }
+              });
+              
+              let isNegligible = true;
+              let impressions = 0;
+              let clicks = 0;
+              
+              if (analyticsResponse.ok) {
+                const analyticsData = await analyticsResponse.json();
+                const metrics = (analyticsData.all && analyticsData.all.summary_metrics) || {};
+                impressions = metrics.IMPRESSION || 0;
+                clicks = metrics.OUTBOUND_CLICK || 0;
+                
+                // Keep the pin if it has >= 50 impressions OR >= 2 outbound clicks
+                if (impressions >= 50 || clicks >= 2) {
+                  isNegligible = false;
+                }
+              } else {
+                // If we fail to fetch stats, default to keeping it safe
+                isNegligible = false;
+              }
+              
+              if (isNegligible) {
+                console.log(`[Pinterest Selective] Pin ${pin.id} is negligible (Views: ${impressions}, Clicks: ${clicks}). Deleting...`);
+                const delResponse = await fetch(`${baseUrl}/v5/pins/${pin.id}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${settings.pinterestAccessToken}` }
+                });
+                
+                if (delResponse.ok) {
+                  deletedCount++;
+                  try {
+                    const urlObj = new URL(link);
+                    const slug = urlObj.pathname.split('/').pop();
+                    if (slug && !toRepinSlugs.includes(slug)) {
+                      toRepinSlugs.push(slug);
+                    }
+                  } catch (e) {}
+                }
+              } else {
+                keptCount++;
+                console.log(`[Pinterest Selective] Keeping active pin ${pin.id} (Views: ${impressions}, Clicks: ${clicks})`);
+              }
+              
+              // 600ms delay to prevent rate limit
+              await new Promise(r => setTimeout(r, 600));
+            }
+          }
+        } while (bookmark);
+        
+        console.log(`[Pinterest Selective] Purge finished. Checked: ${checkedCount}, Kept: ${keptCount}, Deleted: ${deletedCount}.`);
+      } catch (err) {
+        console.error('[Pinterest Selective] Exception during purge:', err.message);
+      }
+      
+      // Delay before starting repin
+      await new Promise(r => setTimeout(r, 5000));
+      
+      // Repin the deleted ones
+      if (toRepinSlugs.length > 0) {
+        console.log(`[Pinterest Selective] Repinning ${toRepinSlugs.length} deleted wallpapers...`);
+        for (const slug of toRepinSlugs) {
+          try {
+            const wall = await Wallpaper.findOne({
+              $or: [
+                { slug },
+                { filename: `waynelab/${slug}` }
+              ]
+            });
+            if (wall) {
+              console.log(`[Pinterest Selective] Pinning: ${wall.title}`);
+              await postToPinterest(wall, settings);
+            }
+          } catch (e) {
+            console.error(`[Pinterest Selective] Exception repinning slug ${slug}:`, e.message);
+          }
+          // 4 second delay
+          await new Promise(r => setTimeout(r, 4000));
+        }
+        console.log('[Pinterest Selective] Repinning completed.');
+      }
+    })();
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
