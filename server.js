@@ -303,6 +303,95 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.post('/api/pinterest/purge-and-repin-25', async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    if (!settings || !settings.pinterestAccessToken || !settings.pinterestBoardId) {
+      return res.status(400).json({ error: 'Pinterest credentials not configured' });
+    }
+    
+    res.json({ success: true, message: 'Purge and repin process started in the background.' });
+    
+    // Background execution
+    (async () => {
+      console.log('[Pinterest Purge] Starting background purge of old pins...');
+      const baseUrl = settings.pinterestSandbox ? 'https://api-sandbox.pinterest.com' : 'https://api.pinterest.com';
+      let bookmark = null;
+      let deletedCount = 0;
+      
+      try {
+        do {
+          let url = `${baseUrl}/v5/boards/${settings.pinterestBoardId}/pins?page_size=100`;
+          if (bookmark) url += `&bookmark=${bookmark}`;
+          
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${settings.pinterestAccessToken}` }
+          });
+          
+          if (!response.ok) {
+            const txt = await response.text();
+            console.error(`[Pinterest Purge] Failed to fetch pins: ${txt}`);
+            break;
+          }
+          
+          const data = await response.json();
+          const pins = data.items || [];
+          bookmark = data.bookmark || null;
+          
+          for (const pin of pins) {
+            const link = pin.link || '';
+            if (link.includes('waynelab.studio') || link.includes('onrender.com')) {
+              console.log(`[Pinterest Purge] Deleting pin ${pin.id} with link: ${link}`);
+              const delResponse = await fetch(`${baseUrl}/v5/pins/${pin.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${settings.pinterestAccessToken}` }
+              });
+              if (delResponse.ok) {
+                deletedCount++;
+                console.log(`[Pinterest Purge] Deleted: ${pin.id}`);
+              } else {
+                const errTxt = await delResponse.text();
+                console.error(`[Pinterest Purge] Failed to delete ${pin.id}: ${errTxt}`);
+              }
+              // 500ms delay to prevent delete rate limiting
+              await new Promise(r => setTimeout(r, 500));
+            }
+          }
+        } while (bookmark);
+        
+        console.log(`[Pinterest Purge] Finished board purge. Deleted ${deletedCount} pins.`);
+      } catch (err) {
+        console.error('[Pinterest Purge] Exception during board purge:', err.message);
+      }
+      
+      // Delay before starting repin
+      await new Promise(r => setTimeout(r, 5000));
+      
+      // Post the 25 most recent wallpapers
+      console.log('[Pinterest Repin] Starting background repinning of 25 wallpapers...');
+      const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(25);
+      for (const wall of walls) {
+        try {
+          console.log(`[Pinterest Repin] Pinning: ${wall.title}`);
+          const result = await postToPinterest(wall, settings);
+          if (result && result.success) {
+            console.log(`[Pinterest Repin] Success: ${wall.title}`);
+          } else {
+            console.error(`[Pinterest Repin] Fail: ${wall.title} - ${result ? result.error : 'Unknown error'}`);
+          }
+        } catch (e) {
+          console.error(`[Pinterest Repin] Exception for ${wall.title}:`, e.message);
+        }
+        // 4 second delay
+        await new Promise(r => setTimeout(r, 4000));
+      }
+      console.log('[Pinterest Repin] Finished repinning process.');
+    })();
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
