@@ -303,42 +303,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.post('/api/pinterest/repin-recent-25-temp', async (req, res) => {
-  try {
-    const settings = await Settings.findOne();
-    if (!settings || !settings.pinterestAccessToken || !settings.pinterestBoardId) {
-      return res.status(400).json({ error: 'Pinterest credentials not configured' });
-    }
-    
-    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(25);
-    
-    res.json({ success: true, message: `Started repinning ${walls.length} wallpapers in the background.` });
-    
-    // Background execution
-    (async () => {
-      console.log(`[Pinterest Repin] Starting background repinning of ${walls.length} wallpapers...`);
-      for (const wall of walls) {
-        try {
-          console.log(`[Pinterest Repin] Pinning: ${wall.title}`);
-          const result = await postToPinterest(wall, settings);
-          if (result && result.success) {
-            console.log(`[Pinterest Repin] Success: ${wall.title}`);
-          } else {
-            console.error(`[Pinterest Repin] Fail: ${wall.title} - ${result ? result.error : 'Unknown error'}`);
-          }
-        } catch (e) {
-          console.error(`[Pinterest Repin] Exception for ${wall.title}:`, e.message);
-        }
-        // 4 second delay to avoid rate limit
-        await new Promise(r => setTimeout(r, 4000));
-      }
-      console.log('[Pinterest Repin] Background repinning finished.');
-    })();
-  } catch(err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
