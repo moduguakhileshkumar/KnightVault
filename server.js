@@ -86,8 +86,13 @@ app.get('/', async (req, res) => {
     const indexPath = path.join(__dirname, 'public', 'index.html');
     let html = fs.readFileSync(indexPath, 'utf8');
 
-    // Query first 24 wallpapers
-    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(24);
+    // Query wallpapers with pagination support
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 24;
+    const skip = (page - 1) * limit;
+    const walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).skip(skip).limit(limit);
+    const totalWalls = await Wallpaper.countDocuments({});
+    const pages = Math.ceil(totalWalls / limit);
     
     // Query featured collections for SSR
     let collectionsHtml = '';
@@ -274,7 +279,23 @@ app.get('/', async (req, res) => {
       <link rel="image_src" href="${esc(previewOg)}">\n`;
     }
     
-    html = html.replace('</head>', `s${verificationTag}${ogImageTags}${schemaScript}\n</head>`);
+    // Pre-render pagination HTML for crawler discovery
+    let paginationHtml = '';
+    if (pages > 1) {
+      if (page > 1) paginationHtml += `<a href="/?page=${page-1}" class="page-btn">Prev</a>`;
+      for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i-page) <= 2) {
+          paginationHtml += `<a href="/?page=${i}" class="page-btn ${i===page?'active':''}">${i}</a>`;
+        } else if (Math.abs(i-page) === 3) {
+          paginationHtml += `<span style="color:var(--dim);padding:0 .3rem">...</span>`;
+        }
+      }
+      if (page < pages) paginationHtml += `<a href="/?page=${page+1}" class="page-btn">Next</a>`;
+    }
+    html = html.replace('<div class="pagination" id="pagination"></div>', `<div class="pagination" id="pagination">${paginationHtml}</div>`);
+
+    // Clean up head injection typo 's' and replace head
+    html = html.replace('</head>', `${verificationTag}${ogImageTags}${schemaScript}\n</head>`);
     res.send(html);
   } catch (err) {
     console.error('Error rendering homepage SSR:', err);
@@ -1348,57 +1369,29 @@ async function postToPinterest(wall, settings) {
     }
 
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
+    const cleanTitle = wall.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
       // 1. Mild blur to protect the uncompressed master and drive CTR
       const blurEffect = 'e_blur:250';
-      // 2. Elegant small corner watermark
-      const cornerWatermark = 'co_rgb:ffffff,l_text:Arial_30:WAYNELAB.STUDIO,g_north_west,x_30,y_30,o_30';
+      // 2. Clean, premium bottom multi-line text label with black background block
+      const cleanUpperTitle = encodeURIComponent(cleanTitle.toUpperCase().replace(/,/g, ' '));
+      const watermarkText = `⚡%20${cleanUpperTitle}%250A4K%20WALLPAPER%20COLLECTION%250AExplore%20Collection%20->`;
+      const bottomLabelWatermark = `co_rgb:ffffff,b_rgb:000000b0,l_text:Arial_24_bold_center:${watermarkText},g_south,y_40`;
       
-      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/`);
+      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${bottomLabelWatermark}/`);
     }
 
-    // Pinterest Search Keyword Booster
-    let keywordSuffix = ' | Aesthetic Background HD';
-    if (wall.category && wall.category.length > 0) {
-      const mainCat = wall.category[0].toLowerCase();
-      if (mainCat === 'anime') {
-        keywordSuffix = ' | Anime Wallpaper HD & Lockscreen';
-      } else if (mainCat === 'gaming') {
-        keywordSuffix = ' | Gaming Wallpaper 4K & Background';
-      } else if (mainCat === 'minimalist') {
-        keywordSuffix = ' | Minimalist Wallpaper & Desktop Background';
-      } else if (mainCat === 'dark') {
-        keywordSuffix = ' | Dark Aesthetic Wallpaper & Lockscreen';
-      } else if (mainCat === 'car' || mainCat === 'cars') {
-        keywordSuffix = ' | Cool Car Wallpaper 4K & Background';
-      } else if (mainCat === 'nature' || mainCat === 'scenery') {
-        keywordSuffix = ' | Aesthetic Nature Wallpaper HD';
-      }
-    }
-    
-    let pinTitle = wall.title;
-    // Strip extensions and clean up title
-    pinTitle = pinTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
-                       .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
-                       .replace(/_/g, ' ')
-                       .trim();
-    
-    let categoryLabel = '';
-    if (wall.category && wall.category.length > 0) {
-      const cat = wall.category[0];
-      categoryLabel = ` ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
-    }
-    
-    pinTitle = `${pinTitle} - Free 4K${categoryLabel} Wallpaper${keywordSuffix}`;
+    // Clean up title for Pinterest Pin Title
+    let pinTitle = `⚡ ${cleanTitle.toUpperCase()} - 4K Wallpaper Collection`;
     if (pinTitle.length > 100) {
       pinTitle = pinTitle.substring(0, 97) + '...';
     }
 
-    // Pinterest Description Optimization
-    const emojiDown = '\uD83D\uDC47';
-    const cleanTitle = wall.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
-    let pinDescription = `Download clean, unblurred 4K ${cleanTitle} Wallpaper ${emojiDown} Tap Visit Site to get the uncompressed full resolution download for free!\n\n`;
+    // Pinterest Description Optimization (Soft, non-promo tone)
+    const emojiSparkles = '⚡';
+    let pinDescription = `${emojiSparkles} ${cleanTitle.toUpperCase()} - 4K Wallpaper Collection.\n`;
+    pinDescription += `Explore the collection to find more high-quality HD & 4K wallpapers for desktop, mobile, and lockscreen backgrounds. Explore Collection ->\n\n`;
     
     let hashtags = ['#4kwallpaper', '#wallpaper', '#backgrounds', '#aesthetic'];
     if (wall.category) {
@@ -1800,7 +1793,7 @@ async function submitToIndexNow(pathOrSlug) {
     });
     
     if (response.ok) {
-      console.log(`[IndexNow] Successfully submitted URL for ${slug}`);
+      console.log(`[IndexNow] Successfully submitted URL for ${pathOrSlug}`);
     } else {
       const txt = await response.text();
       console.error(`[IndexNow] Submission failed (status ${response.status}): ${txt}`);
