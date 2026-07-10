@@ -1376,29 +1376,57 @@ async function postToPinterest(wall, settings) {
     }
 
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
-    const cleanTitle = wall.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
       // 1. Mild blur to protect the uncompressed master and drive CTR
       const blurEffect = 'e_blur:250';
-      // 2. Clean, premium bottom multi-line text label with black background block
-      const cleanUpperTitle = encodeURIComponent(cleanTitle.toUpperCase().replace(/,/g, ' '));
-      const watermarkText = `⚡%20${cleanUpperTitle}%250A4K%20WALLPAPER%20COLLECTION%250AExplore%20Collection%20->`;
-      const bottomLabelWatermark = `co_rgb:ffffff,b_rgb:000000b0,l_text:Arial_24_bold_center:${watermarkText},g_south,y_40`;
+      // 2. Elegant small corner watermark
+      const cornerWatermark = 'co_rgb:ffffff,l_text:Arial_30:WAYNELAB.STUDIO,g_north_west,x_30,y_30,o_30';
       
-      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${bottomLabelWatermark}/`);
+      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/`);
     }
 
-    // Clean up title for Pinterest Pin Title
-    let pinTitle = `⚡ ${cleanTitle.toUpperCase()} - 4K Wallpaper Collection`;
+    // Pinterest Search Keyword Booster
+    let keywordSuffix = ' | Aesthetic Background HD';
+    if (wall.category && wall.category.length > 0) {
+      const mainCat = wall.category[0].toLowerCase();
+      if (mainCat === 'anime') {
+        keywordSuffix = ' | Anime Wallpaper HD & Lockscreen';
+      } else if (mainCat === 'gaming') {
+        keywordSuffix = ' | Gaming Wallpaper 4K & Background';
+      } else if (mainCat === 'minimalist') {
+        keywordSuffix = ' | Minimalist Wallpaper & Desktop Background';
+      } else if (mainCat === 'dark') {
+        keywordSuffix = ' | Dark Aesthetic Wallpaper & Lockscreen';
+      } else if (mainCat === 'car' || mainCat === 'cars') {
+        keywordSuffix = ' | Cool Car Wallpaper 4K & Background';
+      } else if (mainCat === 'nature' || mainCat === 'scenery') {
+        keywordSuffix = ' | Aesthetic Nature Wallpaper HD';
+      }
+    }
+    
+    let pinTitle = wall.title;
+    // Strip extensions and clean up title
+    pinTitle = pinTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
+                       .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
+                       .replace(/_/g, ' ')
+                       .trim();
+    
+    let categoryLabel = '';
+    if (wall.category && wall.category.length > 0) {
+      const cat = wall.category[0];
+      categoryLabel = ` ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
+    }
+    
+    pinTitle = `${pinTitle} - Free 4K${categoryLabel} Wallpaper${keywordSuffix}`;
     if (pinTitle.length > 100) {
       pinTitle = pinTitle.substring(0, 97) + '...';
     }
 
-    // Pinterest Description Optimization (Soft, non-promo tone)
-    const emojiSparkles = '⚡';
-    let pinDescription = `${emojiSparkles} ${cleanTitle.toUpperCase()} - 4K Wallpaper Collection.\n`;
-    pinDescription += `Explore the collection to find more high-quality HD & 4K wallpapers for desktop, mobile, and lockscreen backgrounds. Explore Collection ->\n\n`;
+    // Pinterest Description Optimization
+    const emojiDown = '\uD83D\uDC47';
+    const cleanTitle = wall.title.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '').replace(/_/g, ' ').trim();
+    let pinDescription = `Download clean, unblurred 4K ${cleanTitle} Wallpaper ${emojiDown} Tap Visit Site to get the uncompressed full resolution download for free!\n\n`;
     
     let hashtags = ['#4kwallpaper', '#wallpaper', '#backgrounds', '#aesthetic'];
     if (wall.category) {
