@@ -2389,16 +2389,35 @@ app.get('/collection/:slug', async (req, res) => {
     const coreTerms = words.filter(w => !generic.has(w));
     const termsToSearch = coreTerms.length > 0 ? coreTerms : words;
     
+    // Expand search terms to handle typos, splits, and spaces (e.g. chainsawman vs chainsaw man vs chinsawman)
+    function expandSearchTerm(term) {
+      const t = term.toLowerCase();
+      const patterns = [t];
+      if (t === 'chainsawman' || t === 'chainsaw' || t === 'chinsawman') {
+        patterns.push('chainsaw', 'chainsawman', 'chinsawman', 'chainsaw\\s+man', 'chinsaw\\s+man');
+      }
+      if (t === 'demonslayer') {
+        patterns.push('demon', 'slayer', 'demonslayer', 'demon\\s+slayer');
+      }
+      if (t === 'solo' || t === 'leveling' || t === 'sololeveling') {
+        patterns.push('solo', 'leveling', 'sololeveling', 'solo\\s+leveling');
+      }
+      return [...new Set(patterns)];
+    }
+
     // Build query conditions: wallpapers must match all search terms
     const queryConditions = termsToSearch.map(term => {
-      const termRegex = new RegExp(escapeRegex(term), 'i');
-      return {
-        $or: [
-          { title: termRegex },
-          { category: termRegex },
-          { tags: termRegex }
-        ]
-      };
+      const patterns = expandSearchTerm(term);
+      const orConditions = [];
+      patterns.forEach(pat => {
+        const patRegex = new RegExp(escapeRegex(pat), 'i');
+        orConditions.push(
+          { title: patRegex },
+          { category: patRegex },
+          { tags: patRegex }
+        );
+      });
+      return { $or: orConditions };
     });
     
     const walls = await Wallpaper.find({
