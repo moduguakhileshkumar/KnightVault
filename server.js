@@ -303,37 +303,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/api/diagnostics/collections-check-temp', async (req, res) => {
-  try {
-    const colls = await Collection.find({});
-    const report = [];
-    
-    for (const c of colls) {
-      const escapeRegex = (string) => String(string || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(escapeRegex(c.keyword), 'i');
-      
-      const count = await Wallpaper.countDocuments({
-        $or: [
-          { title: regex },
-          { category: regex },
-          { tags: regex }
-        ]
-      });
-      
-      report.push({
-        name: c.name,
-        slug: c.slug,
-        keyword: c.keyword,
-        matches: count
-      });
-    }
-    
-    res.json({ success: true, report });
-  } catch(err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
@@ -2409,17 +2378,31 @@ app.get('/collection/:slug', async (req, res) => {
       `);
     }
 
-    // Helper to safely escape keywords for regular expressions
-    const escapeRegex = (string) => String(string || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+// Helper to safely escape keywords for regular expressions
+    const escapeRegex = (string) => String(string || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
     
-    // Query matching wallpapers using collection keyword safely
-    const regex = new RegExp(escapeRegex(c.keyword), 'i');
+    // Extract core search terms (excluding generic SEO words like '4k', 'wallpapers', etc.)
+    const rawKeyword = String(c.keyword || '').trim().toLowerCase();
+    const cleanKeyword = rawKeyword.replace(/[-_]/g, ' ');
+    const words = cleanKeyword.split(/\s+/).filter(Boolean);
+    const generic = new Set(['4k', 'uhd', 'hd', 'wallpaper', 'wallpapers', 'collection', 'best', 'top', 'cool', 'background', 'backgrounds', 'theme', 'download', 'free', 'of', 'the']);
+    const coreTerms = words.filter(w => !generic.has(w));
+    const termsToSearch = coreTerms.length > 0 ? coreTerms : words;
+    
+    // Build query conditions: wallpapers must match all search terms
+    const queryConditions = termsToSearch.map(term => {
+      const termRegex = new RegExp(escapeRegex(term), 'i');
+      return {
+        $or: [
+          { title: termRegex },
+          { category: termRegex },
+          { tags: termRegex }
+        ]
+      };
+    });
+    
     const walls = await Wallpaper.find({
-      $or: [
-        { title: regex },
-        { category: regex },
-        { tags: regex }
-      ]
+      $and: queryConditions
     }).sort({ uploadedAt: -1 });
 
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
