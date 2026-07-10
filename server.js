@@ -303,6 +303,54 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/api/diagnostics/seo-check-temp', async (req, res) => {
+  try {
+    const total = await Wallpaper.countDocuments({});
+    const totalColls = await Collection.countDocuments({});
+    
+    const walls = await Wallpaper.find({});
+    const slugs = new Set();
+    const duplicateSlugs = [];
+    const emptySlugs = [];
+    const dotSlugs = [];
+    
+    walls.forEach(w => {
+      const s = w.slug;
+      if (!s) {
+        emptySlugs.push({ id: w._id, title: w.title });
+      } else {
+        if (slugs.has(s)) {
+          duplicateSlugs.push({ id: w._id, slug: s, title: w.title });
+        }
+        slugs.add(s);
+        if (s.includes('.')) {
+          dotSlugs.push({ id: w._id, slug: s, title: w.title });
+        }
+      }
+    });
+    
+    const sampleUrls = walls.slice(0, 10).map(w => {
+      const slug = w.slug || w.filename.replace('waynelab/', '');
+      return `${BASE_URL}/w/${encodeURIComponent(slug)}`;
+    });
+    
+    res.json({
+      success: true,
+      totalWallpapers: total,
+      totalCollections: totalColls,
+      emptySlugsCount: emptySlugs.length,
+      emptySlugsList: emptySlugs.slice(0, 10),
+      duplicateSlugsCount: duplicateSlugs.length,
+      duplicateSlugsList: duplicateSlugs.slice(0, 10),
+      dotSlugsCount: dotSlugs.length,
+      dotSlugsList: dotSlugs,
+      sampleSitemapUrls: sampleUrls
+    });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
