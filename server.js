@@ -303,6 +303,37 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/api/diagnostics/collections-check-temp', async (req, res) => {
+  try {
+    const colls = await Collection.find({});
+    const report = [];
+    
+    for (const c of colls) {
+      const escapeRegex = (string) => String(string || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(escapeRegex(c.keyword), 'i');
+      
+      const count = await Wallpaper.countDocuments({
+        $or: [
+          { title: regex },
+          { category: regex },
+          { tags: regex }
+        ]
+      });
+      
+      report.push({
+        name: c.name,
+        slug: c.slug,
+        keyword: c.keyword,
+        matches: count
+      });
+    }
+    
+    res.json({ success: true, report });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
