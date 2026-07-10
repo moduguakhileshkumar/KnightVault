@@ -2161,12 +2161,11 @@ function renderServerGrid(walls, esc) {
     return `
     <div class="coll-feed-item ${isPortrait ? 'portrait-card' : 'landscape-card'}">
       <h3 class="coll-item-title">${esc(cleanTitle)}</h3>
-      <div class="coll-item-img-wrap">
-        <div class="wall-card-media-wrap">
-          <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}')"></div>
-          <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'"
-            onload="if(this.naturalHeight > this.naturalWidth) { this.closest('.coll-feed-item').classList.add('portrait-card'); this.closest('.coll-feed-item').classList.remove('landscape-card'); }">
-        </div>
+      <div class="coll-item-img-wrap" style="position: relative; aspect-ratio: 1.5 / 1; overflow: hidden; background: #050508; width: 100%;">
+        <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}'); position: absolute; inset: -15px; background-size: cover; background-position: center; filter: blur(12px) brightness(0.6); z-index: 1; display: ${isPortrait ? 'block' : 'none'};"></div>
+        <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'"
+          style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: ${isPortrait ? 'contain' : 'cover'}; z-index: 2;"
+          onload="const card = this.closest('.coll-feed-item'); if(this.naturalHeight > this.naturalWidth) { card.classList.add('portrait-card'); card.classList.remove('landscape-card'); const blur = card.querySelector('.blurred-bg'); if(blur) blur.style.display='block'; this.style.objectFit='contain'; }">
       </div>
       <div class="coll-item-footer">
         <div class="coll-item-left">
