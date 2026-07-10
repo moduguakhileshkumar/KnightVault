@@ -303,54 +303,6 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/api/diagnostics/seo-check-temp', async (req, res) => {
-  try {
-    const total = await Wallpaper.countDocuments({});
-    const totalColls = await Collection.countDocuments({});
-    
-    const walls = await Wallpaper.find({});
-    const slugs = new Set();
-    const duplicateSlugs = [];
-    const emptySlugs = [];
-    const dotSlugs = [];
-    
-    walls.forEach(w => {
-      const s = w.slug;
-      if (!s) {
-        emptySlugs.push({ id: w._id, title: w.title });
-      } else {
-        if (slugs.has(s)) {
-          duplicateSlugs.push({ id: w._id, slug: s, title: w.title });
-        }
-        slugs.add(s);
-        if (s.includes('.')) {
-          dotSlugs.push({ id: w._id, slug: s, title: w.title });
-        }
-      }
-    });
-    
-    const sampleUrls = walls.slice(0, 10).map(w => {
-      const slug = w.slug || w.filename.replace('waynelab/', '');
-      return `${BASE_URL}/w/${encodeURIComponent(slug)}`;
-    });
-    
-    res.json({
-      success: true,
-      totalWallpapers: total,
-      totalCollections: totalColls,
-      emptySlugsCount: emptySlugs.length,
-      emptySlugsList: emptySlugs.slice(0, 10),
-      duplicateSlugsCount: duplicateSlugs.length,
-      duplicateSlugsList: duplicateSlugs.slice(0, 10),
-      dotSlugsCount: dotSlugs.length,
-      dotSlugsList: dotSlugs,
-      sampleSitemapUrls: sampleUrls
-    });
-  } catch(err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────
@@ -1238,6 +1190,9 @@ app.get('/w/:slugOrId', async (req, res) => {
                 </div>
                 
 <!-- Description section removed -->
+                <p class="wp-description" style="font-size: 0.9rem; line-height: 1.6; color: var(--dim); max-width: 600px; margin: 1.5rem auto 0; text-align: center;">
+                  Download the uncompressed <strong>${esc(w.title)}</strong> wallpaper for free. This high-quality artwork is available in <strong>${esc(w.resolution || '4K UHD')}</strong> resolution, perfect for customizing your ${categoryArr.length ? `<strong>${esc(categoryArr.join(', '))}</strong>` : 'desktop and mobile'} screens. Personalize your device with this stunning background today.
+                </p>
 
                 <div class="wp-cta-section">
                   ${w.isPaid 
@@ -1384,6 +1339,10 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
             ? `<a href="${BASE_URL}/w/${encodeURIComponent(w.slug)}" class="btn">👑 Premium ${w.price}</a>`
             : `<a href="${BASE_URL}/api/download-direct/${encodeURIComponent(w.slug)}" class="btn">⬇ Download Now</a>`
           }
+          
+          <p style="font-size: 0.9rem; line-height: 1.6; color: #7A7A9A; margin-top: 1.8rem; text-align: center; max-width: 500px; margin-left: auto; margin-right: auto;">
+            Download the uncompressed <strong>${esc(w.title)}</strong> wallpaper for free. This high-quality artwork is available in <strong>${esc(w.resolution || '4K UHD')}</strong> resolution, perfect for customizing your ${(Array.isArray(w.category) && w.category.length > 0) ? `<strong>${esc(w.category.join(', '))}</strong>` : 'desktop and mobile'} screens. Personalize your device with this stunning background today.
+          </p>
         </main>
         <footer class="main-footer">
           <div class="main-footer-links">
