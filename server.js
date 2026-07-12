@@ -2,6 +2,57 @@ require('dotenv').config();
 const express    = require('express');
 const compression = require('compression');
 const mongoose   = require('mongoose');
+
+// Helper to get rich, unique descriptions for collection pages
+function getCollectionIntro(slug, name) {
+  const intros = {
+    'one-piece-4k-wallpapers': `
+      Welcome to the ultimate One Piece 4K wallpapers collection! Explore high-resolution artwork featuring your favorite Straw Hat Pirates, including Monkey D. Luffy, Roronoa Zoro, Vinsmoke Sanji, Nami, and Nico Robin. Download stunning, uncompressed backgrounds showcasing iconic moments from the Wano Country Arc, Marineford, and Egghead Island.
+      
+      Whether you are looking for Luffy's legendary Gear 5 form (Sun God Nika), Zoro's three-sword style techniques, or epic battle scenes with Shanks and Kaido, our hand-curated catalog has you covered. All wallpapers are optimized for ultra-high-definition desktop screens and high-end mobile displays.
+    `,
+    'solo-leveling-4k-wallpapers': `
+      Immerse yourself in the Shadow Monarch's realm with our premium Solo Leveling 4K wallpapers collection. Featuring Sung Jinwoo, the Shadow Army, Igris, Beru, and other S-Rank Hunters, these backgrounds bring the intensity and dark fantasy aesthetic of the hit anime and webtoon straight to your screen.
+      
+      Discover epic battle illustrations, glowing neon weapon details, and dark minimalist backgrounds perfect for AMOLED mobile lock screens and high-resolution gaming monitors. Elevate your device's look with the ultimate power of the Monarch of Shadows today.
+    `,
+    'demon-slayer-4k-collection': `
+      Step into the world of the Demon Slayer Corps with our hand-picked Demon Slayer 4K wallpapers collection. Featuring breathtaking action shots of Tanjiro Kamado, Nezuko, Zenitsu Agatsuma, and Inosuke Hashibira, this collection highlights the stunning art style and animation of Ufotable.
+      
+      Showcase the power of the Hashira, including Kyojuro Rengoku (Flame Hashira), Giyu Tomioka (Water Hashira), and Tengen Uzui (Sound Hashira). Browse high-quality desktop backgrounds and mobile screens depicting epic encounters, breath techniques, and artistic character portraits.
+    `,
+    'best-black-clover-wallpapers': `
+      Unleash your inner magic with the best Black Clover wallpapers in full 4K and HD. Featuring Asta, Yuno, Noelle Silva, and the members of the Black Bulls squad, this collection captures the spirit of the Clover Kingdom and its fiercest battles.
+      
+      Download high-quality wallpaper backgrounds showcasing Asta's Anti-Magic demon forms, Yuno's Spirit Dive, and the legendary Magic Knight Captains like Yami Sukehiro. Perfect for personalizing your desktop monitor, phone home screen, or tablet.
+    `,
+    'attack-on-titan-4k-wallpapers': `
+      Dedicate your heart with our Attack on Titan (Shingeki no Kyojin) 4K wallpapers collection. Relive the epic dark fantasy saga with high-resolution backgrounds featuring Eren Yeager's Attack Titan form, Mikasa Ackerman, Armin Arlert, and the legendary Captain Levi.
+      
+      From the colossal walls of Paradis Island to the intense Scout Regiment battles against the Titans, these hand-selected artworks are optimized to look incredibly crisp on both desktop monitors and high-end smartphones.
+    `,
+    'chainsawman-4k-wallpapers': `
+      Enter the gritty and chaotic universe of Tatsuki Fujimoto's masterpiece with our Chainsaw Man 4K wallpapers collection. Featuring Denji in his fully transformed chainsaw devil state, Makima, Power, Aki Hayakawa, and the adorable Pochita, these backgrounds bring a unique aesthetic to your device.
+      
+      Browse through vibrant artistic designs, dark moody wallpapers, and action-packed battle sequences. Find the perfect high-quality backdrop for your gaming PC or lock screen, optimized for maximum detail.
+    `,
+    'top-gear-5-wallpapers': `
+      Celebrate the peak of Monkey D. Luffy's power with our Top Gear 5 wallpapers collection. Dedicated entirely to Luffy's legendary Gear 5 transformation (Sun God Nika) from One Piece, these high-resolution 4K and HD backgrounds showcase the comical, free-spirited, and god-like awakened state of the future Pirate King.
+      
+      Download uncompressed wallpapers featuring Luffy's white hair, glowing eyes, and cartoonish battle actions. Perfect for fans looking to bring the absolute peak of anime hype to their desktop and mobile screens.
+    `
+  };
+  
+  const text = intros[slug] || `
+    Browse our hand-curated collection of premium ${name} wallpapers. This collection features high-quality HD and 4K UHD backgrounds designed to make your device's screen look stunning and unique.
+    
+    All wallpapers in this vault are available for free download, optimized for desktop monitors, laptops, and mobile screens. Personalize your setup and find your next favorite background today.
+  `;
+  
+  return text.trim().split('\n\n').map(para => `<p class="coll-desc" style="margin-bottom: 1.2rem; text-align: left; max-width: 750px; margin-left: auto; margin-right: auto;">${para.trim()}</p>`).join('');
+}
+
+
 const multer     = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -1115,12 +1166,41 @@ app.get('/w/:slugOrId', async (req, res) => {
         <script type="application/ld+json">
         {
           "@context": "https://schema.org",
-          "@type": "ImageObject",
-          "name": "${esc(w.title)}",
-          "caption": "${esc(w.title)} High Quality Wallpaper",
-          "contentUrl": "${esc(w.directLink)}",
-          "thumbnailUrl": "${esc(w.directLink)}",
-          "url": "${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}"
+          "@graph": [
+            {
+              "@type": "ImageObject",
+              "name": "${esc(w.title)}",
+              "caption": "${esc(w.title)} High Quality Wallpaper",
+              "contentUrl": "${esc(w.directLink)}",
+              "thumbnailUrl": "${esc(w.directLink)}",
+              "url": "${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}"
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Vault",
+                  "item": "${BASE_URL}/"
+                },
+                ${(Array.isArray(w.category) && w.category.length > 0) ? `
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "${esc(w.category[0].charAt(0).toUpperCase() + w.category[0].slice(1))}",
+                  "item": "${BASE_URL}/?page=1"
+                },
+                ` : ''}
+                {
+                  "@type": "ListItem",
+                  "position": ${(Array.isArray(w.category) && w.category.length > 0) ? 3 : 2},
+                  "name": "${esc(w.title)}",
+                  "item": "${BASE_URL}/w/${encodeURIComponent(w.slug || slugOrId)}"
+                }
+              ]
+            }
+          ]
         }
         </script>
         <style>
@@ -2198,7 +2278,7 @@ function renderServerGrid(walls, esc) {
   }).join('');
 }
 
-function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc) {
+function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc, otherColls = []) {
   const gridHtml = renderServerGrid(walls, esc);
   
   // Generate schema structured data for indexing
@@ -2218,15 +2298,36 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
   
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": title,
-    "description": metaDesc,
-    "url": canonicalUrl,
-    "mainEntity": {
-      "@type": "ItemList",
-      "numberOfItems": walls.length,
-      "itemListElement": itemListElement
-    }
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "name": title,
+        "description": metaDesc,
+        "url": canonicalUrl,
+        "mainEntity": {
+          "@type": "ItemList",
+          "numberOfItems": walls.length,
+          "itemListElement": itemListElement
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Vault",
+            "item": `${BASE_URL}/`
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": title,
+            "item": canonicalUrl
+          }
+        ]
+      }
+    ]
   };
 
   res.send(`
@@ -2257,7 +2358,7 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
         ${JSON.stringify(structuredData)}
       </script>
 
-      <title>${esc(title)} — Waynelab</title>
+      <title>${esc(title)} - Waynelab</title>
       <link rel="canonical" href="${canonicalUrl}">
       <link rel="icon" type="image/svg+xml" href="/favicon.svg">
       <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -2281,14 +2382,14 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
           font-weight: 900;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          margin: 0 0 0.8rem 0;
+          margin: 0 0 1.2rem 0;
           background: linear-gradient(135deg, var(--gold) 30%, #fff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
         .coll-desc {
           font-family: 'Inter', sans-serif;
-          font-size: 0.86rem;
+          font-size: 0.88rem;
           color: var(--mid);
           line-height: 1.6;
           margin: 0;
@@ -2313,18 +2414,33 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
             </div>
           </a>
           <div class="topbar-actions">
-            <button class="btn btn-gold" onclick="window.location.href='/'">← Back to Vault</button>
+            <button class="btn btn-gold" onclick="window.location.href='/'">🔙 Back to Vault</button>
           </div>
         </header>
 
         <main class="main" style="padding: 1.2rem 2rem 3rem;">
           <div class="coll-hero">
             <h1 class="coll-title">${esc(title)}</h1>
-            <p class="coll-desc">${esc(introText)}</p>
+            <div class="coll-desc-wrap">${introText}</div>
           </div>
           <div class="coll-feed-container" style="margin-top: 2.2rem;">
             ${gridHtml}
           </div>
+          
+          ${(otherColls && otherColls.length > 0) ? `
+          <div class="related-colls" style="margin-top: 4rem; border-top: 1px solid var(--border-light); padding-top: 2.5rem; text-align: center;">
+            <h3 style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--gold); text-transform: uppercase; margin-bottom: 1.5rem; letter-spacing: 0.08em;">Explore Other Collections</h3>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem; max-width: 800px; margin: 0 auto;">
+              ${otherColls.map(oc => `
+                <a href="/collection/${oc.slug}" style="padding: 0.6rem 1.4rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 30px; color: var(--mid); text-decoration: none; font-size: 0.85rem; font-family: 'Inter', sans-serif; transition: all 0.25s ease;" 
+                   onmouseover="this.style.borderColor='var(--gold)'; this.style.color='#fff'; this.style.background='rgba(201, 168, 76, 0.05)';" 
+                   onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--mid)'; this.style.background='var(--bg3)';">
+                  ${esc(oc.name)}
+                </a>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
         </main>
 
         <footer class="main-footer">
@@ -2353,11 +2469,13 @@ async function renderCollection(req, res, keyword, title, introText) {
       ]
     }).limit(24).sort({ uploadedAt: -1 });
 
+    const otherColls = await Collection.find({}).limit(8);
+
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const metaDesc = `Download the best high-quality ${title} in 4K UHD and HD resolutions. Browse our hand-curated collection of premium desktop and mobile backgrounds.`;
     const canonicalUrl = `${BASE_URL}/${req.path.replace(/^\/+/, '')}`;
     
-    renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc);
+    renderCollectionPage(res, walls, title, introText, metaDesc, canonicalUrl, esc, otherColls);
   } catch (err) {
     res.status(500).send('Error loading collection page.');
   }
@@ -2383,8 +2501,8 @@ app.get('/collection/:slug', async (req, res) => {
       `);
     }
 
-// Helper to safely escape keywords for regular expressions
-    const escapeRegex = (string) => String(string || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    // Helper to safely escape keywords for regular expressions
+    const escapeRegex = (string) => String(string || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     
     // Extract core search terms (excluding generic SEO words like '4k', 'wallpapers', etc.)
     const rawKeyword = String(c.keyword || '').trim().toLowerCase();
@@ -2429,10 +2547,14 @@ app.get('/collection/:slug', async (req, res) => {
       $and: queryConditions
     }).sort({ uploadedAt: -1 });
 
+    const otherColls = await Collection.find({ slug: { $ne: c.slug } }).limit(8);
+
     const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     
     const canonicalUrl = `${BASE_URL}/collection/${c.slug}`;
-    renderCollectionPage(res, walls, c.metaTitle || c.name, c.description, c.description, canonicalUrl, esc);
+    const richIntroText = getCollectionIntro(c.slug, c.name);
+    
+    renderCollectionPage(res, walls, c.metaTitle || c.name, richIntroText, c.description, canonicalUrl, esc, otherColls);
   } catch (err) {
     console.error('Error loading collection page:', err);
     res.status(500).send('Error loading collection.');
