@@ -10,3 +10,8 @@ yarn-debug.log*
 yarn-error.log*
 .idea/
 .vscode/
+
+# Local generated premium assets
+generate_premium.py
+premium_wallpapers/
+

@@ -943,12 +943,14 @@ app.post('/api/wallpapers/:id/pin', adminOnly, async (req, res) => {
 app.get('/w/:slugOrId', async (req, res) => {
   try {
     const slugOrId = req.params.slugOrId;
-    const w = await Wallpaper.findOne({
-      $or: [
-        { slug: slugOrId },
-        { filename: `waynelab/${slugOrId}` }
-      ]
-    });
+    const queryConditions = [
+      { slug: slugOrId },
+      { filename: `waynelab/${slugOrId}` }
+    ];
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      queryConditions.push({ _id: new mongoose.Types.ObjectId(slugOrId) });
+    }
+    const w = await Wallpaper.findOne({ $or: queryConditions });
     
     if (!w) {
       return res.status(404).send(`
@@ -1276,12 +1278,14 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
   try {
     const isAdminReq = await isRequestAdmin(req);
     const slugOrId = req.params.slugOrId;
-    const w = await Wallpaper.findOne({
-      $or: [
-        { slug: slugOrId },
-        { filename: `waynelab/${slugOrId}` }
-      ]
-    });
+    const queryConditions = [
+      { slug: slugOrId },
+      { filename: `waynelab/${slugOrId}` }
+    ];
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      queryConditions.push({ _id: new mongoose.Types.ObjectId(slugOrId) });
+    }
+    const w = await Wallpaper.findOne({ $or: queryConditions });
     if (!w) return res.status(404).send('Not found');
 
     if (w.slug && slugOrId !== w.slug) {
@@ -1642,12 +1646,14 @@ app.get('/api/pinterest/boards', adminOnly, async (req, res) => {
 app.get('/api/download-direct/:slugOrId', async (req, res) => {
   try {
     const slugOrId = req.params.slugOrId;
-    const w = await Wallpaper.findOne({
-      $or: [
-        { slug: slugOrId },
-        { filename: `waynelab/${slugOrId}` }
-      ]
-    });
+    const queryConditions = [
+      { slug: slugOrId },
+      { filename: `waynelab/${slugOrId}` }
+    ];
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      queryConditions.push({ _id: new mongoose.Types.ObjectId(slugOrId) });
+    }
+    const w = await Wallpaper.findOne({ $or: queryConditions });
     
     if (!w) return res.status(404).send('Wallpaper record not found.');
 
