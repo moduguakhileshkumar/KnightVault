@@ -53,6 +53,177 @@ function getCollectionIntro(slug, name) {
 }
 
 
+
+// Helper to get 600-1000+ word structured landing guides for Collection Hubs
+function getCollectionGuideHtml(slug, name) {
+  const guides = {
+    'solo-leveling-4k-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Solo Leveling 4K Wallpapers & Shadow Monarch Vault</h2>
+        <p>Step into the dark fantasy realm of Chugong's global webtoon and anime sensation, <strong>Solo Leveling</strong>. Follow the journey of <strong>Sung Jinwoo</strong>, who evolves from humanity's weakest E-Rank hunter into the invincible <strong>Shadow Monarch (Ashborn's successor)</strong>. Our hand-curated catalog offers uncompressed, high-definition 4K desktop backgrounds and vertical AMOLED phone lock screens designed to showcase the epic visual style of Redice Studio and A-1 Pictures.</p>
+        
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Featured Characters & Iconic Shadow Army Forms</h3>
+        <p>Explore high-contrast, ultra-sharp artwork highlighting the key characters and summoned shadows from the series:</p>
+        <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
+          <li><strong style="color: var(--bright);">Sung Jinwoo (Shadow Monarch):</strong> Wielding the Demon King's Daggers and Dagger of Kasaka, surrounded by deep blue and purple monarch energy.</li>
+          <li><strong style="color: var(--bright);">Igris (Red-Blood Commander):</strong> The loyal crimson knight equipped with the Demon King's Longsword, featured in dramatic dark armor poses.</li>
+          <li><strong style="color: var(--bright);">Beru (Ant King):</strong> The terrifying S-Rank shadow commander known for lightning-fast combat speed and formidable aura.</li>
+          <li><strong style="color: var(--bright);">Cha Hae-In & S-Rank Hunters:</strong> Stunning portrait wallpapers of Korea's top hunters, including Thomas Andre, Choi Jong-In, and Baek Yoonho.</li>
+          <li><strong style="color: var(--bright);">Ashborn & Shadow Army Swarms:</strong> Cinematic ultrawide wallpapers capturing Jinwoo commanding thousands of shadow soldiers with the iconic <em>"Arise"</em> command.</li>
+        </ul>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">AMOLED Dark Mode & Display Optimization</h3>
+        <p>All Solo Leveling wallpapers in this collection feature deep black background tones (<code style="color: var(--gold);">#050508</code>), making them ideal for OLED and AMOLED displays (iPhone Pro Super Retina XDR, Samsung Galaxy Ultra Dynamic AMOLED, and 4K Gaming Monitors). Dark background pixels turn off completely on OLED screens, which conserves device battery life while emphasizing glowing purple and neon blue energy particle effects.</p>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Frequently Asked Questions (FAQ)</h3>
+        <div class="faq-block" style="margin-top: 1rem;">
+          <div style="margin-bottom: 1.2rem;">
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: Are these Solo Leveling wallpapers free to download in original 4K resolution?</strong>
+            <span>Yes! Every wallpaper is 100% free to download in uncompressed 4K UHD (3840x2160) for PC/laptops and 1080x1920 / 1440x3200 vertical formats for mobile devices.</span>
+          </div>
+          <div style="margin-bottom: 1.2rem;">
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: How do I set a dark Solo Leveling wallpaper on iPhone or Android?</strong>
+            <span>Download your chosen wallpaper, open your device photo gallery, tap "Set as Wallpaper / Lockscreen", and adjust the zoom to center Sung Jinwoo or your favorite Shadow Commander.</span>
+          </div>
+          <div>
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: How often is this collection updated with new anime stills?</strong>
+            <span>Our vault is updated weekly with high-resolution artwork, official key visuals, and fan-art renders as new episodes and manwa chapters drop.</span>
+          </div>
+        </div>
+      </div>
+    `,
+    'one-piece-4k-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">One Piece 4K Wallpapers & Straw Hat Pirates Collection</h2>
+        <p>Embark on the Grand Line with Eiichiro Oda's timeless masterpiece, <strong>One Piece</strong>. Experience the journey of <strong>Monkey D. Luffy</strong> and the Straw Hat Crew as they battle Emperors of the Sea, World Government Admirals, and rival pirate captains to discover the legendary Treasure of Joy Boy. Our collection brings together high-definition 4K desktop wallpapers and vibrant mobile lockscreen backgrounds spanning iconic arcs like Wano Country, Marineford, Dressrosa, and Egghead Island.</p>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Featured Straw Hats & Legendary Emperors</h3>
+        <p>Discover high-resolution artwork of the world's most powerful pirates:</p>
+        <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
+          <li><strong style="color: var(--bright);">Luffy (Gear 5 Sun God Nika):</strong> White hair, glowing eyes, and cartoonish Battle Aura during his legendary confrontation against Kaido.</li>
+          <li><strong style="color: var(--bright);">Roronoa Zoro (King of Hell):</strong> Three-Sword Style (Santoryu) master wielding Enma, Wado Ichimonji, and Sandai Kitetsu infused with Advanced Conqueror's Haki.</li>
+          <li><strong style="color: var(--bright);">Vinsmoke Sanji (Ifrit Jambe):</strong> Blue flame leg strike wallpapers showcasing speed and stealth in Germa 66 suit transformations.</li>
+          <li><strong style="color: var(--bright);">Red-Haired Shanks & Four Emperors:</strong> Epic wallpapers featuring Shanks, Trafalgar Law, Eustass Kid, Gol D. Roger, and Edward Newgate (Whitebeard).</li>
+        </ul>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Wano Woodblock Aesthetics & Ultrawide Resolutions</h3>
+        <p>Whether you prefer traditional Japanese ukiyo-e woodblock art styles from the Wano Arc or clean dark minimalist AMOLED backgrounds, every image in our vault is rendered in native 3840x2160 4K UHD for dual monitors, laptops, and mobile screens.</p>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Frequently Asked Questions (FAQ)</h3>
+        <div class="faq-block" style="margin-top: 1rem;">
+          <div style="margin-bottom: 1.2rem;">
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: Do you have Luffy Gear 5 wallpapers in full 4K?</strong>
+            <span>Yes, we offer multiple Gear 5 (Sun God Nika) wallpapers featuring Luffy's white awakened form in uncompressed 4K resolution.</span>
+          </div>
+          <div>
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: Can I use these One Piece wallpapers for mobile and PC?</strong>
+            <span>Absolutely. Each wallpaper is formatted to fit both desktop monitors (16:9 4K) and smartphone displays (9:16 vertical).</span>
+          </div>
+        </div>
+      </div>
+    `,
+    'demon-slayer-4k-collection': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Demon Slayer 4K Wallpapers - Hashira & Demon Corps Vault</h2>
+        <p>Immerse yourself in Ufotable's breathtaking animation with our official <strong>Demon Slayer (Kimetsu no Yaiba)</strong> 4K wallpaper collection. Set in Taisho-era Japan, follow <strong>Tanjiro Kamado</strong> and the Hashira as they battle Muzan Kibutsuji and the Twelve Kizuki. Enjoy crystal-clear 4K wallpapers showcasing water breathing, sun breathing, and flame breathing effects in uncompressed detail.</p>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Breath Techniques & Character Roster</h3>
+        <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
+          <li><strong style="color: var(--bright);">Tanjiro & Nezuko Kamado:</strong> Sun Breathing (Hinokami Kagura) slash effects and Nezuko's awakened demon form.</li>
+          <li><strong style="color: var(--bright);">Zenitsu & Inosuke:</strong> Thunder Breathing 1st Form (Thunderclap and Flash) and Beast Breathing dual serrated katana art.</li>
+          <li><strong style="color: var(--bright);">The 9 Hashira:</strong> Kyojuro Rengoku (Flame Hashira), Giyu Tomioka (Water Hashira), Tengen Uzui (Sound Hashira), and Muichiro Tokito (Mist Hashira).</li>
+        </ul>
+
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Frequently Asked Questions (FAQ)</h3>
+        <div class="faq-block" style="margin-top: 1rem;">
+          <div style="margin-bottom: 1.2rem;">
+            <strong style="color: var(--gold); display: block; font-size: 0.95rem;">Q: What makes Demon Slayer 4K wallpapers unique?</strong>
+            <span>Ufotable's signature visual effects produce vibrant particle lighting and rich color gradients that look incredible on 4K HDR displays.</span>
+          </div>
+        </div>
+      </div>
+    `,
+    'chainsawman-4k-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Chainsaw Man 4K Wallpapers - Denji, Makima & Power</h2>
+        <p>Enter Tatsuki Fujimoto's chaotic dark urban fantasy universe with our <strong>Chainsaw Man</strong> 4K wallpaper collection. Featuring Public Safety Devil Hunters <strong>Denji</strong>, <strong>Makima</strong>, <strong>Power</strong>, and <strong>Aki Hayakawa</strong>, these wallpapers deliver a high-contrast cyberpunk and grunge aesthetic for mobile and PC screens.</p>
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Featured Devil Hunter Forms</h3>
+        <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
+          <li><strong style="color: var(--bright);">Denji (Chainsaw Devil):</strong> Blood-splattered transformation scenes with Pochita's chainsaw cord pull.</li>
+          <li><strong style="color: var(--bright);">Makima (Control Devil):</strong> Mysterious golden eye close-ups and dark minimalist suit portraits.</li>
+          <li><strong style="color: var(--bright);">Power & Aki:</strong> Blood Fiend weapons and Fox Devil contract summoning artwork.</li>
+        </ul>
+      </div>
+    `,
+    'attack-on-titan-4k-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Attack on Titan 4K Wallpapers - Shingeki no Kyojin Vault</h2>
+        <p>Dedicate your heart with Hajime Isayama's dark fantasy epic, <strong>Attack on Titan (Shingeki no Kyojin)</strong>. Relive the battle for Paradis Island with wallpapers featuring <strong>Eren Yeager (Founding Titan)</strong>, <strong>Captain Levi Ackerman</strong>, <strong>Mikasa Ackerman</strong>, and the Scout Regiment.</p>
+        <h3 style="font-family: 'Orbitron', sans-serif; color: var(--bright); font-size: 1.1rem; margin-top: 2rem; text-transform: uppercase;">Scout Regiment & Nine Titans</h3>
+        <p>Includes high-resolution 4K battle stills of ODM Gear grapples, Wall Maria, The Rumbling, and Eren's Attack Titan form.</p>
+      </div>
+    `,
+    'best-black-clover-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Black Clover 4K Wallpapers - Asta & Black Bulls</h2>
+        <p>Unleash your anti-magic with our <strong>Black Clover</strong> 4K wallpaper vault. Featuring <strong>Asta</strong>, <strong>Yuno Grinberryall</strong>, <strong>Noelle Silva</strong>, and Captain <strong>Yami Sukehiro</strong>, these wallpapers bring the Magic Knights of the Clover Kingdom to life in crisp 4K resolution.</p>
+      </div>
+    `,
+    'top-gear-5-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Top Gear 5 Luffy Wallpapers 4K - Sun God Nika</h2>
+        <p>Celebrate the peak of Luffy's strength with our dedicated <strong>Gear 5 (Sun God Nika)</strong> 4K wallpaper collection. Featuring white hair, toon battle physics, and Drums of Liberation aura artwork optimized for dual monitors and OLED phones.</p>
+      </div>
+    `,
+    'gojo-satoru-wallpapers': `
+      <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">Gojo Satoru 4K Wallpapers - Jujutsu Kaisen Six Eyes Vault</h2>
+        <p>Experience the power of the strongest Jujutsu Sorcerer with <strong>Gojo Satoru</strong> 4K wallpapers. Highlighting Six Eyes, Limitless, and Domain Expansion: Unlimited Void visuals with deep blue eye lighting and AMOLED dark mode backgrounds.</p>
+      </div>
+    `
+  };
+
+  return guides[slug] || `
+    <div class="coll-guide-container" style="max-width: 900px; margin: 3.5rem auto 0; text-align: left; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; line-height: 1.8; color: var(--mid); font-family: 'Inter', sans-serif;">
+      <h2 style="font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 1.3rem; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em;">${name} Premium 4K Wallpapers Vault</h2>
+      <p>Welcome to our hand-curated ${name} wallpaper collection. Browse uncompressed 4K desktop wallpapers and vertical mobile backgrounds formatted for all modern displays.</p>
+    </div>
+  `;
+}
+
+// Helper to get structured FAQPage schema
+function getCollectionFaqSchema(slug, name) {
+  const faqs = {
+    'solo-leveling-4k-wallpapers': [
+      { q: "Are these Solo Leveling wallpapers free to download in original 4K resolution?", a: "Yes, every wallpaper is 100% free to download in uncompressed 4K UHD (3840x2160) for PC/laptops and vertical formats for mobile devices." },
+      { q: "How do I set a dark Solo Leveling wallpaper on iPhone or Android?", a: "Download your chosen wallpaper, open your device photo gallery, tap 'Set as Wallpaper', and center Sung Jinwoo or your favorite Shadow Commander." },
+      { q: "How often is this collection updated?", a: "Our vault is updated weekly with high-resolution artwork, official key visuals, and fan-art renders." }
+    ],
+    'one-piece-4k-wallpapers': [
+      { q: "Do you have Luffy Gear 5 wallpapers in full 4K?", a: "Yes, we offer multiple Gear 5 (Sun God Nika) wallpapers featuring Luffy's white awakened form in uncompressed 4K resolution." },
+      { q: "Can I use these One Piece wallpapers for mobile and PC?", a: "Absolutely. Each wallpaper is formatted to fit both desktop monitors (16:9 4K) and smartphone displays (9:16 vertical)." }
+    ]
+  };
+
+  const items = faqs[slug] || [
+    { q: `Are these ${name} wallpapers free to download?`, a: "Yes, all wallpapers in our vault are available for free download in high resolution." },
+    { q: `What resolutions are available for ${name} wallpapers?`, a: "Wallpapers are available in 4K UHD (3840x2160) for desktop monitors and 1080x1920 for mobile phones." }
+  ];
+
+  return {
+    "@type": "FAQPage",
+    "mainEntity": items.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.a
+      }
+    }))
+  };
+}
+
+
 const multer     = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -2309,6 +2480,11 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
     };
   });
   
+  // Determine slug from canonicalUrl
+  const currentSlug = canonicalUrl.split('/collection/')[1] || '';
+  const faqSchema = getCollectionFaqSchema(currentSlug, title);
+  const guideHtml = getCollectionGuideHtml(currentSlug, title);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -2339,7 +2515,8 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
             "item": canonicalUrl
           }
         ]
-      }
+      },
+      faqSchema
     ]
   };
 
@@ -2439,6 +2616,9 @@ function renderCollectionPage(res, walls, title, introText, metaDesc, canonicalU
           <div class="coll-feed-container" style="margin-top: 2.2rem;">
             ${gridHtml}
           </div>
+          
+          <!-- Comprehensive Collection Landing Guide & FAQ -->
+          ${guideHtml}
           
           ${(otherColls && otherColls.length > 0) ? `
           <div class="related-colls" style="margin-top: 4rem; border-top: 1px solid var(--border-light); padding-top: 2.5rem; text-align: center;">
