@@ -1799,6 +1799,9 @@ app.get('/robots.txt', (req, res) => {
   res.send(`User-agent: *\nAllow: /\nSitemap: ${BASE_URL}/sitemap.xml`);
 });
 
+// Alias for /sitemap to /sitemap.xml
+app.get('/sitemap', (req, res) => res.redirect(301, '/sitemap.xml'));
+
 // ─── SITEMAP.XML ──────────────────────────────────────────
 // 🛠 SITEMAP.XML (With Google Image Extensions) 🛠
 app.get('/sitemap.xml', async (req, res) => {
