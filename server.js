@@ -2705,40 +2705,53 @@ app.get('/collection/:slug', async (req, res) => {
     const coreTerms = words.filter(w => !generic.has(w));
     const termsToSearch = coreTerms.length > 0 ? coreTerms : words;
     
-    // Expand search terms to handle typos, splits, and spaces (e.g. chainsawman vs chainsaw man vs chinsawman)
-    function expandSearchTerm(term) {
-      const t = term.toLowerCase();
-      const patterns = [t];
-      if (t === 'chainsawman' || t === 'chainsaw' || t === 'chinsawman') {
-        patterns.push('chainsaw', 'chainsawman', 'chinsawman', 'chainsaw\\s+man', 'chinsaw\\s+man');
+    // Build smart regex patterns for collection terms
+    function getRegexesForCollection(termList, slugName) {
+      const regexes = [];
+      const joined = termList.join(' ').toLowerCase();
+      const slug = (slugName || '').toLowerCase();
+
+      if (joined.includes('chainsaw') || slug.includes('chainsaw')) {
+        regexes.push(/chainsaw/i, /chinsaw/i, /denji/i, /makima/i, /power/i);
+      } else if (joined.includes('gojo') || slug.includes('gojo') || joined.includes('satoru')) {
+        regexes.push(/gojo/i, /satoru/i, /jujutsu/i, /jjk/i);
+      } else if (joined.includes('demon') || joined.includes('slayer') || slug.includes('demon')) {
+        regexes.push(/demon/i, /slayer/i, /tanjiro/i, /nezuko/i, /zenitsu/i, /rengoku/i, /hashira/i);
+      } else if (joined.includes('solo') || joined.includes('leveling') || slug.includes('solo')) {
+        regexes.push(/solo/i, /leveling/i, /jinwoo/i, /sung/i, /shadow/i);
+      } else if (joined.includes('piece') || joined.includes('luffy') || slug.includes('piece')) {
+        regexes.push(/one\s*piece/i, /luffy/i, /zoro/i, /sanji/i, /shanks/i, /straw\s*hat/i, /wano/i);
+      } else if (joined.includes('titan') || joined.includes('attack') || slug.includes('titan')) {
+        regexes.push(/titan/i, /eren/i, /levi/i, /mikasa/i, /shingeki/i);
+      } else if (joined.includes('clover') || joined.includes('asta') || slug.includes('clover')) {
+        regexes.push(/clover/i, /asta/i, /yuno/i, /yami/i);
+      } else if (joined.includes('gear') || slug.includes('gear')) {
+        regexes.push(/gear\s*5/i, /nika/i, /luffy/i, /sun\s*god/i);
+      } else {
+        termList.forEach(t => {
+          regexes.push(new RegExp(escapeRegex(t), 'i'));
+        });
       }
-      if (t === 'demonslayer') {
-        patterns.push('demon', 'slayer', 'demonslayer', 'demon\\s+slayer');
-      }
-      if (t === 'solo' || t === 'leveling' || t === 'sololeveling') {
-        patterns.push('solo', 'leveling', 'sololeveling', 'solo\\s+leveling');
-      }
-      return [...new Set(patterns)];
+      return regexes;
     }
 
-    // Build query conditions: wallpapers must match all search terms
-    const queryConditions = termsToSearch.map(term => {
-      const patterns = expandSearchTerm(term);
-      const orConditions = [];
-      patterns.forEach(pat => {
-        const patRegex = new RegExp(escapeRegex(pat), 'i');
-        orConditions.push(
-          { title: patRegex },
-          { category: patRegex },
-          { tags: patRegex }
-        );
-      });
-      return { $or: orConditions };
-    });
+    const collectionRegexes = getRegexesForCollection(termsToSearch, c.slug);
     
-    const walls = await Wallpaper.find({
-      $and: queryConditions
+    // First try finding wallpapers that match ANY of the collection regexes
+    let walls = await Wallpaper.find({
+      $or: collectionRegexes.map(r => ({
+        $or: [
+          { title: r },
+          { category: r },
+          { tags: r }
+        ]
+      })).flatMap(cond => cond.$or)
     }).sort({ uploadedAt: -1 });
+
+    // Fallback: If 0 matches, fetch latest 24 wallpapers so the page is never empty
+    if (!walls || walls.length === 0) {
+      walls = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(24);
+    }
 
     const otherColls = await Collection.find({ slug: { $ne: c.slug } }).limit(8);
 
