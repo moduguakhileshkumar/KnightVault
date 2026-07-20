@@ -1770,6 +1770,16 @@ app.get('/api/download-direct/:slugOrId', async (req, res) => {
 });
 // ─── KEEP-ALIVE ───────────────────────────────────────────
 app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+app.get('/api/diagnostics/count', async (req, res) => {
+  try {
+    const wallCount = await Wallpaper.countDocuments();
+    const collCount = await Collection.countDocuments();
+    const wallsWithoutSlug = await Wallpaper.countDocuments({ slug: { $exists: false } });
+    res.json({ wallCount, collCount, wallsWithoutSlug });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ─── ADS.TXT (AdSense Verification) ─────────────────────
 app.get('/ads.txt', async (req, res) => {
