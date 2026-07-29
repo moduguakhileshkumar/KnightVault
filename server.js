@@ -1946,7 +1946,8 @@ app.get('/api/diagnostics/count', async (req, res) => {
     const wallCount = await Wallpaper.countDocuments();
     const collCount = await Collection.countDocuments();
     const wallsWithoutSlug = await Wallpaper.countDocuments({ slug: { $exists: false } });
-    res.json({ wallCount, collCount, wallsWithoutSlug });
+    const samples = await Wallpaper.find({}, 'title category tags resolution').limit(20);
+    res.json({ wallCount, collCount, wallsWithoutSlug, samples });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
