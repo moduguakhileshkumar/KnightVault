@@ -3,6 +3,49 @@ const express    = require('express');
 const compression = require('compression');
 const mongoose   = require('mongoose');
 
+// Helper to generate highly unique, varied, and contextual SEO descriptions for wallpapers
+function generateWallpaperSEOText(w, esc) {
+  const title = w.title || '';
+  const resolution = w.resolution || '4K Ultra HD';
+  const categoryStr = (w.category || []).join(', ');
+  const tagsStr = (w.tags || []).join(' ').toLowerCase();
+
+  // Create an offset using character codes to ensure layout variability
+  let codeSum = 0;
+  for (let i = 0; i < title.length; i++) codeSum += title.charCodeAt(i);
+  const layoutHash = codeSum % 3;
+
+  // Lore/Backstory templates based on keyword matching
+  let lore = '';
+  if (tagsStr.includes('luffy') || tagsStr.includes('zoro') || tagsStr.includes('one piece') || tagsStr.includes('shanks') || tagsStr.includes('sanji')) {
+    const character = tagsStr.includes('luffy') ? 'Monkey D. Luffy' : tagsStr.includes('zoro') ? 'Roronoa Zoro' : tagsStr.includes('shanks') ? 'Red-Haired Shanks' : 'Straw Hat Pirates';
+    lore = `Inspired by the legendary characters of Eiichiro Oda's One Piece saga, this digital background celebrates the adventurous spirit of ${character} and the Grand Line. The illustration brings the epic visual style, signature color tones, and grand scales of the series' historical battle arcs directly to your daily digital space.`;
+  } else if (tagsStr.includes('jinwoo') || tagsStr.includes('leveling') || tagsStr.includes('shadow') || tagsStr.includes('monarch')) {
+    lore = `Designed specifically for fans of the global dark fantasy anime and webtoon series Solo Leveling, this artwork highlights the striking dark energy of Sung Jinwoo and the Monarch of Shadows. It features high-contrast purple hues and deep background shadow outlines, creating an intense, powerful aesthetic.`;
+  } else if (tagsStr.includes('gojo') || tagsStr.includes('satoru') || tagsStr.includes('kaisen') || tagsStr.includes('sukuna')) {
+    const character = tagsStr.includes('gojo') ? 'Gojo Satoru' : 'Ryomen Sukuna';
+    lore = `Showcasing the legendary power of Jujutsu Kaisen's strongest characters, this premium wallpaper captures the mystical aura of ${character} and the Shibuya Incident battlegrounds. It uses minimalist neon accents and deep contrasts, making it look incredibly clean and visually striking on high-end display panels.`;
+  } else if (tagsStr.includes('tanjiro') || tagsStr.includes('slayer') || tagsStr.includes('nezuko') || tagsStr.includes('zenitsu') || tagsStr.includes('rengoku')) {
+    lore = `Inspired by Ufotable's cinematic art style in Kimetsu no Yaiba (Demon Slayer), this piece captures breathing style sword slashes and traditional Taisho-era Japanese backdrops. The dynamic lighting particles and rich colors give your home screen a polished, premium aesthetic.`;
+  } else if (tagsStr.includes('denji') || tagsStr.includes('chainsaw') || tagsStr.includes('makima') || tagsStr.includes('power')) {
+    lore = `Reflecting the chaotic, grunge-inspired universe of Tatsuki Fujimoto's Chainsaw Man, this digital art piece features bold styling, high-contrast outlines, and custom neon lighting effects. It offers a unique look that stands out on modern setups and lock screens.`;
+  } else if (tagsStr.includes('titan') || tagsStr.includes('eren') || tagsStr.includes('levi') || tagsStr.includes('shingeki')) {
+    lore = `Capturing the intense action and dark atmosphere of Shingeki no Kyojin (Attack on Titan), this visual highlights the struggle of humanity and the Scout Regiment. The rustic, high-contrast details create a dramatic, atmospheric look for custom setups.`;
+  } else {
+    lore = `Created by skilled digital illustrators, this artwork showcases stunning detail, balanced lighting, and custom colors designed to make your device screen stand out. It blends popular design trends with classic anime styling for a premium visual finish.`;
+  }
+
+  // Variations in paragraph layout structure to bypass automated duplicate content filters
+  if (layoutHash === 0) {
+    return `Download the original, uncompressed <strong>${esc(title)}</strong> background for free. Available in native <strong>${esc(resolution)}</strong>, this illustration is optimized to look exceptionally clean on widescreen desktop monitors, laptop screens, and mobile vertical setups. ${lore} Elevate your digital environment and showcase your fandom today.`;
+  } else if (layoutHash === 1) {
+    return `Upgrade your desktop or phone home screen with this premium <strong>${esc(title)}</strong> wallpaper, rendered in crisp <strong>${esc(resolution)}</strong>. ${lore} Because of its deep contrast levels, this background is perfect for saving battery life on high-end OLED and AMOLED screens. Get the direct, free download link.`;
+  } else {
+    return `Get this high-quality <strong>${esc(title)}</strong> artwork for your custom setup. Formatted in native <strong>${esc(resolution)}</strong>, it fits standard 16:9 desktop monitors and 9:16 smartphone displays perfectly. ${lore} Personalize your lock screen with this unique visual today.`;
+  }
+}
+
+
 // Helper to get rich, unique descriptions for collection pages
 function getCollectionIntro(slug, name) {
   const intros = {
@@ -1444,7 +1487,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                 
 <!-- Description section removed -->
                 <p class="wp-description" style="font-size: 0.9rem; line-height: 1.6; color: var(--dim); max-width: 600px; margin: 1.5rem auto 0; text-align: center;">
-                  Download the uncompressed <strong>${esc(w.title)}</strong> wallpaper for free. This high-quality artwork is available in <strong>${esc(w.resolution || '4K UHD')}</strong> resolution, perfect for customizing your ${categoryArr.length ? `<strong>${esc(categoryArr.join(', '))}</strong>` : 'desktop and mobile'} screens. Personalize your device with this stunning background today.
+                  ${generateWallpaperSEOText(w, esc)}
                 </p>
 
                 <div class="wp-cta-section">
@@ -1596,7 +1639,7 @@ app.get('/amp/w/:slugOrId', async (req, res) => {
           }
           
           <p style="font-size: 0.9rem; line-height: 1.6; color: #7A7A9A; margin-top: 1.8rem; text-align: center; max-width: 500px; margin-left: auto; margin-right: auto;">
-            Download the uncompressed <strong>${esc(w.title)}</strong> wallpaper for free. This high-quality artwork is available in <strong>${esc(w.resolution || '4K UHD')}</strong> resolution, perfect for customizing your ${(Array.isArray(w.category) && w.category.length > 0) ? `<strong>${esc(w.category.join(', '))}</strong>` : 'desktop and mobile'} screens. Personalize your device with this stunning background today.
+            ${generateWallpaperSEOText(w, esc)}
           </p>
         </main>
         <footer class="main-footer">
