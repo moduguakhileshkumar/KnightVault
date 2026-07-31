@@ -1676,12 +1676,10 @@ async function postToPinterest(wall, settings) {
     // Generate watermarked preview link for Pinterest using Cloudinary transformation
     let previewLink = wall.directLink;
     if (previewLink && previewLink.includes('/upload/')) {
-      // 1. Mild blur to protect the uncompressed master and drive CTR
-      const blurEffect = 'e_blur:250';
-      // 2. Elegant small corner watermark
+      // Elegant small corner watermark
       const cornerWatermark = 'co_rgb:ffffff,l_text:Arial_30:WAYNELAB.STUDIO,g_north_west,x_30,y_30,o_30';
       
-      previewLink = previewLink.replace('/upload/', `/upload/${blurEffect}/${cornerWatermark}/`);
+      previewLink = previewLink.replace('/upload/', `/upload/${cornerWatermark}/`);
     }
 
     // Pinterest Search Keyword Booster
