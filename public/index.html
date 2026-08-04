@@ -229,8 +229,7 @@
 
   <div class="topbar-actions" data-nosnippet>
     <!-- Only shows after admin login -->
-    <button class="btn btn-gold hidden" id="uploadBtn-top" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Admin Panel</button>
-    <button class="btn hidden" id="adminBtn" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Admin Panel</button>
+    <button class="btn btn-gold hidden" id="adminBtn" onclick="window.location.href='/vault-access/' + encodeURIComponent(adminPw)">⚙ Admin Panel</button>
     <button class="btn" id="loginBtn" style="display:none;" onclick="openLogin()" title="Admin Login">🔐</button>
     <button class="btn hidden" id="logoutBtn" onclick="logout()">Log out</button>
   </div>
@@ -1079,7 +1078,6 @@ function setAdminMode(on, pw) {
   if (pw !== undefined) adminPw = pw;
 
   // Show/hide UI elements based on admin state
-  document.getElementById('uploadBtn-top').classList.toggle('hidden', !on);
   document.getElementById('adminBtn').classList.toggle('hidden', !on);
   document.getElementById('loginBtn').classList.toggle('hidden', on);
   document.getElementById('logoutBtn').classList.toggle('hidden', !on);

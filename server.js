@@ -603,13 +603,6 @@ async function isRequestAdmin(req) {
       return true;
     }
   }
-  const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-  try {
-    const settings = await Settings.findOne();
-    if (settings && settings.adminIp && clientIp === settings.adminIp) {
-      return true;
-    }
-  } catch (e) {}
   if (!process.env.ADMIN_PASSWORD) {
     return true;
   }
