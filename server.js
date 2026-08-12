@@ -1278,6 +1278,7 @@ app.get('/w/:slugOrId', async (req, res) => {
       }
     }
 
+    let collectionLinkHtml = '';
     // Find similar wallpapers (collection-aware suggestions)
     let categoryArr = Array.isArray(w.category) ? w.category : [w.category];
     categoryArr = categoryArr.filter(Boolean);
@@ -1300,6 +1301,8 @@ app.get('/w/:slugOrId', async (req, res) => {
         }
       }
       
+      const escTemp = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
       if (matchedCollection) {
         suggestionTitle = `${matchedCollection.name} Wallpapers`;
         const regex = new RegExp(matchedCollection.keyword, 'i');
@@ -1311,6 +1314,17 @@ app.get('/w/:slugOrId', async (req, res) => {
             { tags: regex }
           ]
         }).limit(8).sort({ uploadedAt: -1 });
+
+        // Generate dynamic backlink to the parent collection
+        collectionLinkHtml = `
+          <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="/collection/${matchedCollection.slug}" class="wp-coll-link" style="display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--gold); text-transform: uppercase; text-decoration: none; border: 1px solid rgba(201, 168, 76, 0.3); padding: 0.5rem 1.1rem; border-radius: 20px; background: rgba(201, 168, 76, 0.03); transition: all 0.25s ease;"
+               onmouseover="this.style.borderColor='var(--gold)'; this.style.background='rgba(201, 168, 76, 0.08)';"
+               onmouseout="this.style.borderColor='rgba(201, 168, 76, 0.3)'; this.style.background='rgba(201, 168, 76, 0.03)';">
+              📦 Part of ${escTemp(matchedCollection.name)} Collection
+            </a>
+          </div>
+        `;
       }
     } catch (err) {
       console.error('Failed to find matching collection for suggestions', err);
@@ -1482,6 +1496,7 @@ app.get('/w/:slugOrId', async (req, res) => {
                 <p class="wp-description" style="font-size: 0.9rem; line-height: 1.6; color: var(--dim); max-width: 600px; margin: 1.5rem auto 0; text-align: center;">
                   ${generateWallpaperSEOText(w, esc)}
                 </p>
+                ${collectionLinkHtml}
 
                 <div class="wp-cta-section">
                   ${w.isPaid 
@@ -2465,13 +2480,15 @@ function renderServerGrid(walls, esc) {
 
     return `
     <div class="coll-feed-item ${isPortrait ? 'portrait-card' : 'landscape-card'}">
-      <h3 class="coll-item-title">${esc(cleanTitle)}</h3>
-      <div class="coll-item-img-wrap" style="position: relative; aspect-ratio: 1.5 / 1; overflow: hidden; background: #050508; width: 100%;">
-        <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}'); position: absolute; inset: -15px; background-size: cover; background-position: center; filter: blur(12px) brightness(0.6); z-index: 1; display: ${isPortrait ? 'block' : 'none'};"></div>
-        <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'"
-          style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: ${isPortrait ? 'contain' : 'cover'}; z-index: 2;"
-          onload="const card = this.closest('.coll-feed-item'); if(this.naturalHeight > this.naturalWidth) { card.classList.add('portrait-card'); card.classList.remove('landscape-card'); const blur = card.querySelector('.blurred-bg'); if(blur) blur.style.display='block'; this.style.objectFit='contain'; }">
-      </div>
+      <h3 class="coll-item-title"><a href="${pageLink}" style="color: inherit; text-decoration: none;">${esc(cleanTitle)}</a></h3>
+      <a href="${pageLink}" class="coll-item-img-link" style="display: block; width: 100%;" title="View ${esc(cleanTitle)} details page">
+        <div class="coll-item-img-wrap" style="position: relative; aspect-ratio: 1.5 / 1; overflow: hidden; background: #050508; width: 100%;">
+          <div class="blurred-bg" style="background-image: url('${esc(imgUrl)}'); position: absolute; inset: -15px; background-size: cover; background-position: center; filter: blur(12px) brightness(0.6); z-index: 1; display: ${isPortrait ? 'block' : 'none'};"></div>
+          <img src="${esc(imgUrl)}" alt="${esc(w.title)} High Quality Wallpaper" loading="lazy" onerror="this.style.opacity='0.3'"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: ${isPortrait ? 'contain' : 'cover'}; z-index: 2;"
+            onload="const card = this.closest('.coll-feed-item'); if(this.naturalHeight > this.naturalWidth) { card.classList.add('portrait-card'); card.classList.remove('landscape-card'); const blur = card.querySelector('.blurred-bg'); if(blur) blur.style.display='block'; this.style.objectFit='contain'; }">
+        </div>
+      </a>
       <div class="coll-item-footer">
         <div class="coll-item-left">
           <span class="coll-item-res-badge">${esc(resolutionText)} Wallpaper</span>
