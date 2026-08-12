@@ -25,6 +25,20 @@ function generateWallpaperSEOText(w, esc) {
   if (words.length > 5) words = words.slice(0, 5);
   cleanTitle = words.join(' ');
 
+  // Compute file details dynamically
+  let aspectVal = '16:9';
+  let deviceRec = 'desktop monitors and laptops';
+  if (w.resolution && w.resolution.includes('x')) {
+    const [width, height] = w.resolution.split('x').map(Number);
+    if (!isNaN(width) && !isNaN(height)) {
+      if (height > width) {
+        aspectVal = '9:16';
+        deviceRec = 'mobile devices, iPhones, and Android setups';
+      }
+    }
+  }
+  const sizeMB = w.size ? (w.size/1024/1024).toFixed(2) + ' MB' : '0.50 MB';
+
   // Create an offset using character codes to ensure layout variability
   let codeSum = 0;
   for (let i = 0; i < title.length; i++) codeSum += title.charCodeAt(i);
@@ -55,11 +69,11 @@ function generateWallpaperSEOText(w, esc) {
 
   // Variations in paragraph layout structure to bypass automated duplicate content filters
   if (layoutHash === 0) {
-    return `Download the original, uncompressed <strong>${esc(cleanTitle)}</strong> background for free. Available in native <strong>${esc(resolution)}</strong>, this illustration is optimized to look exceptionally clean on widescreen desktop monitors, laptop screens, and mobile vertical setups. ${lore} ${originality} Elevate your digital environment and showcase your fandom today.`;
+    return `Download the original, uncompressed <strong>${esc(cleanTitle)}</strong> background. This wallpaper features a native resolution of <strong>${esc(resolution)}</strong>, a custom <strong>${aspectVal}</strong> aspect ratio, and an optimized file size of <strong>${sizeMB}</strong>. Designed to scale beautifully without distortion, this illustration is optimized for ${deviceRec}. ${lore} ${originality} Elevate your digital environment and showcase your fandom today.`;
   } else if (layoutHash === 1) {
-    return `Upgrade your desktop or phone home screen with this premium <strong>${esc(cleanTitle)}</strong> wallpaper, rendered in crisp <strong>${esc(resolution)}</strong>. ${lore} ${originality} Because of its deep contrast levels, this background is perfect for saving battery life on high-end OLED and AMOLED screens. Get the direct, free download link.`;
+    return `Upgrade your desktop or phone setup with this premium <strong>${esc(cleanTitle)}</strong> wallpaper, rendered in crisp <strong>${esc(resolution)}</strong> with a native <strong>${aspectVal}</strong> layout and <strong>${sizeMB}</strong> file. dots ${lore} ${originality} Because of its deep contrast levels, this background is perfect for saving battery life on high-end OLED and AMOLED screens. Get the direct, free download link.`;
   } else {
-    return `Get this high-quality <strong>${esc(cleanTitle)}</strong> artwork for your custom setup. Formatted in native <strong>${esc(resolution)}</strong>, it fits standard 16:9 desktop monitors and 9:16 smartphone displays perfectly. ${lore} ${originality} Personalize your lock screen with this unique visual today.`;
+    return `Get this high-quality <strong>${esc(cleanTitle)}</strong> artwork for your custom setup. Formatted in native <strong>${esc(resolution)}</strong> with a <strong>${aspectVal}</strong> aspect ratio and <strong>${sizeMB}</strong> size, it fits standard ${deviceRec} perfectly. ${lore} ${originality} Personalize your lock screen with this unique visual today.`;
   }
 }
 
@@ -1505,8 +1519,26 @@ app.get('/w/:slugOrId', async (req, res) => {
                 
                 <div class="wp-meta">
                   ${w.tags && w.tags.length ? `<div><span>Tags:</span> ${(w.tags).map(t=>esc(t)).join(', ')}</div>` : ''}
-                  <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(1)+'MB' : '—'}</div>
-
+                  <div><span>Size:</span> ${w.size ? (w.size/1024/1024).toFixed(2)+' MB' : '—'}</div>
+                  <div><span>Resolution:</span> ${w.resolution ? esc(w.resolution) : '3840x2160'}</div>
+                  <div><span>Aspect Ratio:</span> ${(() => {
+                    if (w.resolution && w.resolution.includes('x')) {
+                      const [width, height] = w.resolution.split('x').map(Number);
+                      if (!isNaN(width) && !isNaN(height)) {
+                        return height > width ? '9:16 (Portrait)' : '16:9 (Landscape)';
+                      }
+                    }
+                    return '16:9 (Landscape)';
+                  })()}</div>
+                  <div><span>Target Screen:</span> ${(() => {
+                    if (w.resolution && w.resolution.includes('x')) {
+                      const [width, height] = w.resolution.split('x').map(Number);
+                      if (!isNaN(width) && !isNaN(height)) {
+                        return height > width ? 'Smartphones / Mobile Devices' : 'PC Desktop / Laptops / Tablets';
+                      }
+                    }
+                    return 'PC Desktop / Laptops';
+                  })()}</div>
                   ${isAdminReq ? `<div><span>Views:</span> ${w.views} (${w.adminViews || 0} by you)</div>` : ''}
                 </div>
                 
