@@ -2501,8 +2501,11 @@ function renderServerGrid(walls, esc) {
     let cleanTitle = coreTitle.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '')
                               .replace(/HD(png|jpg|jpeg|webp)$/i, ' HD')
                               .replace(/_/g, ' ')
+                              .replace(/\s+(&|and)\s+wallpaper/gi, '')
                               .replace(/Wallpaper/gi, '')
                               .replace(/4K/gi, '')
+                              .replace(/—|-/g, ' ')
+                              .replace(/\s+(&|and)\s*$/gi, '')
                               .trim();
     let words = cleanTitle.split(/\s+/)
                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
