@@ -321,7 +321,7 @@
       <input type="password" class="pw-input" id="pwInput" placeholder="Admin password"
         onkeydown="if(event.key==='Enter')submitLogin()">
     </div>
-    <button class="btn-login" id="loginSubmitBtn" onclick="submitLogin()">⚔ Enter Vault</button>
+    <button class="btn-login" id="loginSubmitBtn" onclick="submitLogin()">⚔ Enter Panel</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -943,7 +943,7 @@ function renderGrid(walls) {
     <a class="wall-card ${isPortrait ? 'portrait-card' : 'landscape-card'}" href="${pageLink}">
       <div class="wall-card-media-wrap">
         <div class="blurred-bg" style="background-image: url('${esc(thumbUrl)}')"></div>
-        <img src="${esc(thumbUrl)}" alt="${esc(w.title)} High Quality Wallpaper" ${loadAttr} ${aspectStyle}
+        <img src="${esc(thumbUrl)}" alt="${esc(cleanTitle)} background for desktop and mobile" ${loadAttr} ${aspectStyle}
           onerror="this.style.opacity='0.3'" class="loading"
           onload="this.classList.remove('loading'); if(this.naturalHeight > this.naturalWidth) { this.closest('.wall-card').classList.add('portrait-card'); this.closest('.wall-card').classList.remove('landscape-card'); }">
       </div>
@@ -1054,7 +1054,7 @@ async function submitLogin() {
     } else {
       err.textContent = 'Wrong password';
       btn.disabled = false;
-      btn.textContent = '⚔ Enter Vault';
+      btn.textContent = '⚔ Enter Panel';
     }
   } catch(e) {
     err.textContent = 'Server error';
