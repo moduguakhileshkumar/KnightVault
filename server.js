@@ -2010,11 +2010,16 @@ app.get('/api/download-direct/:slugOrId', async (req, res) => {
 app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 app.get('/api/diagnostics/count', async (req, res) => {
   try {
-    const wallCount = await Wallpaper.countDocuments();
-    const collCount = await Collection.countDocuments();
-    const wallsWithoutSlug = await Wallpaper.countDocuments({ slug: { $exists: false } });
-    const samples = await Wallpaper.find({}, 'title category tags resolution').limit(20);
-    res.json({ wallCount, collCount, wallsWithoutSlug, samples });
+    const aot = await Wallpaper.findOne({ title: /attack/i });
+    const clover = await Wallpaper.findOne({ title: /clover/i });
+    const kuma = await Wallpaper.findOne({ title: /kuma/i });
+    const latest = await Wallpaper.find({}).sort({ uploadedAt: -1 }).limit(5);
+    res.json({
+      aot: aot ? { title: aot.title, slug: aot.slug || aot.filename.split('/').pop() } : null,
+      clover: clover ? { title: clover.title, slug: clover.slug || clover.filename.split('/').pop() } : null,
+      kuma: kuma ? { title: kuma.title, slug: kuma.slug || kuma.filename.split('/').pop() } : null,
+      latest: latest.map(l => ({ title: l.title, slug: l.slug || l.filename.split('/').pop() }))
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
